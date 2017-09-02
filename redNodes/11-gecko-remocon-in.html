@@ -1,0 +1,98 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko remocon in', {
+        paletteLabel:'remocon in',
+        category: 'gecko_link',
+        color: '#ffcc33',
+        defaults: {
+            name: {value:''},
+            labelName: {value:'remocon'},
+            deviceName: {value:'all', required:true},
+            remoconGroup: {value:'all', required:true},
+            remoconCode: {value:'all', required:true},
+        },
+        inputs:0,
+        outputs:1,
+        icon: 'GeckoLogo_White.png',
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.labelName;
+        },
+        oneditprepare: function() {
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+          
+            this.homeServer = homeServer;
+            if(this.deviceName == null) this.deviceName = 'all';
+            $('#node-input-deviceName').append($('<option></option>').val('all').text('all'));
+            $('#node-input-deviceName').append($('<option></option>').val('server').text('server'));
+            for(i in this.homeServer.alias) {
+              if(!(parseInt(this.homeServer.alias[i].option, 16) & (1 << 22))) continue;
+              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+            }
+            $('#node-input-deviceName').val(this.deviceName);
+            
+            if(this.remoconGroup == null) this.remoconGroup = 'all';
+            $('#node-input-remoconGroup').append($('<option></option>').val('all').text('all'));
+            for(i in this.homeServer.remocon.remoconGroup) {
+              $('#node-input-remoconGroup').append($('<option></option>').val(i).text(this.homeServer.remocon.remoconGroup[i].comment));
+            }
+            $('#node-input-remoconGroup').val(this.remoconGroup);
+
+            const RedrawRemoconCode = (group) => {
+              if(this.remoconCode == null) this.remoconCode = 'all';
+              $('#node-input-remoconCode option').remove();
+              $('#node-input-remoconCode').append($('<option></option>').val('all').text('all'));
+              for(i in this.homeServer.remocon.remoconTable) {
+                if((group != 'all') && (group != this.homeServer.remocon.remoconTable[i].group)) continue;
+                $('#node-input-remoconCode').append($('<option></option>').val(i).text(this.homeServer.remocon.remoconTable[i].comment));
+              }
+              $('#node-input-remoconCode').val(this.remoconCode);
+            }
+            $('#node-input-remoconGroup').change((e) => {this.remoconCode = null;RedrawRemoconCode(e.target.value);});
+            RedrawRemoconCode(this.remoconGroup);
+          });
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.remoconGroup = $('#node-input-remoconGroup').val();
+          this.remoconCode = $('#node-input-remoconCode').val();
+          if(this.homeServer) {
+            if(this.remoconCode == 'all') {
+              if(this.remoconGroup == 'all') {
+                this.labelName = 'all remocon';
+              } else {
+                this.labelName = this.homeServer.remocon.remoconGroup[this.remoconGroup].comment;
+              }
+            } else {
+              this.labelName = this.homeServer.remocon.remoconTable[this.remoconCode].comment;
+            }
+          }
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko remocon in">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-remoconGroup"><i class="fa fa-cube"></i> remocon group</span></label>
+        <select id="node-input-remoconGroup" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-remoconCode"><i class="fa fa-cube"></i> remocon code</span></label>
+        <select id="node-input-remoconCode" style="width:120px; margin-right:5px;"></select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko remocon in">
+    <p>親機、子機で受信したリモコン信号のイベント通知を受信します。</p>
+    <p>moduleとremocon group,remocon codeを選択すると選択したリモコンを受信した場合に<code>msg.payload</code>にイベントの通知内容が入ります。</p>
+    <p>allを選択するとイベントを選択せずに全て通知します。</p>
+</script>
+

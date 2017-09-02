@@ -1,0 +1,120 @@
+<div class="container-fluid tab-panel">
+  <div class="col-sm-5 col-md-5 scrollable">
+    <div class="row">
+      <h4>ControlServer Command</h4>
+      <textarea cols="40" rows="3" v-model="command"></textarea>
+    </div>
+    <div class="row">
+      <dropdown class="moduleLabel" text="Send">
+        <li v-for="dev of moduleList" class="module-list" :class="{disabled:!dev.enable}">
+          <a href="#" @click="SelectModule" :data-device="dev.device" :data-enable="dev.enable" :disabled="!dev.enable">
+            {{dev.label}}
+          </a>
+        </li>
+      </dropdown>
+      <h4>ControlServer Response</h4>
+      <textarea id="response" cols="40" rows="8" readonly :value="response" ></textarea>
+      <h4>Sensor Event</h4>
+      <textarea id="events" cols="40" rows="8" readonly :value="events"></textarea>
+    </div>
+  </div>
+  <div class="col-sm-7 col-md-7 scrollable">
+    <div class="row">
+      <div v-show="devices && (devices.length > 0)">
+        <h4>Modules</h4>
+        <table class="device-table">
+          <tr>
+            <th>name</th>
+            <th>module</th>
+            <th>type</th>
+            <th>net</th>
+            <th>option</th>
+            <th>param</th>
+            <th>version</th>
+            <th>power</th>
+            <th>state</th>
+          </tr>
+          <tr v-for="dev of actualDevices">
+            <td>{{dev.deviceName?dev.deviceName:'-'}}</td>
+            <td>{{dev.device}}</td>
+            <td>{{dev.type?dev.type:'-'}}</td>
+            <td>{{dev.networkAddr?dev.networkAddr:'-'}}</td>
+            <td>{{dev.option?dev.option:'-'}}</td>
+            <td>{{dev.param?parseInt(dev.param, 16):'-'}}</td>
+            <td>{{dev.version?dev.version:'-'}}</td>
+            <td>{{dev.voltage?dev.voltage:'-'}}</td>
+            <td>{{dev.state}}</td>
+          </tr>
+        </table>
+        <br>
+      </div>
+      <div v-show="status && (status.length > 0)">
+        <h4>Sensor Status</h4>
+        <table class="status-table">
+          <tr>
+            <th>device</th>
+            <th>function</th>
+            <th>value</th>
+          </tr>
+          <tr v-for="stat of status">
+            <td>{{stat.deviceName?stat.deviceName:stat.device}}</td>
+            <td>{{stat.funcName?stat.funcName:stat.func}}</td>
+            <td>{{stat.valueName?stat.valueName:stat.value}}</td>
+          </tr>
+        </table>
+        <br>
+      </div>
+      <h4 v-show="(queue.writeQueue && (queue.writeQueue.length > 0))||(queue.readQueue && (queue.readQueue.length > 0))">ControlSerever Queue</h4>
+      <div v-show="queue.writeQueue && (queue.writeQueue.length > 0)">
+        <h5>write queue</h5>
+        <table class="queue-table">
+         <tr>
+           <th>module</th>
+           <th>seqID</th>
+           <th>command</th>
+           <th>dump</th>
+          </tr>
+          <tr v-for="q of queue.writeQueue">
+            <td>{{q.device}}</td>
+            <td>{{q.sequenceID}}</td>
+            <td>{{q.command}}</td>
+            <td>{{QueueDecode(q.code)}}</td>
+          </tr>
+        </table>
+        <br>
+      </div>
+      <div v-show="queue.readQueue && (queue.readQueue.length > 0)">
+        <h5>read queue</h5>
+        <table class="queue-table">
+          <tr>
+           <th>dump</th>
+          </tr>
+          <tr v-for="q of queue.readQueue">
+            <td>{{QueueDecode(q.code)}}</td>
+          </tr>
+        </table>
+        <br>
+      </div>
+
+      <div v-show="controllerLog.length > 0">
+        <h4>controller log</h4>
+        <table class="controllerLog-table">
+          <tr>
+           <th class="col-sm-2">time</th>
+           <th class="col-sm-1">type</th>
+           <th class="col-sm-2">module</th>
+           <th class="col-sm-7">message</th>
+          </tr>
+          <tr v-for="l of controllerLog">
+            <td>{{l.timeStamp.substr(5, 11)}}</td>
+            <td>{{l.type}}</td>
+            <td>{{l.body.deviceName||l.body.device}}</td>
+            <td>{{LogText(l)}}</td>
+          </tr>
+        </table>
+        <br>
+      </div>
+
+    </div>
+  </div>
+</div>

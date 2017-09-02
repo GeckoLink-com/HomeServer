@@ -1,0 +1,93 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko status', {
+        paletteLabel:'status',
+        category: 'gecko_link',
+        color: '#ffcc33',
+        defaults: {
+            name: {value:''},
+            label: {value:'all:all'},
+            deviceName: {value:'all', required:true},
+            func: {value:'all', required:true},
+        },
+        inputs:0,
+        outputs:1,
+        icon: 'GeckoLogo_White.png',
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.label;
+        },
+        oneditprepare: function() {
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+            this.homeServer = homeServer;
+            if(this.deviceName == null) this.deviceName = 'all';
+            $('#node-input-deviceName').append($('<option></option>').val('all').text('all'));
+            for(i in this.homeServer.alias) {
+              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+            }
+            $('#node-input-deviceName').val(this.deviceName);
+            
+            const RedrawFunc = (deviceName) => {
+              $('#node-input-func option').remove();
+              $('#node-input-func').append($('<option></option>').val('all').text('all'));
+              if(deviceName == 'all') {
+                this.func = 'all';
+              } else {
+                if(this.func == null) this.func = 'all';
+                for(i in this.homeServer.aliasTable[deviceName].property) {
+                  if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
+                  if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[deviceName].property[i].type == 'out')) continue;
+                  let name = this.homeServer.aliasTable[deviceName].property[i].name;
+                  if(!name || (name == '')) name = i;
+                  $('#node-input-func').append($('<option></option>').val(i).text(name));
+                }
+              }
+              $('#node-input-func').val(this.func);
+            }            
+            $('#node-input-deviceName').change((e) => {this.func = null;RedrawFunc(e.target.value);});
+            RedrawFunc(this.deviceName);
+          });
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.func = $('#node-input-func').val();
+          if(this.homeServer &&
+             ('alias' in this.homeServer) &&
+             ('aliasTable' in this.homeServer) &&
+             this.deviceName && (this.deviceName != '') &&
+             this.func && (this.func != '')) {
+            if(this.deviceName == 'all') {
+              this.label = 'all:all';
+            } else {
+              let n = null;
+              if(this.func in this.homeServer.aliasTable[this.deviceName].property)
+                n = this.homeServer.aliasTable[this.deviceName].property[this.func].name;
+              if(!n || (n == '')) n = this.deviceName+':'+this.func;
+              this.label = n;
+            }
+          }
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko status">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-func"><i class="fa fa-exchange"></i> sensor</span></label>
+        <select id="node-input-func" style="width:120px; margin-right:5px;"></select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko status">
+    <p>親機、子機のstatusの変化、定期情報のイベント通知を受信します。</p>
+    <p>moduleとsensorを選択すると<code>msg.payload</code>に選択されたイベントの通知内容が入ります。</p>
+    <p>allを選択すると全てのイベント通知します。</p>
+</script>
+

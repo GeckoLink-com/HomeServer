@@ -1,0 +1,651 @@
+@font-face {
+  font-family: "NotoSansCJKjp";
+  font-style: normal;
+  font-weight: 300;
+  src: url('../fonts/NotoSansCJKjp-DemiLight.woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NotoSansCJKjp";
+  font-style: normal;
+  font-weight: 500;
+  src: url('../fonts/NotoSansCJKjp-Medium.woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NotoSansCJKjp";
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/NotoSansCJKjp-Bold.woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NotoSansMonoCJKjp";
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/NotoSansMonoCJKjp-Regular.woff');
+  font-display: swap;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans CJK JP', 'NotoSansCJKjp', sans-serif;
+  font-weight: 300;
+}
+
+h1, h2, h3, h4, h5, h6, h7 {
+  white-space:nowrap;
+}
+
+h1.error, h2.error, h3.error, h4.error, h5.error, h6.error, h7.error {
+  color: red;
+  white-space: normal;
+}
+
+.radio {
+  padding-top: 0px !important;
+  margin: 4px;
+}
+
+input.error {
+  background-color: #f2dede;
+}
+
+.dropdown-menu {
+  font-size:16px;
+  font-weight: 300;
+  text-align: left;
+}
+
+.module-list, .moduleLabel {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:14px;
+  text-align: left;
+}
+
+.module-list li a {
+  padding: 3px 10px;
+}
+
+.smart-meter-id {
+  width: 40px;
+}
+
+.btn-xs-wide {
+  padding: 1px 7px;
+}
+
+.well {
+  background-color: white;
+}
+
+.well-transparent {
+  height:85%;
+  width:100%;
+  padding:0.3% 0 0.3% 0;
+  margin:0 0;
+  background-color: rgba(255,255,255,0);
+  border-color: rgba(255,255,255,0);
+  box-shadow: none;
+}
+
+.well-homekit {
+  padding: 4px;
+  font-size: 18px;
+  font-family: Courier, 'NotoSansMonoCJKjp', monospace;
+  text-align: center;
+  border-radius: 0px;
+  border-color: black;
+  border-width: 2px;
+  display:inline-block;
+  padding: 4px;
+  margin: 15px;
+}
+
+.well-func {
+  height:85%;
+  width:100%;
+  padding:0.7% 0 0.3% 0;
+  margin: 0.5% 0;
+  background-color: rgba(255,255,255,0);
+}
+
+.well-uisel {
+  padding:0.7% 0 0.3% 0;
+}
+
+.well .row {
+  margin: 0;
+}
+
+.well h5 {
+  margin: 0;
+  display:inline-block;
+  vertical-align: middle;
+}
+
+.well input {
+  padding: 0;
+}
+
+.well input:disabled {
+  color: #ccc;
+}
+
+.well select:disabled {
+  color: #ccc;
+}
+
+.separation {
+  width: 960px;
+  margin: 5vh 0.5vw 1vh 0.5vw;
+}
+
+.alert {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  margin: 5px 10px;
+  font-size: 0.9em;
+}
+
+.select-menu {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:12px;
+  margin: 0px;
+  padding:0px;
+  text-align: center;
+  width: 140px;
+  height:20px;
+  line-height:20px
+}
+
+.wisun-select-menu {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:12px;
+  margin: 0px;
+  padding:0px;
+  text-align: center;
+  width: 300px;
+  height:20px;
+  line-height:20px
+}
+
+.tab-bar {
+  margin: 0;
+  padding: 32px 10px 5px 10px;
+  width: 70vw;
+  font-size:1.5vw;
+}
+
+.tab-bar li a {
+  padding: 0.1em 0.8vw;
+}
+
+.navbar {
+  background-color:white;
+  height: 80px;
+  max-width: 1280px;
+  width: 100%;
+}
+
+.navbar .container {
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.title-mark {
+  width: 20vw;
+  max-width: 380px;
+  margin: 10px 0px 6px 0px;
+  padding: 0px 1vw;
+}
+
+.tab-panel {
+  position: absolute;
+  top: 80px;
+  width: 98%;
+  height: calc(100vh - 80px);
+}
+
+.dropdown:hover:not(.disabled) .dropdown-menu {
+  display: block;
+}
+
+.dropdown:not(:hover) .dropdown-menu {
+  display: none;
+}
+
+.command-panel {
+  height:40vh;
+}
+
+.event-panel {
+  height:40vh;
+}
+
+.device-panel {
+  height:40vh;
+}
+
+.status-panel {
+  height:40vh;
+}
+
+.queue-panel {
+  height:40vh;
+}
+
+table.ui-table {
+  table-layout: fixed;
+  margin-bottom: 0px;
+}
+
+table.ui-table tr {
+  min-height: 24px;
+}
+
+table.ui-table tr th, table.ui-table tr td {
+  font-size:11px;
+  border-bottom: 1px solid #CCC;
+  padding: 1px 5px;
+  word-wrap: break-word;
+  height: 25px;
+}
+
+#node-red {
+  position: fixed;
+  top: 80px;
+  left: 1vw;
+  height: 89vh;
+  width: 98vw;
+}
+
+#toast-container {
+  position: fixed;
+  left: 0.5vw;
+  width: 33vw;
+  bottom: 1vh;
+  opacity: 0.8;
+}
+
+h5.toast-text {
+  white-space: normal;
+}
+
+.toast-fade-item {
+  transition: all 1s;
+}
+
+.toast-fade-move {
+  transition: transform 1s;
+}
+
+.toast-fade-enter, .toast-fade-leave-active {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.toast-fade-leave-active {
+  position: absolute;
+}
+
+.btn-sw {
+  color: #dcdcdc;
+  background-color: #dcdcdc;
+  border-color: #ccc;
+}
+
+.btn-sw:hover, .btn-sw.hover {
+  color: #808080;
+  background-color: #dcdcdc;
+  border-color: #ccc;
+}
+
+.btn-sw:focus, .btn-sw.focus {
+  color: #c0c0c0;
+  background-color: #c0c0c0;
+  border-color: #8c8c8c;
+}
+
+.btn-sw:active, .btn-sw.active {
+  color: white;
+  background-color: #337ab7;
+  border-color: #2e6da4;
+}
+
+.btn-sw.disabled, .btn-sw.disabled:focus {
+  color: #e0e0e0;
+  background-color: white;
+  border-color: #ccc;
+}
+
+.btn-single {
+  color: 3c763d;
+  background-color: #cfe0c8;
+  border-color: #d6e9c6;
+}
+
+.btn-single:hover, .btn-single.hover {
+  color: 3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.btn-single:focus, .btn-single.focus {
+  color: 3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.btn-single:active, .btn-single.active {
+  color: 3c763d;
+  background-color: #bfd0b8;
+  border-color: #d6e9c6;
+}
+
+#airconTable {
+  height: calc(100vh - 80px - 80px);
+  position: fixed;
+}
+
+.scrollable {
+  position: relative !important;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: 100%;
+  padding: 10px 15px;
+}
+
+.ui-submit-btn {
+  vertical-align: middle;
+  padding: 0 15px;
+  margin:0 0;
+}
+
+.well hr {
+  margin: 0.5%;
+  border-top-width: 2px;
+}
+
+.well-uisel {
+  width: 100%;
+  padding:1vh 0.5vw 1vh 0.5vw;
+  margin: 0.5vh 0.2vw;
+}
+
+fieldset:disabled  {
+  color: #aaa;
+}
+
+input.success {
+  background-color: #dff0d8;
+}
+
+
+.func-name {
+  width:12vw;
+}
+
+.ui-func-name {
+  width:100%;
+}
+
+.conversion {
+  width:3vw;
+}
+
+.unit {
+  width:2vw;
+}
+
+.state {
+  width:5vw;
+}
+
+.option-param {
+  width:5vw;
+}
+
+.item-label {
+  display:inline;
+  margin: 0vh 0.2vw 0vh 0.5vw;
+}
+
+.btn-inline {
+  display:inline-block;
+  margin-left: 0.2vw;
+}
+
+.btn-full {
+  display:inline-block;
+  margin-left: 0.2vw;
+  width: 100%;
+}
+
+.btn-margin {
+  margin-right:0.2vw;
+}
+
+.clearfix:after {
+  display: block;
+  clear: both;
+  content: "";
+}
+
+.input-transparent {
+  background-color: rgba(255,255,255,0.5);
+}
+
+input.channelList {
+  width: 85%;
+}
+
+.system-config-btn {
+  width: 70%;
+  margin: 1vh;
+}
+
+.vertical-space1 {
+  margin-top: 5vh;
+}
+
+.vertical-space2 {
+  margin-top: 10vh;
+}
+
+.icon-homekit {
+  font-size: 35px;
+  vertical-align: middle;
+}
+
+.progress {
+  margin: 2%;
+}
+
+.gray {
+  background-color: #ccc;
+}
+
+.blue {
+  background-color: #337ab7;
+  color: white;
+}
+
+.code {
+  width: 100%;
+  font-family: Courier, 'NotoSansMonoCJKjp', monospace;
+  font-size: 13px;
+}
+
+.code-min {
+  width: 100%;
+  font-family: Courier, 'NotoSansMonoCJKjp', monospace;
+  font-size: 13px;
+  letter-spacing: -0.12em;
+  line-height: 10px !important;
+  padding: 1px !important;
+}
+
+.remocon-table {
+  margin: 0px;
+}
+
+.remocon-table th, .remocon-table td {
+  padding: 1px !important;
+  line-height: 20px !important;
+}
+
+.remocon-btn {
+  line-height: 20px !important;
+  width: 1em;
+  vertical-align: middle;
+  margin: 6px 6px;
+  padding: 4px 10px 4px 5px;
+}
+
+.remocon-error {
+  color: red;
+}
+
+.remocon-inline-input {
+  border: 0px;
+  margin-left: 15px;
+}
+
+.remocon-select-menu {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:12px;
+  margin: 0px;
+  padding:0px;
+  text-align: center;
+  width: 70%;
+  height:20px;
+  line-height:20px;
+  background-color: rgba(255,255, 255, 0);
+}
+
+
+.ui-select-menu {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:12px;
+  margin: 0px;
+  padding:0px;
+  text-align: center;
+  width: 100%;
+  height:20px;
+  line-height:20px;
+  background-color: rgba(255,255, 255, 0);
+}
+
+.table-select-menu {
+  font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+  font-size:12px;
+  margin: 0px;
+  padding:0px;
+  text-align: center;
+  width: 120px;
+  height:20px;
+  line-height:20px
+}
+
+table.device-table {
+    width: 100%;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-spacing:0;
+}
+table.device-table tr th, table.device-table tr td {
+    font-size:12px;
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    border-bottom: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    padding: 0px 5px;
+}
+
+table.device-table tr th {
+    background: #E6EAFF;
+}
+
+table.module-table {
+    width: 100%;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-spacing:0;
+}
+
+table.module-table tr th, table.module-table tr td {
+    font-size:14px;
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    border-bottom: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    padding: 0px 5px;
+    height: 23px;
+}
+
+table.module-table tr th {
+    background: #E6EAFF;
+}
+
+.module-progress {
+    height: 10px;
+    margin-top: 5px;
+}
+
+table.status-table {
+    width: 100%;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-spacing:0;
+}
+table.status-table tr th,table.status-table tr td {
+    font-size: 12px;
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    border-bottom: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    padding: 0px 5px;
+}
+table.status-table tr th {
+    background: #E6EAFF;
+}
+
+table.queue-table {
+    width: 100%;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-spacing:0;
+}
+table.queue-table tr th,table.queue-table tr td {
+    font-size: 12px;
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    border-bottom: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    padding: 0px 5px;
+}
+table.queue-table tr th {
+    background: #E6EAFF;
+}
+
+table.controllerLog-table {
+    width: 100%;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-spacing:0;
+}
+table.controllerLog-table tr th,table.controllerLog-table tr td {
+    font-size: 12px;
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    border-bottom: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+    padding: 0px 5px;
+}
+table.controllerLog-table tr th {
+    background: #E6EAFF;
+}
+
+textarea {
+    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+}
+

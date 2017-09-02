@@ -1,0 +1,200 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko switch', {
+        paletteLabel:'switch',
+        category: 'gecko_link',
+        color: '#ffcc99',
+        defaults: {
+            name: {value:''},
+            label: {value:'switch'},
+            deviceName: {value:null, required:true},
+            func: {value:null, required:true},
+            rules: {value:[{sel:'lt', val:'', enable:true},{sel:null, val:'', enable:true},{sel:'lt', val:'', enable:true}]},
+            outputs: {value:1},
+        },
+        inputs:1,
+        outputs:1,
+        icon: 'GeckoLogo_White.png',
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.label;
+        },
+        oneditprepare: function() {
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+            this.homeServer = homeServer;
+            for(i in this.homeServer.alias) {
+              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+              if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
+            }
+            $('#node-input-deviceName').val(this.deviceName);
+            
+            const RedrawFunc = () => {
+              $('#node-input-func option').remove();
+              for(i in this.homeServer.aliasTable[this.deviceName].property) {
+                if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
+                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type == 'out')) continue;
+                let name = this.homeServer.aliasTable[this.deviceName].property[i].name;
+                if(!name || (name == '')) name = i;
+                if(this.func == null) this.func = i;
+                $('#node-input-func').append($('<option></option>').val(i).text(name));
+              }
+              $('#node-input-func').val(this.func);
+              RedrawMode();
+            }
+
+            if(!this.rules) this.rules = [{sel:'lt', val:'', enable:true},{sel:null, val:'', enable:true},{sel:'lt', val:'', enable:true}];
+            this.checked = [];
+            for(let i = 0; i < 3; i++) {
+              this.checked[i] = this.rules[i].enable;
+            }
+            const RedrawMode = () => {
+              $('#node-input-container').css('min-height','250px').css('min-width','450px').empty();
+              if(!(this.deviceName in this.homeServer.aliasTable)) return;
+              if(!(this.func in this.homeServer.aliasTable[this.deviceName].property)) return;
+              const funcObj = this.homeServer.aliasTable[this.deviceName].property[this.func];
+              if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+                let c = 0;
+                for(let i = 0; i < 3; i++) {
+                  let rowElement = $('<div></div>',{class:"form-row", style:"padding-top: 5px; padding-left: 5%; width: 90%;"});
+                  let selElement = $('<select></select>',{id:"node-input-adsel" + i, style:"padding-top: 5px; padding-left: 5%; width: 50px;"})
+                    .append($('<option></option>').val('lt').text('<'))
+                    .append($('<option></option>').val('lte').text('<='));
+                  let inputElement = $('<input></input>',{id:"node-input-adval" + i, type:"number", step:"0.1", style:"padding-top: 5px; padding-left: 5%; width: 100px;"});
+                  let unitElement = $('<span></span>', {style:"padding-left: 10px; padding-right: 10px;"}).text(funcObj.unit);
+                  let rightElement = $('<span/>',{style:"float: right; margin-top:5px; margin-bottom:20px;"});
+                  if(this.checked[i]) {
+                    c++;
+                    rightElement.append($('<span class="node-input-rule-index"> &#8594; </span>'));
+                  }
+                  rightElement.append($('<input/>', {id:"node-iput-mode" + i, type:"checkbox",style:"width:auto;vertical-align:top"}).prop("checked", this.checked[i]).change((e) => {
+                            this.checked[i] = e.target.checked;
+                      }));
+                  switch(i) {
+                  case 0:
+                    $('#node-input-container')
+                    .append(rowElement
+                      .append(selElement)
+                      .append(inputElement)
+                      .append(unitElement)
+                      .append(rightElement)
+                    );
+                    break;
+                  case 1:
+                    $('#node-input-container')
+                    .append(rowElement
+                      .append(rightElement)
+                    );
+                    break;
+                  case 2:
+                    $('#node-input-container')
+                    .append(rowElement
+                      .append(inputElement)
+                      .append(unitElement)
+                      .append(selElement)
+                      .append(rightElement)
+                    );
+                    break;
+                  }
+                  $('#node-input-adsel' + i).val(this.rules[i].sel);
+                  $('#node-input-adval' + i).val(this.rules[i].val);
+                }
+              } else {
+                let c = 0;
+                for(let i in funcObj.valueLabel) {
+                  const mode = funcObj.valueLabel[i];
+                  let rightElement = $('<span/>',{style:"float: right;"});
+                  if(this.checked[i]) {
+                    c++;
+                    rightElement.append('<span class="node-input-rule-index"> &#8594; </span> ');
+                  }
+                  rightElement.append($('<input/>', {id:"node-iput-mode" + i, type:"checkbox",style:"width:auto;vertical-align:top"}).prop("checked", this.checked[i]).change((e) => {
+                    this.checked[i] = e.target.checked;
+                  }));
+                  $('#node-input-container').append(
+                    $('<div ></div>',{class:"form-row", style:"padding-top: 5px; padding-left: 5%; width: 90%;"})
+                    .append($('<span/>', {id:"node-input-mode" + i, style:"font-size:1.4em;"}).text(mode).val(mode))
+                    .append(rightElement)
+                  );
+                }
+              }
+            }
+                   
+            $('#node-input-deviceName').click((e) => {
+              this.func = null;
+              this.deviceName = e.target.value;
+              for(let i = 0; i < 3; i++) {
+                this.checked[i] = true;
+              }
+              RedrawFunc();
+            });
+            RedrawFunc();
+            $('#node-input-func').change((e) => {
+              this.func = e.target.value;
+              for(let i = 0; i < 3; i++) {
+                this.checked[i] = true;
+              }
+              RedrawMode();
+            });
+          });
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.func = $('#node-input-func').val();
+          if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+            this.outputs = 0;
+            for(let i = 0; i < 3; i++) {
+              this.rules[i].sel = $('#node-input-adsel' + i).val();
+              this.rules[i].val = $('#node-input-adval' + i).val();
+              this.rules[i].enable = this.checked[i];
+              if(this.checked[i]) this.outputs++;
+            }
+          } else {
+            for(let i = 0; i < 3; i++) {
+              this.rules[i].enable = false;
+            }
+            this.outputs = 0;
+            const funcObj = this.homeServer.aliasTable[this.deviceName].property[this.func];
+            for(let i in funcObj.valueLabel) {
+              this.rules[i].val = $('#node-input-mode' + i).text();
+              this.rules[i].enable = this.checked[i];
+              if(this.checked[i]) this.outputs++;
+            }
+          }
+          if(this.homeServer &&
+             ('alias' in this.homeServer) &&
+             ('aliasTable' in this.homeServer) &&
+             this.deviceName && (this.deviceName != '') &&
+             this.func && (this.func != '')) {
+            let n = this.homeServer.aliasTable[this.deviceName].property[this.func].name;
+            if(!n || (n == '')) n = this.deviceName+':'+this.func;
+            this.label = n;
+          }
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko switch">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-func"><i class="fa fa-paper-plane"></i> function</span></label>
+        <select id="node-input-func" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row node-input-rule-container-row">
+      <div class="red-ui-editableList-container">
+        <div id="node-input-container"></div>
+      </div>
+    </div>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko switch">
+    <p>指定されたモジュールのステータスに応じて出力先を切り替えます。入力された<code>msg.payload</code>がそのまま出力先に出力されます。</p>
+</script>
+

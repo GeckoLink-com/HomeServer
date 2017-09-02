@@ -1,0 +1,118 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko command', {
+        paletteLabel:'command',
+        category: 'gecko_link',
+        color: '#ff9900',
+        defaults: {
+            name: {value:''},
+            label: {value:'command'},
+            deviceName: {value:null, required:true},
+            func: {value:null, required:true},
+            mode: {value:null, required:false},
+            script: {value:'', required:false},
+        },
+        inputs:1,
+        outputs:1,
+        icon: 'GeckoLogo_White.png',
+        align: "right",
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.label;
+        },
+        oneditprepare: function() {
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+            this.homeServer = homeServer;
+            for(i in this.homeServer.alias) {
+              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+              if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
+            }
+            $('#node-input-deviceName').val(this.deviceName);
+            
+            const RedrawFunc = () => {
+              $('#node-input-func option').remove();
+              for(i in this.homeServer.aliasTable[this.deviceName].property) {
+                if(this.homeServer.commandFunc.indexOf(i) < 0) continue;
+                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type != 'out')) continue;
+                let name = this.homeServer.aliasTable[this.deviceName].property[i].name;
+                if(!name || (name == '')) name = i;
+                if(this.func == null) this.func = i;
+                $('#node-input-func').append($('<option></option>').val(i).text(name));
+              }
+              $('#node-input-func').append($('<option></option>').val('script').text('script'));
+              if(this.func == null) this.func = 'script';
+              $('#node-input-func').val(this.func);
+              RedrawMode();
+            }
+
+            const RedrawMode = () => {
+              if(this.func != 'script') {
+                $('#node-input-mode').parents('.form-row').removeClass('hidden');
+                $('#node-input-script').parents('.form-row').addClass('hidden');
+                $('#node-input-mode-block').removeClass('hidden');
+                $('#node-input-mode option').remove();
+                if(!(this.deviceName in this.homeServer.aliasTable)) return;
+                if(!(this.func in this.homeServer.aliasTable[this.deviceName].property)) return;
+                for(let i in this.homeServer.aliasTable[this.deviceName].property[this.func].valueLabel) {
+                  const mode = this.homeServer.aliasTable[this.deviceName].property[this.func].valueLabel[i];
+                  if(this.mode == null) this.mode = mode;
+                  $('#node-input-mode').append($('<option></option>').val(mode).text(mode));
+                }
+                $('#node-input-mode').val(this.mode);
+              } else {
+                $('#node-input-mode').parents('.form-row').addClass('hidden');
+                $('#node-input-script').parents('.form-row').removeClass('hidden');
+                $('#node-input-script').val(this.script);
+              }
+            }
+                   
+            $('#node-input-deviceName').change((e) => {this.func = null;this.mode = null;this.deviceName = e.target.value; RedrawFunc();});
+            RedrawFunc();
+            $('#node-input-func').change((e) => {this.mode = null;this.func = e.target.value; RedrawMode();});
+          });
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.func = $('#node-input-func').val();
+          this.mode = $('#node-input-mode').val();
+          if(this.homeServer &&
+             ('alias' in this.homeServer) &&
+             ('aliasTable' in this.homeServer) &&
+             this.deviceName && (this.deviceName != '') &&
+             this.func && (this.func != '') && (this.func != 'script') &&
+             this.mode && (this.mode != '')) {
+            let n = this.homeServer.aliasTable[this.deviceName].property[this.func].name;
+            if(!n || (n == '')) n = this.deviceName+':'+this.func;
+            this.label = n + ' ' + this.mode;
+          }
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko command">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-func"><i class="fa fa-paper-plane"></i> function</span></label>
+        <select id="node-input-func" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode"><i class="fa fa-toggle-on"></i> mode</span></label>
+        <select id="node-input-mode" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row hidden">
+        <label for="node-input-script"><i class="fa fa-toggle-on"></i> Script</label>
+        <input type="text" id="node-input-script" placeholder="Script">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko command">
+    <p>入力があった時にmodule, function, mode, scriptで指定されたコマンドを発行します。</p>
+</script>
+

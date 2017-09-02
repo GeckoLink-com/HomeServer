@@ -1,0 +1,189 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko elapsed time', {
+        paletteLabel:'elapsed time',
+        category: 'gecko_link',
+        color: '#ffcc33',
+        defaults: {
+            name: {value:''},
+            label: {value:'elapsed time'},
+            deviceName: {value:null, required:true},
+            func: {value:null, required:true},
+            rules: {value:[{sel:'lt', val:''},{sel:null, val:''}]},
+            elapsedTime: {value:1},
+        },
+        inputs:0,
+        outputs:1,
+        icon: 'GeckoLogo_White.png',
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.label;
+        },
+        oneditprepare: function() {
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+            this.homeServer = homeServer;
+            for(i in this.homeServer.alias) {
+              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+              if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
+            }
+            $('#node-input-deviceName').val(this.deviceName);
+            
+            const RedrawFunc = () => {
+              $('#node-input-func option').remove();
+              for(i in this.homeServer.aliasTable[this.deviceName].property) {
+                if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
+                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type == 'out')) continue;
+                let name = this.homeServer.aliasTable[this.deviceName].property[i].name;
+                if(!name || (name == '')) name = i;
+                if(this.func == null) this.func = i;
+                $('#node-input-func').append($('<option></option>').val(i).text(name));
+              }
+              $('#node-input-func').val(this.func);
+              RedrawMode();
+            }
+
+            this.checked = 0;
+            const RedrawMode = () => {
+              if(!(this.deviceName in this.homeServer.aliasTable)) return;
+              if(!(this.func in this.homeServer.aliasTable[this.deviceName].property)) return;
+              const funcObj = this.homeServer.aliasTable[this.deviceName].property[this.func];
+              $('#node-input-container').empty();
+              if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+                $('#node-input-container')
+                  .append($('<div class="form-row row0"></div>',{id:"node-input-ad0", style:"padding-top: 5px; padding-left: 5%; width: 90%;"}));
+                $('#node-input-container .row0')
+                  .append($('<select></select>',{id:"node-input-adsel0", style:"padding-top: 5px; padding-left: 5%; width: 50px;"})
+                    .append($('<option></option>').val('lt').text('<'))
+                    .append($('<option></option>').val('lte').text('<='))
+                    .append($('<option></option>').val('gt').text('>'))
+                    .append($('<option></option>').val('gte').text('=>')));
+                $('#node-input-container .row0')
+                  .append($('<input></input>',{id:"node-input-adval0", type:"number", step:"0.1", style:"padding-top: 5px; padding-left: 5%; width: 100px;"}));
+                $('#node-input-container .row0')
+                  .append($('<span></span>', {style:"padding-left: 10px; padding-right: 10px;"}).text(funcObj.unit));
+
+                let adsel0 = this.rules[0].sel;
+                if((adsel0 == 'gt') || (adsel0 == 'gte')) {
+                  $('#node-input-container')
+                    .append($('<div class="form-row row1"></div>',{id:"node-input-ad1", style:"padding-top: 5px; padding-left: 5%; width: 90%;"}));
+                  $('#node-input-container .row1')
+                    .append($('<select></select>',{id:"node-input-adsel1", style:"padding-top: 5px; padding-left: 5%; width: 50px;"})
+                      .append($('<option></option>').val('').text(' '))
+                      .append($('<option></option>').val('lt').text('<'))
+                      .append($('<option></option>').val('lte').text('<=')));
+                  $('#node-input-container .row1')
+                    .append($('<input></input>',{id:"node-input-adval1", type:"number", step:"0.1", style:"padding-top: 5px; padding-left: 5%; width: 100px;"}));
+                  $('#node-input-container .row1')
+                    .append($('<span></span>', {style:"padding-left: 10px; padding-right: 10px;"}).text(funcObj.unit));
+                }
+                $('#node-input-adsel0').val(this.rules[0].sel).change((e) => {
+                    this.rules[0].sel = e.target.value;
+                    RedrawMode();
+                  });
+                $('#node-input-adval0').val(this.rules[0].val).change((e) => {
+                    this.rules[0].val = e.target.value;
+                  });
+                $('#node-input-adsel1').val(this.rules[1].sel).change((e) => {
+                    this.rules[1].sel = e.target.value;
+                  });
+                $('#node-input-adval1').val(this.rules[1].val).change((e) => {
+                    this.rules[1].val = e.target.value;
+                  });
+              } else {
+                let optionElement = $('<select></select>', {id:'node-input-mode', style:'width:120px; margin-right:5px;'});
+                for(let i in funcObj.valueLabel) {
+                  const mode = funcObj.valueLabel[i];
+                  optionElement.append($('<option></option>').val(mode).text(mode));
+                }
+                $('#node-input-container')
+                .append($('<div class="form-row"></div>')
+                  .append($('<label for="node-input-mode"></label>')
+                    .append($('<i class="fa fa-toggle-on"></i>').text(' mode'))
+                  )
+                  .append(optionElement)
+                );
+                $('#node-input-mode').val(this.rules[0].val).change((e) => {
+                    this.rules[0].val = e.target.value;
+                  });
+              }
+            }
+            
+            $('#node-input-deviceName').click((e) => {this.func = null;this.deviceName = e.target.value; RedrawFunc();});
+            RedrawFunc();
+            $('#node-input-func').change((e) => {this.func = e.target.value; RedrawMode();});
+          });
+          
+          let unit = 's';
+          let count = this.elapsedTime;
+          if((this.elapsedTime % 60) == 0) {
+            count = this.elapsedTime / 60;
+            unit = 'm';
+          }
+          if((this.elapsedTime % 3600) == 0) {
+            count = this.elapsedTime / 3600;
+            unit = 'h';
+          }
+          $('#node-input-elapsed-count').val(count);
+          $('#node-input-elapsed-unit').val(unit);
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.func = $('#node-input-func').val();
+          let count = $('#node-input-elapsed-count').val();
+          let unit = $('#node-input-elapsed-unit').val();
+          if(unit == 'm') count *= 60;
+          if(unit == 'h') count *= 3600;
+          this.elapsedTime = count;
+          if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+            for(let i = 0; i < 2; i++) {
+              if($('#node-input-adsel' + i)) this.rules[i].sel = $('#node-input-adsel' + i).val();
+              if($('#node-input-adval' + i)) this.rules[i].val = $('#node-input-adval' + i).val();
+            }
+          } else {
+            this.rules[0].val = $('#node-input-mode').val();
+          }
+          if(this.homeServer &&
+             ('alias' in this.homeServer) &&
+             ('aliasTable' in this.homeServer) &&
+             this.deviceName && (this.deviceName != '') &&
+             this.func && (this.func != '')) {
+            let n = this.homeServer.aliasTable[this.deviceName].property[this.func].name;
+            if(!n || (n == '')) n = this.deviceName+':'+this.func;
+            this.label = n;
+          }
+        },
+    });
+
+</script>
+
+<script type="text/x-red" data-template-name="gecko elapsed time">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-func"><i class="fa fa-paper-plane"></i> function</span></label>
+        <select id="node-input-func" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div id="node-input-container" class="form-row">
+    </div>
+    <div class="form-row inject-time-row" id="node-input-elapsed-time">
+        <span>elapsed time </span>
+        <input id="node-input-elapsed-count" class="inject-time-count" value="1"></input>
+        <select style="width: 100px" id="node-input-elapsed-unit">
+            <option value="s">seconds</option>
+            <option value="m">minutes</option>
+            <option value="h">hours</option>
+        </select><br/>
+    </div>
+
+</script>
+
+<script type="text/x-red" data-help-name="gecko elapsed time">
+    <p>module, function, modeで指定された条件のイベントが発生し指定時間継続して条件が成立した場合にイベントの情報が<code>msg.payload</code>に通知されます。</p>
+</script>
+

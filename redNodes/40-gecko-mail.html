@@ -1,0 +1,63 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko mail', {
+        paletteLabel:'mail',
+        category: 'gecko_link',
+        color: '#ccff66',
+        defaults: {
+            name: {value:''},
+            body: {value:''},
+        },
+        inputs:1,
+        outputs:0,
+        icon: 'GeckoLogo_White.png',
+        align: "right",
+        label: function() {
+          return 'mail ' + this.name||'';
+        },
+        oneditprepare: function() {
+            var that = this;
+            this.editor = RED.editor.createEditor({
+                id: 'node-input-body-editor',
+                value: $("#node-input-body").val()
+            });
+            this.editor.focus();
+        },
+        oneditsave: function() {
+            $("#node-input-body").val(this.editor.getValue());
+            delete this.editor;
+        },
+        oneditresize: function(size) {
+            var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+            var height = $("#dialog-form").height();
+            for (var i=0;i<rows.size();i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-text-editor-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $(".node-text-editor").css("height",height+"px");
+            this.editor.resize();
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko mail">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-comment"></i>Subject</label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row" style="margin-bottom: 0px;">
+        <label for="node-input-body" style="width: 100% !important;"><i class="fa fa-comments"></i>Body</label>
+        <input type="hidden" id="node-input-body" autofocus="autofocus">
+    </div>
+    <div class="form-row node-text-editor-row">
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-body-editor"></div>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko mail">
+    <p>何か入力があった時に、設定したSubjectとBodyに<code>msg.payload</code>を付加してmailします。</p>
+    <p>メールの送付先はシステム設定で設定された宛先になります。</p>
+    <p><strong>※リモートサーバ機能をonしていないと無視されます。</strong></p>
+</script>
+

@@ -1,0 +1,15 @@
+{
+  "setupWebServerPort": 4080,
+  "controllerHost": "localhost",
+  "controllerPort": 47900,
+  "localIPRegistHost": "https://geckolink.com",
+  "localApplicationPort": 47910,
+  "localApplicationRedirectPort": 4000,
+  "basePath": "/var/gecko",
+  "initialPassword": "3b8d0b97514d2519c71664785a04e050d8090e7a616ec3c1374982d173e950ab",
+  "hap": true,
+  "motor": false,
+  "led": false,
+  "smartMeter": true,
+  "wisunDevice": "/dev/ttyUSB0"
+}

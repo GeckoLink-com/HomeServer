@@ -1,0 +1,80 @@
+#header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background-color: white;
+  padding: 0px 0px 0px 0px;
+}
+
+#header .logo {
+  margin: 2px 0px 0px 0px;
+  padding: 0px 0px 0px 15px;
+  background-color: #f8f8f8;
+  color: #888;
+  border: 1px solid #888;
+  box-sizing: border-box;
+  width: 180px;
+}
+
+#header li.open .button {
+  background: #fff;
+  border-color: #fff;
+}
+
+#header .button {
+  border-color: #fff;
+  background: #fff;
+}
+
+#header .button:hover {
+  border: 1px solid rgba(255,255,255,0.2);
+  background: #fff;
+}
+
+#header .button:active, #header .button.active {
+  border-color: #fff;
+  background: #fff;
+}
+
+#header ul.dropdown-menu {
+  background: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+#header ul.dropdown-menu li a {
+  color: #777;
+}
+
+#header ul.dropdown-menu > li:hover > a, #header ul.dropdown-menu > li:focus > a {
+  background: #f0f0f0 !important;
+}
+
+.dropdown-submenu > a::before {
+  border-right-color: #777;
+}
+
+.dropdown-menu * .fa-check-square {
+  color: #777;
+}
+
+.dropdown-submenu.disabled > a::before {
+  border-right-color: #ddd;
+}
+
+#header ul.dropdown-menu li.divider {
+  background: #eaeaea;
+  border-bottom-color: #f3f3f3;
+}
+
+#header ul#btn-deploy-options-submenu li a {
+  color: #777;
+}
+
+#btn-deploy.disabled {
+    cursor: default;
+    background: #fff;
+    color: #fff !important
+}
+

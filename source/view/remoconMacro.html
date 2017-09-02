@@ -1,0 +1,105 @@
+<div class="container-fluid tab-panel">
+  <div class="col-sm-3 col-md-3 scrollable">
+    <br>
+    <h4>マクロ登録・編集</h4>
+    <div class="well well-transparent">
+      <br>
+      <div class="row">
+        <div class="col-md-12">
+          <form class="btn-full">
+            <select class="form-control ui-select-menu" v-model="selectedMacro" @change="SelectMacro">
+              <option value="newMacro">
+                新規追加
+              </option>
+              <option v-for="(item,index) of remocon.remoconMacro" :value="index">
+                {{index}}
+              </option>
+            </select>
+          </form>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-md-4">
+          <h5>登録名</h5>
+        </div>
+        <div class="col-md-8">
+          <input class="ui-func-name" v-model="name" :class="{error:!nameValid}" @input="NameCheck"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-offset-2">
+          <h6>識別しやすい名前を付けてください。</h6>
+          <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-md-4">
+          <h5>コメント</h5>
+        </div>
+        <div class="col-md-8">
+          <input class="ui-func-name" v-model="comment" :class="{error:!commentValid}" @input="CommentCheck"/>
+        </div>
+      </div>
+      <div class="row" v-if="commentAlert.length">
+        <div class="col-md-offset-2">
+          <h6 class="error">{{commentAlert}}</h6>
+        </div>
+      </div>
+
+      <br>
+      <div class="row">
+        <div class="col-md-offset-4">
+          <button v-show="(selectedMacro=='newMacro')&&(sequence==0)" class="btn btn-primary btn-sm btn-margin" @click="Start">開始</button>
+          <button v-show="selectedMacro!='newMacro'" :disabled="dirty" class="btn btn-danger btn-sm btn-margin" @click="removeModal=!dirty">削除</button>
+          <modal v-model="removeModal">
+            <div slot="modal-header" class="modal-header">
+              マクロ登録の削除
+            </div>
+            <div v-if="selectedMacro!='newMacro'" slot="modal-body" class="modal-body">
+              {{selectedMacro}}を削除します。よろしいですか？
+            </div>
+            <div v-if="selectedMacro=='newMacro'" slot="modal-body" class="modal-body">
+              削除しました。
+            </div>
+            <div slot="modal-footer" class="modal-footer">
+              <button type="button" class="btn btn-default" @click="removeModal = false">中止</button>
+              <button type="button" class="btn btn-primary" @click="Remove" >実行</button>
+            </div>
+          </modal>
+          <button v-show="(selectedMacro!='newMacro')||(sequence!=0)" :disabled="!dirty" class="btn btn-danger btn-sm btn-margin" @click="Cancel">中止</button>
+          <button class="btn btn-primary btn-sm btn-margin" :disabled="!dirty" @click="Submit">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-9 col-md-9 scrollable">
+    <br>
+    <div v-if="macro.length > 0" class="well well-transparent">
+      <table class="table table-striped remocon-table">
+        <tr>
+          <th class="col-md-4">登録名</th>
+          <th class="col-md-8">コメント</th>
+        </tr>
+        <tr v-for="item of macro">
+          <td v-if="item.wait!=null">
+            <input class="remocon-inline-input" type="number" step="0.1" v-model="item.wait" @change="dirty=true"></input>
+            秒
+          </td>
+          <td v-if="item.wait!=null">待ち時間</td>
+          <td v-if="item.wait==null">
+            <select class="form-control remocon-select-menu" v-model="item.label" @change="dirty=true">
+              <option v-for="(remocon,idx) of remocon.remoconTable" :value="idx">
+                {{idx}}
+              </option>
+            </saelect>
+          </td>
+          <td v-if="item.wait==null">
+            {{item.label?remocon.remoconTable[item.label].comment:item.info}}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

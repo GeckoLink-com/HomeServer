@@ -1,0 +1,42 @@
+<div class="container-fluid tab-panel" @click="selectedDevice=null">
+  <div class="col-sm-3 col-md-3">
+    <br>
+    <h4>子機一覧</h4>
+    <br>
+    <div class="module-image">
+      <img src="../images/HB-6.png" width="200px" />
+    </div>
+  </div>
+  <div class="col-sm-7 col-md-7 scrollable">
+    <br>
+    <table class="table module-table" v-show="devices && (devices.length > 0)">
+      <tr>
+        <th class="col-md-3">name</th>
+        <th class="col-md-2">module</th>
+        <th class="col-md-1">type</th>
+        <th class="col-md-2">version</th>
+        <th class="col-md-1">power</th>
+        <th class="col-md-3">status</th>
+      </tr>
+      <tr v-for="dev of actualDevices" @click.stop="selectedDevice=dev.device" :class="{success:(selectedDevice==dev.device)}">
+        <td>{{dev.deviceName?dev.deviceName:'-'}}</td>
+        <td>{{dev.device}}</td>
+        <td>{{dev.type?dev.type:'-'}}</td>
+        <td>{{dev.version?dev.version:'-'}}</td>
+        <td>{{dev.voltage?dev.voltage:'-'}}</td>
+        <td v-if="dev.fwupdateSeq == dev.fwupdateNum">
+          {{dev.state}}
+          <button v-show="(selectedDevice==dev.device)&&(dev.state=='dead')" class="btn btn-xs btn-danger delete-btn pull-right" @click.stop="Delete(dev.device)">
+            -
+          </button>
+          <button v-show="(selectedDevice==dev.device)&&(dev.state!='dead')&&(dev.type=='HA/FC')" class="btn btn-xs btn-danger delete-btn pull-right" @click.stop="Update(dev.device)">
+            update
+          </button>
+        </td>
+        <td v-if="dev.fwupdateSeq != dev.fwupdateNum">
+          <progressbar :now="dev.fwupdateSeq * 100 / dev.fwupdateNum" type="primary" :striped="true" :animated="true" class="module-progress"></progressbar>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>

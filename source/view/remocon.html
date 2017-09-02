@@ -1,0 +1,134 @@
+<div class="container-fluid tab-panel" @click="ClearSelect">
+  <div class="col-sm-3 col-md-3 scrollable">
+    <br>
+    <h4>通常設定</h4>
+    <div class="well">
+      <h5>
+        リモコンコード
+      </h5>
+      <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json"></a>
+      <button @click="Save" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
+      <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none" />
+      <button type="button" @click="Load" class="btn btn-xs btn-primary system-config-btn">ファイルから追加</button>
+      <h6 class="system-config-btn">
+        同じ登録名のコードは<br>
+        上書きされます。
+      </h6>
+    </div>
+    <div class="row">
+      <alert :type="(!selectedIdx&&!selectedGroup)?'success':'default'">
+        リモコンコードを追加する場合は、本機に向けてリモコンを送信してください。
+      </alert>
+      <alert :type="(selectedIdx||selectedGroup)?'success':'default'">
+        リモコンコードを削除する場合は、右の登録済みリモコン一覧から選択し赤いボタンを押してください。
+      </alert>
+      <alert :type="(selectedGroup)?'success':'default'">
+        グループ登録されているコード(エアコン設定・TV設定で登録したコード)はまとめて消去されます。
+      </alert>
+    </div>
+    <br>
+  </div>
+  <div class="col-sm-9 col-md-9 scrollable">
+    <br>
+    <fieldset v-show="(Object.keys(lastRemoconCode).length == 0)">
+      <h5>本機に向けて登録したいリモコンを送信してください。</h5>
+    </fieldset>
+    <fieldset v-show="(Object.keys(lastRemoconCode).length != 0)">
+      <h5>最後に受信したリモコンコード</h5>
+      <table class="table table-striped remocon-table">
+        <tr>
+          <th class="col-md-2">モジュール</th>
+          <th class="col-md-2">フォーマット</th>
+          <th class="col-md-7">コード</th>
+        </tr>
+        <tr v-for="item of lastRemoconCode" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
+          <td>{{item.deviceName}}</td>
+          <td>{{item.format}}</td>
+          <td>{{item.info}}</td>
+        </tr>
+      </table>
+      <h5>登録するリモコンコードを選択して下さい。</h5>
+    </fieldset>
+    
+    <fieldset v-show="selectedItem != null">
+      <div class="row">
+        <div class="col-md-5">
+          <label>登録名</label>
+          <input type="text" :class="{error:!nameValid}" v-model="name" @input="NameCheck"/>
+        </div>
+        <div class="col-md-5">
+          <label>コメント</label>
+          <input type="text" :class="{error:!commentValid}" v-model="comment" @input="CommentCheck"/>
+        </div>
+        <div class="col-md-2">
+          <div class="row">
+          <button @click="Cancel" class="btn btn-danger" type="button">中止</button>
+          <button @click="Submit" :disabled="!nameValid||!commentValid" class="btn btn-primary" type="button">保存</button>
+          </div>
+        </div>
+      </div>
+      <h6>種類＋メーカー名＋シリーズ名＋機能名など、識別しやすい名前を付けて下さい。</h6>
+      <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
+      <h6 v-if="commentAlert.length" class="error">{{commentAlert}}</h6>
+    </fieldset>
+
+    <fieldset v-show="(Object.keys(remocon.remoconTable).length > 0)">
+      <p class="vertical-space2">
+      <h5>登録済みリモコン一覧</h5>
+      <div class="well well-transparent">
+        <table class="table remocon-table">
+          <tr class="gray">
+            <th class="col-md-5">登録名<br>コメント</th>
+            <th class="col-md-7">コード</th>
+          </tr>
+          <tr v-for="(item,idx) of remocon.remoconTable" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
+            <td>
+              <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
+                >
+              </button>
+              <div>
+                {{idx}}<br>
+                {{item.comment}}
+              </div>
+            </td>
+            <td>
+              {{Decode(item.code)}}
+              <button v-show="(idx==selectedIdx)" class="btn btn-xs btn-danger delete-btn pull-right remocon-btn" @click="DeleteItem(item, idx)">
+                -
+              </button>
+            </td>
+          </tr>
+        </table>
+        <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup">
+          <tr @click.stop="SelectGroup(groupName)" :class="{success:(groupName==selectedGroup)}">
+            <td>
+              <div>
+                {{groupName}}<br>{{group.comment}}
+              </div>
+            </td>
+            <td>
+              <button v-show="(selectedGroup==groupName)" class="btn btn-xs btn-danger delete-btn pull-right remocon-btn" @click="DeleteGroup(groupName)">
+                -
+              </button>
+            </td>
+          </tr>
+          <tr v-for="(item,idx) of remocon.remoconTable" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
+            <td>
+              <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
+                >
+              </button>
+              <div>
+                {{idx}}<br>
+                {{item.comment}}
+              </div>
+            </td>
+            <td>
+              {{Decode(item.code)}}
+            </td>
+          </tr>
+        </table>
+      </div>
+    </fieldset>
+
+  </div>
+</div>

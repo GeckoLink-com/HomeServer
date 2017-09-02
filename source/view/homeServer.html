@@ -1,0 +1,43 @@
+<navbar placement="top" type="defualt">
+  <div slot="brand">
+    <img src="../images/GeckoLogo.png" class="title-mark"/>
+  </div>
+  <tabs v-show="!debug" v-model="activeTab" class="tab-bar" nav-style="tabs" @active="ChangeTab">
+    <tab header="システム設定"></tab>
+    <tab-group v-show="moduleMenu" header="子機設定" :disabled="!moduleMenu||!passwordValid">
+      <tab header="ペアリング" :disabled="!module"></tab>
+      <tab header="基本設定"></tab>
+      <tab header="詳細設定"></tab>
+      <tab header="子機一覧"></tab>
+    </tab-group>
+    <tab header="リンク機器" :disabled="!passwordValid"></tab>
+    <tab-group header="リモコン登録" :disabled="!passwordValid">
+      <tab header="通常設定"></tab>
+      <tab header="マクロ登録・編集"></tab>
+      <tab header="エアコン設定"></tab>
+      <tab header="テレビ設定"></tab>
+    </tab-group>
+    <tab header="UI設定" :disabled="!passwordValid"></tab>
+    <tab header="プログラム" :disabled="!passwordValid"></tab>
+  </tabs>
+
+  <tabs v-show="debug" v-model="activeTab" class="tab-bar" nav-style="tabs" @active="ChangeTab">
+    <tab header="システム設定"></tab>
+    <tab-group v-show="moduleMenu" header="子機設定" :disabled="!moduleMenu||!passwordValid">
+      <tab header="ペアリング" :disabled="!module"></tab>
+      <tab header="基本設定"></tab>
+      <tab header="詳細設定"></tab>
+      <tab header="子機一覧"></tab>
+    </tab-group>
+    <tab header="リンク機器" :disabled="!passwordValid"></tab>
+    <tab-group header="リモコン登録" :disabled="!passwordValid">
+      <tab header="通常設定"></tab>
+      <tab header="マクロ登録・編集"></tab>
+      <tab header="エアコン設定"></tab>
+      <tab header="テレビ設定"></tab>
+    </tab-group>
+    <tab header="UI設定" :disabled="!passwordValid"></tab>
+    <tab header="プログラム" :disabled="!passwordValid"></tab>
+    <tab header="debug" :disabled="!passwordValid"></tab>
+  </tabs>
+</navbar>
