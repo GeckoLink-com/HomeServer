@@ -193,7 +193,7 @@ class SetupWebServer {
             'menu-item-export-library': false,
             'menu-item-keyboard-shortcuts': false,
             'menu-item-help': false,
-            'menu-item-show-tips': false,
+            'menu-item-show-tips': true,
           },
           userMenu: false,
         },
