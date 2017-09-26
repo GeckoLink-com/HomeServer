@@ -68,6 +68,7 @@ class Remocon {
             this._remoconSave.click();
           },
           Load: () => {
+            this._remoconLoad.value = '';
             this._remoconLoad.click();
           },
           LoadFile: () => {
@@ -104,7 +105,6 @@ class Remocon {
                 return;
               }
               this.nameAlert = '登録名が既に存在しています。上書きしますがよろしいですか？';
-              if(this.comment.length == 0) this._vue.comment = this.remocon.remoconTable[i].comment;
             } else {
               this.nameAlert = '';
             }
@@ -165,7 +165,7 @@ class Remocon {
           },
           IRSend: (item, idx) => {
             const code = this._vue.remocon.remoconTable[idx].code;
-            let cmd = 'ir 01';
+            let cmd = 'ir 20';
             for(let i = 0; i < code.length; i++) {
               cmd += ' ' + ('00' + code[i].toString(16)).slice(-2);
             }
