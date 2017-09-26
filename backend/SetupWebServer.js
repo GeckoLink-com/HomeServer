@@ -108,6 +108,14 @@ class SetupWebServer {
           if((user == this._common.systemConfig.account) && (pw == this._common.systemConfig.password)) return true;
           return false;
         }));
+        this._app.use('/js/*.js', (req ,res, next) => {
+          fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
+            if(err) return next();
+            res.set('Content-Type', 'application/javascript');
+            res.set('Content-Encoding', 'gzip');
+            res.send(data);
+          });
+        });
         this._app.use(express.static(__dirname + '/../frontend/'));
         this._app.use(bodyParser.urlencoded({ extended: true }));
         this._app.use(bodyParser.json());

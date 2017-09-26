@@ -1,11 +1,14 @@
 const webpack = require('webpack');
+const UglifyEsPlugin = require('uglify-es-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+
 process.noDeprecation = true;
 
 module.exports = {
   entry: __dirname + '/source/js/homeserver.js',
   output: {
     path: __dirname + '/frontend',
-    filename: 'bundle.js'
+    filename: 'js/bundle.js'
   },
   module: {
     rules: [
@@ -112,8 +115,17 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: { warnings: false}
+    new UglifyEsPlugin(),
+    new webpack.LoaderOptionsPlugin({
+      minimize: true
+    }),
+    new CompressionPlugin({
+      asset: '[path].gz[query]',
+      algorithm: 'gzip',
+      test: /js\/.*\.js$/,
+      threshold: 0,
+      minRatio: 0.8,
+      deleteOriginalAssets: true
     }),
   ],
 };
