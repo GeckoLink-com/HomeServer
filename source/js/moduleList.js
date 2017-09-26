@@ -18,6 +18,7 @@ class ModuleList {
 
     this._common = common;
     
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.On(this._common.events.changeDevices, (_caller) => {
       if(this._vue) this._vue.devices = this._common.devices;
     }, this);

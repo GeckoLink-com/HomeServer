@@ -17,6 +17,7 @@ class LinkDevices {
 
     this._common = common;
     
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.On(this._common.events.changeSystemConfig, (_caller) => {
       if(!this._vue) return;
       this._vue.hap = this._common.systemConfig.hap;

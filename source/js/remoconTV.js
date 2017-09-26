@@ -46,7 +46,7 @@ class RemoconTV {
       }
       this._vue.codeLength = l;
 
-      this._ExecSequence(this._lastRemoconCode.info);
+      this._ExecSequence();
       this._lastCode = this._lastRemoconCode.info;
     });
     this._common.On(this._common.events.changeRemocon, () => {
@@ -235,7 +235,7 @@ class RemoconTV {
     }
   }
 
-  _ExecSequence(comment) {
+  _ExecSequence() {
 
     let reentry;
     do {
@@ -256,7 +256,9 @@ class RemoconTV {
           break;
         }
         this._vue.sequence++;
+        // fallthrough
       case 3:
+        {
           let err = this._CodeCheck();
           if(err != 0) {
             if(err == -1) toastr.error('リモコンコードが揃っていません。<br>再度指示に従ってボタンを押して下さい。');
@@ -267,6 +269,7 @@ class RemoconTV {
             reentry = true;
             break;
           }
+        }
         toastr.info('次にチャンネル表示設定をします。<br>右の表の各項目に名称を設定して保存を押して下さい。');
         this._vue.sequence++;
         break;

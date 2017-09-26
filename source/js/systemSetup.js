@@ -21,7 +21,8 @@ class SystemSetup {
     this._common = common;
     this._reader = new FileReader();
 
-    this._common.On(this._common.events.changeSystemConfig, (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this._common.On(this._common.events.changeSystemConfig, (_caller) => {
       this._serverKeys = this._common.systemConfig.serverKeys;
       this._sshKeys = this._common.systemConfig.sshKeys;
       this._vue.passwordValid = this._common.systemConfig.password && this._common.systemConfig.initialPassword && (this._common.systemConfig.password != this._common.systemConfig.initialPassword);

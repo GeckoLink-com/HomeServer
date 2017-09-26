@@ -19,6 +19,7 @@ class Pairing {
     this._common = common;
     
     socket.on(this._common.eventFromBackend.response, this._Response.bind(this));
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.On(this._common.events.changeDevices, (_caller) => {
       if(!this._vue) return;
       for(let dev of this._common.devices) {
@@ -80,7 +81,8 @@ class Pairing {
             const dev = str[0].replace(/^.*-/,'');
             if(dev) {
               let c = 0;
-              while(1) {
+              /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
+              while(true) {
                 const name = 'new_device' + c;
                 let f = false;
                 for(let id in this._common.alias) {
@@ -117,8 +119,8 @@ class Pairing {
         if(message.search(/Wait Coordinator/) >= 0) {
           let n = parseInt(message.replace(/^.*bring up /, ''));
           if(n == 0) {
-　　　　　　  toastr.info('無線接続開始');
-　　　　　　}
+            toastr.info('無線接続開始');
+          }
           this._vue.progress = 60 + n;
         }
         if(message.search(/Bootup HA-Micro/) >= 0) {

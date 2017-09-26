@@ -43,8 +43,32 @@ module.exports = {
         ],
       },
       {
+        enforce: 'pre',
+        test: /js\/.*\.js$/,
+        use: [
+          {
+            loader: 'eslint-loader',
+            options: {
+              configFile: './eslintjs'
+            },
+          },
+        ],
+      },
+      {
         test: /js\/.*\.vue$/,
         use: 'vue-loader',
+      },
+      {
+        enforce: 'pre',
+        test: /js\/.*\.vue$/,
+        use: [
+          {
+            loader: 'eslint-loader',
+            options: {
+              configFile: './eslintvue'
+            },
+          },
+        ],
       },
       {
         test: /view\/.*\.html$/,

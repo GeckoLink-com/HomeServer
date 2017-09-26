@@ -31,7 +31,7 @@
             <input class="func-name" type="text" v-model="light.name"/>
           </div>
           <div class="col-md-4">
-            <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin"　:data-id="bridge.id" :data-light="idx">
+            <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
               フラッシュ
             </button>
           </div>
@@ -40,28 +40,6 @@
     </div>
   </div>
   <hr class="separation">
-<!--
-  <div class="row">
-    <div class="col-md-3">
-      <br>
-      <h4>HUIS REMOTE</h4>
-    </div>
-    <div class="col-md-7 scrollable">
-      <br>
-      <div class="row">
-        <div class="col-md-6 col-md-offset-4">
-          <button @click="BTPairing" type="button" class="btn btn-primary btn-xs btn-margin">
-            ペアリング
-          </button>
-        </div>
-      </div>
-      <h6>
-        ペアリングボタンを押した後、HUIS REMOTE CONTROLLERの画面でペアリングを承認して下さい。
-      </h6>
-    </div>
-  </div>
-  <hr class="separation">
--->
   <div v-if="hap" class="row">
     <div class="col-md-3">
       <br>

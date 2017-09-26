@@ -117,7 +117,7 @@ class RemoconAircon {
           },
           Start: () => {
             toastr.clear();
-          　this._vue.sequence = 1;
+            this._vue.sequence = 1;
             this._vue.remoconTable = {cooler:[], heater:[], power:[]};
             this._vue.nameAlert = '';
             this._lastCode = null;
@@ -199,6 +199,7 @@ class RemoconAircon {
       switch(this._vue.sequence) {
       case 1:
         this._dataLength = {};
+        // fallthrough
       case 21:
         if(this._vue.sequence == 1) {
           toastr.info('最初に暖房モードの設定をします。<br><strong>暖房モード</strong>に設定後、リモコンを本機に向けて温度を<strong>下げる</strong>ボタンを押して下さい。');
@@ -306,6 +307,7 @@ class RemoconAircon {
           break;
         }
         this._vue.sequence++;
+        // fallthrough
       case 9:
       case 29:
         toastr.error('途中でエラーが出ているので、<br>今度は温度を<strong>上げる</strong>ボタンを押して下さい。');
@@ -335,7 +337,7 @@ class RemoconAircon {
       case 32:
         toastr.info('リモコンの表示が電源on状態なのを確認して、<br><strong>電源(off)</strong>ボタンを押して下さい。');
         this._vue.remoconTable[this._vue.mode].push(this._lastRemoconCode);
-
+        {
           const l = this._vue.remoconTable[this._vue.mode].length;
           if((l > 3) &&
              (this._vue.remoconTable[this._vue.mode][l-1].info == this._vue.remoconTable[this._vue.mode][l-3].info)) {
@@ -343,6 +345,7 @@ class RemoconAircon {
             reentry = true;
             break;
           }
+        }
         this._vue.sequence--;
         break;
       case 40:

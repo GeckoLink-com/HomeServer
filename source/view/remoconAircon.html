@@ -22,7 +22,7 @@
           <h5>コメント</h5>
         </div>
         <div class="col-md-8">
-          <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment"　@input="CommentCheck"/>
+          <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck"/>
         </div>
       </div>
       <div class="row" v-if="commentAlert.length">
