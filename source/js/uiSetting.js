@@ -19,7 +19,10 @@ class UISetting {
     this._select = false;
 
     this._common.On(this._common.events.changeAlias, () => {
-      if(this._vue) this._vue.alias = this._common.alias;
+      if(this._vue) {
+        this._vue.alias = this._common.alias;
+        this._vue.ChangeAlias();
+      }
     });
     this._common.On(this._common.events.changeRemocon, () => {
       if(this._vue) this._vue.remocon = this._common.remocon;
@@ -70,6 +73,9 @@ class UISetting {
           button: [],
           tvGroup: '',
           tvModule: '',
+          sensorList: [{}],
+          commandList: [{type:'none'}],
+          remoconTxList: [{deviceName: 'server', label: '親機'}],
         },
         computed: {
           validTypeTable: function() {
@@ -84,7 +90,35 @@ class UISetting {
             }
             return table;
           },
-          sensorList: function() {
+          buttonNum: function() {
+            for(let type of this.typeTable) {
+              if(this.itemType == type.value) return type.buttons;
+            }
+          },
+        },
+        methods: {
+          NameCheck: function() {
+            if(this.itemName.length == 0) {
+              this.nameAlert = '項目名を入れてください。';
+              return;
+            }
+            this.nameAlert = '';
+          },
+          StatusItem: function(item, idx) {
+            let stat = '';
+            if(item.status && item.status[idx]) {
+              stat = item.status[idx].sensor;
+              if(item.status[idx].deviceName && item.status[idx].func) stat = item.status[idx].deviceName + ':' + item.status[idx].func;
+            }
+            return stat;
+          },
+          ButtonItem: function(item, idx) {
+            let lbl = item.buttons[idx].label;
+            if((item.type == 'tv') && (lbl == 'vol+')) lbl = 'v+';
+            if((item.type == 'tv') && (lbl == 'vol-')) lbl = 'v-';
+            return lbl;
+          },
+          ChangeAlias: function() {
             const sensorList = [{}];
             for(let dev in this.alias) {
               for(let func in this.alias[dev]) {
@@ -99,9 +133,8 @@ class UISetting {
                 }
               }
             }
-            return sensorList;
-          },
-          commandList: function() {
+            this.sensorList = sensorList;
+
             const commandList = [{type:'none'}];
             for(let dev in this.alias) {
               for(let func in this.alias[dev]) {
@@ -130,14 +163,8 @@ class UISetting {
               type: 'macro',
               label: 'リモコンマクロ',
             });
-            return commandList;
-          },
-          buttonNum: function() {
-            for(let type of this.typeTable) {
-              if(this.itemType == type.value) return type.buttons;
-            }
-          },
-          remoconTxList: function() {
+            this.commandList = commandList;
+
             const txList = [{deviceName: 'server', label: '親機'}];
             for(let dev in this.alias) {
               if(((parseInt(this.alias[dev].option, 16) >> 21) & 1) == 1)
@@ -146,30 +173,7 @@ class UISetting {
                   label: this.alias[dev].name,
                 });
             }
-            return txList;
-          },
-        },
-        methods: {
-          NameCheck: function() {
-            if(this.itemName.length == 0) {
-              this.nameAlert = '項目名を入れてください。';
-              return;
-            }
-            this.nameAlert = '';
-          },
-          StatusItem: function(item, idx) {
-            let stat = '';
-            if(item.status && item.status[idx]) {
-              stat = item.status[idx].sensor;
-              if(item.status[idx].deviceName && item.status[idx].func) stat = item.status[idx].deviceName + ':' + item.status[idx].func;
-            }
-            return stat;
-          },
-          ButtonItem: function(item, idx) {
-            let lbl = item.buttons[idx].label;
-            if((item.type == 'tv') && (lbl == 'vol+')) lbl = 'v+';
-            if((item.type == 'tv') && (lbl == 'vol-')) lbl = 'v-';
-            return lbl;
+            this.remoconTxList = txList;
           },
           RoomDeleteEnable(room) {
             if(this.selectedItem.type != 'room') return false;
