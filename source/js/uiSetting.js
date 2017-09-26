@@ -403,7 +403,6 @@ class UISetting {
             }
             if(this._vue.itemType == 'hue') {
               item.status = [{
-                sensor: this._vue.hueLight.device,
                 deviceName: this._vue.hueLight.name,
                 func: 'hue',
                 sensor: this._vue.hueLight.name,
