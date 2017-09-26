@@ -207,7 +207,7 @@ class Common extends eventEmitter {
           amesh: this.config.amesh,
           smartMeter: this.config.smartMeter,
           bridge: {
-            name: 'Gecko HomeBridge',
+            name: 'GeckoLink-' + macAddr.slice(-8).replace(':',''),
             port: 51826,
             username: macAddr,
             pin: pin,
