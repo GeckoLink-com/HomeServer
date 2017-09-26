@@ -8,13 +8,16 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import ViewLinkDevices from '../view/linkDevices.html'
+
 class LinkDevices {
 
   constructor(common) {
 
     this._common = common;
     
-    this._common.On(this._common.events.changeSystemConfig, (caller) => {
+    this._common.On(this._common.events.changeSystemConfig, (_caller) => {
       if(!this._vue) return;
       this._vue.hap = this._common.systemConfig.hap;
       this._vue.hapPin = this._common.systemConfig.bridge.pin;
@@ -39,7 +42,7 @@ class LinkDevices {
         }
       }
     });
-    this._common.On(this._common.events.changeHueBridges, (caller) => {
+    this._common.On(this._common.events.changeHueBridges, (_caller) => {
       if(this._vue) this._vue.hueBridges = this._common.hueBridges;
     });
     this._common.On(this._common.events.changeAlias, () => {
@@ -47,7 +50,7 @@ class LinkDevices {
     }, this);
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_linkDevices').innerHTML = require('../view/linkDevices.html');
+      document.getElementById('tab_linkDevices').innerHTML = ViewLinkDevices;
       this._vue = new Vue({
         el: '#tab_linkDevices',
         data: {
@@ -141,4 +144,4 @@ class LinkDevices {
   }
 }
 
-module.exports = LinkDevices;
+export default LinkDevices;

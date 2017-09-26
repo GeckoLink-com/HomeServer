@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewPairing from '../view/pairing.html'
+
 class Pairing {
 
   constructor(common) {
@@ -15,7 +19,7 @@ class Pairing {
     this._common = common;
     
     socket.on(this._common.eventFromBackend.response, this._Response.bind(this));
-    this._common.On(this._common.events.changeDevices, (caller) => {
+    this._common.On(this._common.events.changeDevices, (_caller) => {
       if(!this._vue) return;
       for(let dev of this._common.devices) {
         if(dev.device == 'pairing') {
@@ -29,7 +33,7 @@ class Pairing {
     }, this);
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_pairing').innerHTML = require('../view/pairing.html');
+      document.getElementById('tab_pairing').innerHTML = ViewPairing;
       this._vue = new Vue({
         el: '#tab_pairing',
         data: {
@@ -43,6 +47,9 @@ class Pairing {
         },
         methods: {
           ExecutePairing: this._ExecutePairing.bind(this),
+        },
+        components: {
+          'progressbar' : VueStrap.progressbar,
         },
       });
     });
@@ -141,4 +148,4 @@ class Pairing {
   }
 }
 
-module.exports = Pairing;
+export default Pairing;

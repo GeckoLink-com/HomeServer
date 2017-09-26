@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewRemoconMacro from '../view/remoconMacro.html'
+
 class RemoconMacro {
 
   constructor(common) {
@@ -42,7 +46,7 @@ class RemoconMacro {
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_remoconMacro').innerHTML = require('../view/remoconMacro.html');
+      document.getElementById('tab_remoconMacro').innerHTML = ViewRemoconMacro;
       this._vue = new Vue({
         el: '#tab_remoconMacro',
         data: {
@@ -148,11 +152,14 @@ class RemoconMacro {
             this._vue.SelectMacro();
           }
         },
+        components: {
+          'modal' : VueStrap.modal,
+        },
       });
     });
   }
 
 }
 
-module.exports = RemoconMacro;
+export default RemoconMacro;
 

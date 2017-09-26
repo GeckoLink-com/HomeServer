@@ -8,11 +8,15 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewToastr from '../view/toastr.html'
+
 class Toastr {
 
   constructor() {
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('toast-container').innerHTML = require('../view/toastr.html');
+      document.getElementById('toast-container').innerHTML = ViewToastr;
       this._vue = new Vue({
         el: '#toast-container',
         data: {
@@ -49,6 +53,9 @@ class Toastr {
             this.defaultTimeout = timeout;
           },
         },
+        components: {
+          'alert' : VueStrap.alert,
+        },
       });
     });
   }
@@ -73,4 +80,4 @@ class Toastr {
   }
 }
 
-global.toastr = new Toastr();
+export default Toastr;

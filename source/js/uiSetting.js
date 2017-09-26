@@ -8,6 +8,9 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import ViewUiSetting from '../view/uiSetting.html'
+
 class UISetting {
 
   constructor(common) {
@@ -29,7 +32,7 @@ class UISetting {
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_uiSetting').innerHTML = require('../view/uiSetting.html');
+      document.getElementById('tab_uiSetting').innerHTML = ViewUiSetting;
       this._vue = new Vue({
         el: '#tab_uiSetting',
         data: {
@@ -543,4 +546,4 @@ class UISetting {
 
 }
 
-module.exports = UISetting;
+export default UISetting;

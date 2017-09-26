@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import SlideSwitch from './SlideSwitch.vue'
+import ViewAdvancedSetup from '../view/advancedSetup.html'
 /*
  option value : bit 31:0
    AVR  HB   ---- ---- : KPD  MTR  LED  RAIN : I2C  IRI  IRO  SW   : HA1  HA0  AD1  AD0
@@ -45,7 +49,7 @@ class AdvancedSetup {
     }, this);
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_advancedSetup').innerHTML = require('../view/advancedSetup.html');
+      document.getElementById('tab_advancedSetup').innerHTML = ViewAdvancedSetup;
       this._vue = new Vue({
         el: '#tab_advancedSetup',
         data: {
@@ -155,6 +159,10 @@ class AdvancedSetup {
             this.moduleNameAlert = '';
           },
           Submit: this._ValidateValue.bind(this),
+        },
+        components: {
+          'dropdown' : VueStrap.dropdown,
+          'slide-switch' : SlideSwitch,
         },
       });
     });
@@ -536,5 +544,5 @@ class AdvancedSetup {
   }
 }
 
-module.exports = AdvancedSetup;
+export default AdvancedSetup;
 

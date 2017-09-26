@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue  from 'vue'
+import VueStrap from 'vue-strap'
+import ViewBasicSetup from '../view/basicSetup.html'
+
 class BasicSetup {
 
   constructor(common) {
@@ -31,7 +35,7 @@ class BasicSetup {
     }, this);
     
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_basicSetup').innerHTML = require('../view/basicSetup.html');
+      document.getElementById('tab_basicSetup').innerHTML = ViewBasicSetup;
       this._vue = new Vue({
         el: '#tab_basicSetup',
         data: {
@@ -186,9 +190,13 @@ class BasicSetup {
                 {type:'command', device:this._vue.selectedModule, command:this._configCommand});
           },
         },
+        components: {
+          'radio' : VueStrap.radio,
+          'dropdown' : VueStrap.dropdown,
+        },
       });
     });
   }
 }
 
-module.exports = BasicSetup;
+export default BasicSetup;

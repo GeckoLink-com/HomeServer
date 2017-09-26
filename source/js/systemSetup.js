@@ -8,7 +8,11 @@
 */
 'use strict';
 
-const jsSHA = require('jssha');
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import jsSHA from 'jssha'
+import SlideSwitch from './SlideSwitch.vue'
+import ViewSystemSetup from '../view/systemSetup.html'
 
 class SystemSetup {
 
@@ -26,7 +30,7 @@ class SystemSetup {
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_systemSetup').innerHTML = require('../view/systemSetup.html');
+      document.getElementById('tab_systemSetup').innerHTML = ViewSystemSetup;
       this._vue = new Vue({
         el: '#tab_systemSetup',
         data: {
@@ -184,6 +188,10 @@ class SystemSetup {
           },
           Submit: this._ValidateValue.bind(this),
         },
+        components: {
+          'slide-switch' : SlideSwitch,
+          'modal' : VueStrap.modal,
+        },
       });
       this._authLoad = document.getElementById('auth-load');
       this._authSave = document.getElementById('auth-save');
@@ -251,4 +259,4 @@ class SystemSetup {
 
 }
 
-module.exports = SystemSetup;
+export default SystemSetup;

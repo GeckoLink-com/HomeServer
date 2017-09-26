@@ -8,9 +8,15 @@
 */
 'use strict';
 
+import SocketClient from 'socket.io-client'
+import Vue from 'vue'
+import Toastr from './toastr'
+
 class Common {
 
   constructor() {
+    global.socket = SocketClient();
+    global.toastr = new Toastr();
 
     this.eventToBackend = {
       command: 'command',
@@ -135,39 +141,6 @@ class Common {
     this._Ahead(this.events.changeRemocon, this._ChangeRemocon.bind(this));
     this._Ahead(this.events.changeHueBridges, this._ChangeHueBridges.bind(this));
     this._Ahead(this.events.changeUITable, this._ChangeUITable.bind(this));
-
-    Vue.component('button-group', VueStrap.buttonGroup);
-    Vue.component('radio', VueStrap.radio);
-    Vue.component('dropdown', VueStrap.dropdown);
-    Vue.component('radio', VueStrap.radio);
-    Vue.component('progressbar', VueStrap.progressbar);
-    Vue.component('modal', VueStrap.modal);
-    Vue.component('alert', VueStrap.alert);
-    Vue.component('navbar', VueStrap.navbar);
-    Vue.component('tabs', VueStrap.tabs);
-    Vue.component('tabGroup', VueStrap.tabGroup);
-    Vue.component('tab', VueStrap.tab);
-
-    this._vue = Vue.component('slide-switch', {
-      template: ' \
-        <button-group :value="value"> \
-          <radio :value="value" :disabled="disabled" v-for="button in buttons" button \
-            :selected-value="button.val" \
-            class="btn-xs btn-xs-wide" \
-            @input="BtnClick" \
-            :type="(value==button.val)?\'primary\':\'default\'" \
-            :key="button" \
-          >{{button.label}}</radio> \
-        </button-group> \
-      ',
-      props: ['value', 'buttons', 'disabled'],
-      methods: {
-        BtnClick: function (val) {
-          this.$emit('input', val);
-        },
-      },
-    });
-    
   }
 
   _Ahead(event, handler) {
@@ -278,4 +251,4 @@ class Common {
   }
 }
 
-module.exports = Common;
+export default Common;

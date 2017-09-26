@@ -8,40 +8,35 @@
 */
 'use strict';
 
-const socket = require('socket.io-client')();
-const Vue = require('vue');
-const VueStrap = require('vue-strap');
-const Toastr = require('./toastr.js');
-const Common = require('./common.js');
-const SystemSetup = require('./systemSetup.js');
-const Pairing = require('./pairing.js');
-const BasicSetup = require('./basicSetup.js');
-const AdvancedSetup = require('./advancedSetup.js');
-const ModuleList = require('./moduleList.js');
-const LinkDevices = require('./linkDevices.js');
-const Remocon = require('./remocon.js');
-const RemoconMacro = require('./remoconMacro.js');
-const RemoconAircon = require('./remoconAircon.js');
-const RemoconTV = require('./remoconTV.js');
-const UISetting = require('./uiSetting.js');
-const DebugPanel = require('./debugPanel.js');
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import Common from './common.js'
+
+import SystemSetup from './systemSetup.js'
+import Pairing from './pairing.js'
+import BasicSetup from './basicSetup.js'
+import AdvancedSetup from './advancedSetup.js'
+import ModuleList from './moduleList.js'
+import LinkDevices from './linkDevices.js'
+import Remocon from './remocon.js'
+import RemoconMacro from './remoconMacro.js'
+import RemoconAircon from './remoconAircon.js'
+import RemoconTV from './remoconTV.js'
+import UISetting from './uiSetting.js'
+import DebugPanel from './debugPanel.js'
+import ViewHomeServer from '../view/homeServer.html'
 
 // css
-require('../css/bootstrap.css');
-require('../css/localStyle.css');
+import '../css/bootstrap.css'
+import '../css/localStyle.css'
 
-const webpackFileCopy = {
-  index: require('../index.html'),
-  red: require('../red/theme/css/nodeRed.css'),
-};
+// for webpack
+import '../index.html'
+import '../red/theme/css/nodeRed.css'
 
 class HomeServer {
 
   constructor() {
-
-    global.socket = socket;
-    global.Vue = Vue;
-    global.VueStrap = VueStrap;
 
     this._common = new Common();
     this._childrenTable = [
@@ -132,7 +127,7 @@ class HomeServer {
 
     // view
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab-bar').innerHTML = require('../view/homeServer.html');
+      document.getElementById('tab-bar').innerHTML = ViewHomeServer;
       this._vue = new Vue({
         el: '#tab-bar',
         data: {
@@ -193,12 +188,14 @@ class HomeServer {
       if(this._nodeRed.innerHTML == '') {
         this._nodeRed.innerHTML = '<iframe src="/red/" id="node-red" scrolling="no" frameborder="no"></iframe>';
       }
+      toastr.timeout(8000);
+      // fallthrough
     default:
       toastr.timeout(8000);
     }
     this._common.Trigger(this._common.events.changeTab, this);
   }
-
 }
-global.Server = new HomeServer();
+
+new HomeServer();
 

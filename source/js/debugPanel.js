@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue  from 'vue'
+import VueStrap from 'vue-strap'
+import ViewDebugPanel from '../view/debugPanel.html'
+
 class DebugPanel {
 
   constructor(common) {
@@ -36,7 +40,7 @@ class DebugPanel {
     }, this);
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_debugPanel').innerHTML = require('../view/debugPanel.html');
+      document.getElementById('tab_debugPanel').innerHTML = ViewDebugPanel;
       this._vue = new Vue({
         el: '#tab_debugPanel',
         data: {
@@ -129,6 +133,9 @@ class DebugPanel {
             this.eventsFlag = false;  
           }
         },
+        components: {
+          'dropdown' : VueStrap.dropdown,
+        },
       });
     });
   }
@@ -186,4 +193,4 @@ class DebugPanel {
   }
 }
 
-module.exports = DebugPanel;
+export default DebugPanel;

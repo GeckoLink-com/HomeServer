@@ -8,20 +8,24 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewModuleList from '../view/moduleList.html'
+
 class ModuleList {
 
   constructor(common) {
 
     this._common = common;
     
-    this._common.On(this._common.events.changeDevices, (caller) => {
+    this._common.On(this._common.events.changeDevices, (_caller) => {
       if(this._vue) this._vue.devices = this._common.devices;
     }, this);
-    this._common.On(this._common.events.changeAlias, (caller) => {
+    this._common.On(this._common.events.changeAlias, (_caller) => {
       if(this._vue) this._vue.alias = this._common.alias;
     }, this);
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_moduleList').innerHTML = require('../view/moduleList.html');
+      document.getElementById('tab_moduleList').innerHTML = ViewModuleList;
       this._vue = new Vue({
         el: '#tab_moduleList',
         data: {
@@ -57,9 +61,12 @@ class ModuleList {
             this._vue.selectedDevice = null;
           },
         },
+        components: {
+          'progressbar' : VueStrap.progressbar,
+        },
       });
     });
   }
 }
 
-module.exports = ModuleList;
+export default ModuleList;

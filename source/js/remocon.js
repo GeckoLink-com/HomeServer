@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewRemocon from '../view/remocon.html'
+
 class Remocon {
 
   constructor(common) {
@@ -36,7 +40,7 @@ class Remocon {
     }, this);
     
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_remocon').innerHTML = require('../view/remocon.html');
+      document.getElementById('tab_remocon').innerHTML = ViewRemocon;
       this._vue = new Vue({
         el: '#tab_remocon',
         data: {
@@ -184,6 +188,9 @@ class Remocon {
             this.selectedGroup = null;
           },
         },
+        components: {
+          'alert' : VueStrap.alert,
+        },
       });
       this._remoconLoad = document.getElementById('remocon-load');
       this._remoconSave = document.getElementById('remocon-save');
@@ -191,4 +198,4 @@ class Remocon {
   }
 }
 
-module.exports = Remocon;
+export default Remocon;

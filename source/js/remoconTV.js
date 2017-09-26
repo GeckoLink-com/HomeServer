@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewRemoconTV from '../view/remoconTV.html'
+
 class RemoconTV {
 
   constructor(common) {
@@ -70,7 +74,7 @@ class RemoconTV {
       {name: 'vol-', label: '音量-'},
     ];
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_remoconTV').innerHTML = require('../view/remoconTV.html');
+      document.getElementById('tab_remoconTV').innerHTML = ViewRemoconTV;
       this._vue = new Vue({
         el: '#tab_remoconTV',
         data: {
@@ -195,6 +199,9 @@ class RemoconTV {
             return true;
           },
         },
+        components: {
+          'alert' : VueStrap.alert,
+        },
       });
     });
   }
@@ -250,16 +257,16 @@ class RemoconTV {
         }
         this._vue.sequence++;
       case 3:
-        let err = this._CodeCheck();
-        if(err != 0) {
-          if(err == -1) toastr.error('リモコンコードが揃っていません。<br>再度指示に従ってボタンを押して下さい。');
-          if(err == -2) toastr.error('リモコンコードの読み取りエラーがあります。<br>再度指示に従ってボタンを押して下さい。');
-          if(err == -3) toastr.error('リモコンコードが重複しています。<br>再度指示に従ってボタンを押して下さい。');
-          this._vue.remoconNo = 0;
-          this._vue.sequence = 1;
-          reentry = true;
-          break;
-        }
+          let err = this._CodeCheck();
+          if(err != 0) {
+            if(err == -1) toastr.error('リモコンコードが揃っていません。<br>再度指示に従ってボタンを押して下さい。');
+            if(err == -2) toastr.error('リモコンコードの読み取りエラーがあります。<br>再度指示に従ってボタンを押して下さい。');
+            if(err == -3) toastr.error('リモコンコードが重複しています。<br>再度指示に従ってボタンを押して下さい。');
+            this._vue.remoconNo = 0;
+            this._vue.sequence = 1;
+            reentry = true;
+            break;
+          }
         toastr.info('次にチャンネル表示設定をします。<br>右の表の各項目に名称を設定して保存を押して下さい。');
         this._vue.sequence++;
         break;
@@ -337,4 +344,4 @@ class RemoconTV {
   }
 }
 
-module.exports = RemoconTV;
+export default RemoconTV;

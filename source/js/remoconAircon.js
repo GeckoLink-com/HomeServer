@@ -8,6 +8,10 @@
 */
 'use strict';
 
+import Vue from 'vue'
+import VueStrap from 'vue-strap'
+import ViewRemoconAircon from '../view/remoconAircon.html'
+
 class RemoconAircon {
 
   constructor(common) {
@@ -50,7 +54,7 @@ class RemoconAircon {
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('tab_remoconAircon').innerHTML = require('../view/remoconAircon.html');
+      document.getElementById('tab_remoconAircon').innerHTML = ViewRemoconAircon;
       this._vue = new Vue({
         el: '#tab_remoconAircon',
         data: {
@@ -178,6 +182,9 @@ class RemoconAircon {
             }
             return true;
           },
+        },
+        components: {
+          'alert' : VueStrap.alert,
         },
       });
       this._table = document.getElementById('airconTable');
@@ -329,13 +336,13 @@ class RemoconAircon {
         toastr.info('リモコンの表示が電源on状態なのを確認して、<br><strong>電源(off)</strong>ボタンを押して下さい。');
         this._vue.remoconTable[this._vue.mode].push(this._lastRemoconCode);
 
-        const l = this._vue.remoconTable[this._vue.mode].length;
-        if((l > 3) &&
-           (this._vue.remoconTable[this._vue.mode][l-1].info == this._vue.remoconTable[this._vue.mode][l-3].info)) {
-          this._vue.sequence = 40;
-          reentry = true;
-          break;
-        }
+          const l = this._vue.remoconTable[this._vue.mode].length;
+          if((l > 3) &&
+             (this._vue.remoconTable[this._vue.mode][l-1].info == this._vue.remoconTable[this._vue.mode][l-3].info)) {
+            this._vue.sequence = 40;
+            reentry = true;
+            break;
+          }
         this._vue.sequence--;
         break;
       case 40:
@@ -368,5 +375,5 @@ class RemoconAircon {
 
 }
 
-module.exports = RemoconAircon;
+export default RemoconAircon;
 
