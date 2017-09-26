@@ -31,6 +31,7 @@ process.on('uncaughtException', (err) => {
 let user = null;
 let group = null;
 let configFile = null;
+let local = false;
 for(let i = 2; i < process.argv.length; i++) {
   if(process.argv[i] == '-u') {
     if(i + 1 < process.argv.length) user = process.argv[i + 1];
@@ -44,6 +45,7 @@ for(let i = 2; i < process.argv.length; i++) {
     if(i + 1 < process.argv.length) configFile = process.argv[i + 1];
     i++;
   }
+  if(process.argv[i] == '-l') local = true;
 }
 if(configFile == null) configFile = __dirname + '/../config.json';
 const common = new Common(JSON.parse(fs.readFileSync(configFile, 'UTF-8')));
@@ -57,6 +59,8 @@ if(user) {
     common.home = '/home/' + user;
   }
 }
+if(local) common.config.setupWebServerPort = 4080;
+
 new SetupWebServer(common, () => {
   new ControllerConnection(common);
   new ServerConnection(common);
