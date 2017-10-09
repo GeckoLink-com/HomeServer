@@ -85,8 +85,8 @@ class SetupWebServer {
       this._SendMessage(this._eventToFrontend.controllerLog, msg);
     });
 
-    this._common.on('changeHueBridges', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.hueBridges, msg);
+    this._common.on('changeHueBridges', (caller) => {
+      this._SendMessage(this._eventToFrontend.hueBridges, this._common.hueBridges);
     });
 
     this._common.on('statusNotify', (caller) => {

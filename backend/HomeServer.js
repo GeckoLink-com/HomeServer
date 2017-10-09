@@ -72,7 +72,7 @@ new SetupWebServer(common, () => {
   common.emit('changeSystemConfig', common);
   common.emit('changeHueBridges', common);
   common.emit('changeUITable', common);
-  common.emit('changeControllerLog', common);
+  common.emit('changeControllerLog', common, common.controllerLog);
   common.emit('statusNotify', common);
   common.initialState = false;
 });
