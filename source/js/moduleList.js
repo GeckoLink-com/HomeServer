@@ -8,16 +8,14 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import ViewModuleList from '../view/moduleList.html'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import ViewModuleList from '../view/moduleList.html';
 
 class ModuleList {
-
   constructor(common) {
-
     this._common = common;
-    
+
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.On(this._common.events.changeDevices, (_caller) => {
       if(this._vue) this._vue.devices = this._common.devices;
@@ -36,19 +34,19 @@ class ModuleList {
         },
         computed: {
           actualDevices: function() {
-            return this.devices.filter(function (dev) {
-              return dev.device != 'pairing';
+            return this.devices.filter(function(dev) {
+              return dev.device !== 'pairing';
             });
           },
         },
         methods: {
           Delete: (device) => {
-            for(let i in this._vue.devices) {
-              if(this._vue.devices[i].device == device) {
+            for(const i in this._vue.devices) {
+              if(this._vue.devices[i].device === device) {
                 this._vue.devices.splice(i, 1);
                 this._common.Trigger(this._common.events.changeDevices, this);
                 socket.emit(this._common.eventToBackend.command,
-                  {type:'command', device:device, command:'rmdev'});
+                  { type: 'command', device: device, command: 'rmdev' });
                 break;
               }
             }
@@ -58,12 +56,12 @@ class ModuleList {
           },
           Update: (device) => {
             socket.emit(this._common.eventToBackend.command,
-                  {type:'command', device:device, command:'update'});
+              { type: 'command', device: device, command: 'update' });
             this._vue.selectedDevice = null;
           },
         },
         components: {
-          'progressbar' : VueStrap.progressbar,
+          'progressbar': VueStrap.progressbar,
         },
       });
     });

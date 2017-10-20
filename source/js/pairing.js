@@ -8,23 +8,21 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import ViewPairing from '../view/pairing.html'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import ViewPairing from '../view/pairing.html';
 
 class Pairing {
-
   constructor(common) {
-
     this._common = common;
-    
+
     socket.on(this._common.eventFromBackend.response, this._Response.bind(this));
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.On(this._common.events.changeDevices, (_caller) => {
       if(!this._vue) return;
-      for(let dev of this._common.devices) {
-        if(dev.device == 'pairing') {
-          if(dev.state != 'connect') {
+      for(const dev of this._common.devices) {
+        if(dev.device === 'pairing') {
+          if(dev.state !== 'connect') {
             this._vue.progress = 0;
             this._vue.moduleLabel = '';
           }
@@ -43,25 +41,25 @@ class Pairing {
         },
         computed: {
           progressing: function() {
-            return (this.progress != 0) && (this.progress != 100);
+            return (this.progress !== 0) && (this.progress !== 100);
           },
         },
         methods: {
           ExecutePairing: this._ExecutePairing.bind(this),
         },
         components: {
-          'progressbar' : VueStrap.progressbar,
+          'progressbar': VueStrap.progressbar,
         },
       });
     });
   }
-  
+
   _Response(msg) {
-    if((msg.data[0].command == this._configCommand) || (msg.data[0].command == 'moduleauth')) {
-      if(msg.data[0].status == 'error') {
+    if((msg.data[0].command === this._configCommand) || (msg.data[0].command === 'moduleauth')) {
+      if(msg.data[0].status === 'error') {
         toastr.error(msg.data[0].message);
         this._vue.progress = 0;
-      } else if(msg.data[0].status == 'ok') {
+      } else if(msg.data[0].status === 'ok') {
         toastr.success('ペアリング完了');
         this._vue.progress = 100;
         this._vue.moduleLabel = this._newDevice.name + ' : ' + this._newDevice.device;
@@ -78,22 +76,22 @@ class Pairing {
         if(message.search(/HA module XBee Info/) >= 0) {
           const str = message.match(/SerialNumber :.*/);
           if(str) {
-            const dev = str[0].replace(/^.*-/,'');
+            const dev = str[0].replace(/^.*-/, '');
             if(dev) {
               let c = 0;
               /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
               while(true) {
                 const name = 'new_device' + c;
                 let f = false;
-                for(let id in this._common.alias) {
-                  if(this._common.alias[id].name == name) {
+                for(const id in this._common.alias) {
+                  if(this._common.alias[id].name === name) {
                     f = true;
                     break;
                   }
                 }
                 if(!f) {
-                  this._common.alias[dev] = {name: name};
-                  this._newDevice = {name:name, device:dev};
+                  this._common.alias[dev] = { name: name };
+                  this._newDevice = { name: name, device: dev };
                   this._common.Trigger(this._common.events.changeAlias, this);
                   break;
                 }
@@ -117,8 +115,8 @@ class Pairing {
           }, 10000);
         }
         if(message.search(/Wait Coordinator/) >= 0) {
-          let n = parseInt(message.replace(/^.*bring up /, ''));
-          if(n == 0) {
+          const n = parseInt(message.replace(/^.*bring up /, ''));
+          if(n === 0) {
             toastr.info('無線接続開始');
           }
           this._vue.progress = 60 + n;
@@ -143,10 +141,10 @@ class Pairing {
     toastr.clear();
     toastr.info('モジュール接続開始');
     this._vue.progress = 10;
-    
+
     this._configCommand = 'config c0000000 F';
-    socket.emit(this._common.eventToBackend.command, 
-        {type:'command', device:'0', command:this._configCommand});
+    socket.emit(this._common.eventToBackend.command,
+      { type: 'command', device: '0', command: this._configCommand });
   }
 }
 

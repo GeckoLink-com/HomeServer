@@ -10,12 +10,12 @@
   </button-group>
 </template>
 <script>
-  import { radio, buttonGroup } from 'vue-strap'
+  import { radio, buttonGroup } from 'vue-strap';
 
   export default {
     props: ['value', 'buttons', 'disabled'],
     methods: {
-      BtnClick: function (val) {
+      BtnClick: function(val) {
         this.$emit('input', val);
       },
     },
@@ -23,6 +23,6 @@
       'radio': radio,
       'button-group': buttonGroup,
     },
-  }
+  };
 </script>
     

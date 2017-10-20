@@ -8,12 +8,11 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import ViewToastr from '../view/toastr.html'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import ViewToastr from '../view/toastr.html';
 
 class Toastr {
-
   constructor() {
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('toast-container').innerHTML = ViewToastr;
@@ -37,14 +36,16 @@ class Toastr {
             };
             this.messages.unshift(data);
             if(this.messages.length > 4) this.messages.pop();
-            if(timeout != 0) setTimeout((d) => {
-              for(let i in this.messages) {
-                if(this.messages[i] == d) {
-                  this.messages.splice(i, 1);
-                  break;
+            if(timeout !== 0) {
+              setTimeout((d) => {
+                for(const i in this.messages) {
+                  if(this.messages[i] === d) {
+                    this.messages.splice(i, 1);
+                    break;
+                  }
                 }
-              }
-            }, timeout, data);
+              }, timeout, data);
+            }
           },
           clear: function() {
             this.messages = [];
@@ -54,7 +55,7 @@ class Toastr {
           },
         },
         components: {
-          'alert' : VueStrap.alert,
+          'alert': VueStrap.alert,
         },
       });
     });

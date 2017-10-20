@@ -8,10 +8,10 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import SlideSwitch from './SlideSwitch.vue'
-import ViewAdvancedSetup from '../view/advancedSetup.html'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import SlideSwitch from './SlideSwitch.vue';
+import ViewAdvancedSetup from '../view/advancedSetup.html';
 /*
  option value : bit 31:0
    AVR  HB   ---- ---- : KPD  MTR  LED  RAIN : I2C  IRI  IRO  SW   : HA1  HA0  AD1  AD0
@@ -19,19 +19,17 @@ import ViewAdvancedSetup from '../view/advancedSetup.html'
 */
 
 class AdvancedSetup {
-
   constructor(common) {
-
     this._common = common;
 
     this._moduleOption = (1 << 31) | (1 << 30);
     this._moduleLabels = {};
 
     socket.on(this._common.eventFromBackend.response, (msg) => {
-      if(msg.data[0].command == this._configCommand) {
-        if(msg.data[0].status == 'error') {
+      if(msg.data[0].command === this._configCommand) {
+        if(msg.data[0].status === 'error') {
           toastr.error(msg.data[0].message);
-        } else if(msg.data[0].status == 'ok') {
+        } else if(msg.data[0].status === 'ok') {
           toastr.success('書き込み完了');
         }
       }
@@ -60,88 +58,88 @@ class AdvancedSetup {
           moduleName: '',
           moduleNameAlert: '',
           moduleType: '',
-          ledTapeEnable: this._common.systemConfig?this._common.systemConfig.led:false,
-          motorEnable: this._common.systemConfig?this._common.systemConfig.motor:false,
-          heartbeat: { sw:1 },
+          ledTapeEnable: this._common.systemConfig ? this._common.systemConfig.led : false,
+          motorEnable: this._common.systemConfig ? this._common.systemConfig.motor : false,
+          heartbeat: { sw: 1 },
           motor: { sw: 0 },
-          remoconTx: { sw:0 },
-          remoconRx: { sw:0 },
+          remoconTx: { sw: 0 },
+          remoconRx: { sw: 0 },
           ad: [
-            { sw:0, name: '', type: 'other', offset: 0, gain: 1, unit: ''},
-            { sw:0, name: '', type: 'other', offset: 0, gain: 1, unit: ''},
-            { sw:0, name: '', type: 'other', offset: 0, gain: 1, unit: ''},
-            { sw:0, name: '', type: 'other', offset: 0, gain: 1, unit: ''},
+            { sw: 0, name: '', type: 'other', offset: 0, gain: 1, unit: '' },
+            { sw: 0, name: '', type: 'other', offset: 0, gain: 1, unit: '' },
+            { sw: 0, name: '', type: 'other', offset: 0, gain: 1, unit: '' },
+            { sw: 0, name: '', type: 'other', offset: 0, gain: 1, unit: '' },
           ],
-          rainSensor: { sw:0 },
-          ledTape: { sw:0 },
+          rainSensor: { sw: 0 },
+          ledTape: { sw: 0 },
           gpio: [
-            { sw:0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0},
-            { sw:0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0},
-            { sw:0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other'},
-            { sw:0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other'},
+            { sw: 0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0 },
+            { sw: 0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0 },
+            { sw: 0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other' },
+            { sw: 0, name: '', pull: 0, valueLabel: { '0': 'off', '1': 'on' }, type: 'other' },
           ],
           ha: [
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
           ],
           hai: [
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
           ],
           hao: [
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
           ],
-          sw: { sw:0, name: '', optionValue: 0, },
+          sw: { sw: 0, name: '', optionValue: 0 },
           swio: [
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
-            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, },
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+            { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
           ],
           adFuncTable: [
-            { name:'温度センサー', type:'temp', unit:'°C', offset:-500, gain:0.1 },
-            { name:'湿度センサー', type:'humidity', unit:'%', offset:-500, gain:0.045 },
-            { name:'降雨センサー', type:'rain', unit:'', offset:0, gain:0.024 },
-            { name:'騒音センサー', type:'noise', unit:'', offset:0, gain:1 },
-            { name:'バッテリー', type:'battery', unit:'mV', offset:0, gain:17.5 },
-            { name:'その他', type:'other', unit:'', offset:0, gain:1 },
-         ],
-          gpioFuncTable: [
-            { name:'人感センサー', type:'motion', valueLabel:{'0':'off', '1':'on' } },
-            { name:'報知機センサー', type:'alarm', valueLabel:{'0':'off', '1':'on' } },
-            { name:'フラップセンサー', type:'flap', valueLabel:{'0':'off', '1':'on' } },
-            { name:'その他', type:'other', valueLabel:{'0':'off', '1':'on' } },
+            { name: '温度センサー', type: 'temp', unit: '°C', offset: -500, gain: 0.1 },
+            { name: '湿度センサー', type: 'humidity', unit: '%', offset: -500, gain: 0.045 },
+            { name: '降雨センサー', type: 'rain', unit: '', offset: 0, gain: 0.024 },
+            { name: '騒音センサー', type: 'noise', unit: '', offset: 0, gain: 1 },
+            { name: 'バッテリー', type: 'battery', unit: 'mV', offset: 0, gain: 17.5 },
+            { name: 'その他', type: 'other', unit: '', offset: 0, gain: 1 },
           ],
-          buttonsOnOff: [{label:'on', val:1}, {label:'off', val:0}],
-          buttonsInOutOff: [{label:'in', val:2}, {label:'out', val:1}, {label:'off', val:0}],
-          buttonsPlupNone: [{label:'plup', val:1}, {label:'none', val:0}],
+          gpioFuncTable: [
+            { name: '人感センサー', type: 'motion', valueLabel: { '0': 'off', '1': 'on' }},
+            { name: '報知機センサー', type: 'alarm', valueLabel: { '0': 'off', '1': 'on' }},
+            { name: 'フラップセンサー', type: 'flap', valueLabel: { '0': 'off', '1': 'on' }},
+            { name: 'その他', type: 'other', valueLabel: { '0': 'off', '1': 'on' }},
+          ],
+          buttonsOnOff: [{ label: 'on', val: 1 }, { label: 'off', val: 0 }],
+          buttonsInOutOff: [{ label: 'in', val: 2 }, { label: 'out', val: 1 }, { label: 'off', val: 0 }],
+          buttonsPlupNone: [{ label: 'plup', val: 1 }, { label: 'none', val: 0 }],
         },
         computed: {
           moduleList: function() {
             const moduleList = [];
-            for(let i in this.devices) {
+            for(const i in this.devices) {
               const dev = this.devices[i];
-              if(dev.device == 'pairing') continue;
+              if(dev.device === 'pairing') continue;
               let name = '';
               if(dev.device in this.alias) name = this.alias[dev.device].name;
               moduleList.push({
                 device: dev.device,
                 name: name,
-                label: dev.device + ((name.length > 0)?':':'') + name,
-                enable: dev.state == 'alive',
+                label: dev.device + ((name.length > 0) ? ':' : '') + name,
+                enable: dev.state === 'alive',
               });
             }
             return moduleList;
           },
           isAVR: function() {
-            return (this.moduleType == 'HA/FC') ||
-                   (this.moduleType == 'RP/IR');
+            return (this.moduleType === 'HA/FC') ||
+                   (this.moduleType === 'RP/IR');
           },
         },
         methods: {
           SelectModule: this._SelectModule.bind(this),
           ModuleNameCheck: function() {
-            if(this.moduleName.length == 0) {
+            if(this.moduleName.length === 0) {
               this.moduleNameAlert = 'モジュール名をいれて下さい。';
               return;
             }
@@ -149,9 +147,9 @@ class AdvancedSetup {
               this.moduleNameAlert = 'モジュール名が短かすぎます。4文字以上にして下さい。';
               return;
             }
-            for(let i in this.alias) {
-              if(i == this.selectedModule) continue;
-              if(this.alias[i].name == this.moduleName) {
+            for(const i in this.alias) {
+              if(i === this.selectedModule) continue;
+              if(this.alias[i].name === this.moduleName) {
                 this.moduleNameAlert = '同じモジュール名があります。他の名前にしてください。';
                 return;
               }
@@ -161,22 +159,21 @@ class AdvancedSetup {
           Submit: this._ValidateValue.bind(this),
         },
         components: {
-          'dropdown' : VueStrap.dropdown,
-          'slide-switch' : SlideSwitch,
+          'dropdown': VueStrap.dropdown,
+          'slide-switch': SlideSwitch,
         },
       });
     });
   }
-  
-  _SelectModule(e) {
 
+  _SelectModule(e) {
     toastr.clear();
     const device = e.target.dataset.device;
     const name = e.target.dataset.name;
     const enable = e.target.dataset.enable;
     if(!enable) return;
 
-    this._vue.selectedModuleLabel = device + ((name.length > 0)?':':'') + name;
+    this._vue.selectedModuleLabel = device + ((name.length > 0) ? ':' : '') + name;
     this._vue.selectedModule = device;
     this._vue.moduleName = name;
     this._vue.ModuleNameCheck();
@@ -202,13 +199,13 @@ class AdvancedSetup {
         if(this._common.alias[device] && this._common.alias[device]['gpio' + i]) {
           this._vue.gpio[i].name = this._common.alias[device]['gpio' + i].name;
           this._vue.gpio[i].type = this._common.alias[device]['gpio' + i].type;
-          if(this._vue.gpio[i].type == 'other') {
-            this._vue.gpio[i].valueLabel = this._common.alias[device]['gpio' + i].valueLabel || {'0':'off', '1':'on'};
+          if(this._vue.gpio[i].type === 'other') {
+            this._vue.gpio[i].valueLabel = this._common.alias[device]['gpio' + i].valueLabel || { '0': 'off', '1': 'on' };
           }
         } else {
           this._vue.gpio[i].name = '';
           this._vue.gpio[i].type = 'other';
-          this._vue.gpio[i].valueLabel = {'0':'off', '1':'on'};
+          this._vue.gpio[i].valueLabel = { '0': 'off', '1': 'on' };
         }
       }
       return;
@@ -220,7 +217,7 @@ class AdvancedSetup {
 
     // AD
     for(let i = 0; i < 2; i++) {
-      this._vue.ad[i].sw = (moduleOption >> (16 +i)) & 1;
+      this._vue.ad[i].sw = (moduleOption >> (16 + i)) & 1;
       if(this._common.alias[device] && this._common.alias[device]['ad' + i]) {
         this._vue.ad[i].name = this._common.alias[device]['ad' + i].name;
         this._vue.ad[i].type = this._common.alias[device]['ad' + i].type;
@@ -232,13 +229,13 @@ class AdvancedSetup {
     // RAIN
     this._vue.rainSensor.sw = (moduleOption >> 24) & 1;
     // LEDTape
-    this._vue.ledTape.sw = this._vue.ledTapeEnable?((moduleOption >> 25) & 1):0;
+    this._vue.ledTape.sw = this._vue.ledTapeEnable ? ((moduleOption >> 25) & 1) : 0;
     // Motor
-    this._vue.motor.sw = this._vue.motorEnable?((moduleOption >> 26) & 1):0;
+    this._vue.motor.sw = this._vue.motorEnable ? ((moduleOption >> 26) & 1) : 0;
     if(this._common.alias[device] && this._common.alias[device].motor) {
       this._vue.motor.optionValue = this._common.alias[device].motor.optionValue;
     } else {
-      this._vue.motor.optionValue = this._vue.motor.sw?param:1;
+      this._vue.motor.optionValue = this._vue.motor.sw ? param : 1;
     }
     // GPIO
     for(let i = 0; i < 2; i++) {
@@ -248,13 +245,13 @@ class AdvancedSetup {
         this._vue.gpio[i].name = this._common.alias[device]['gpio' + i].name;
         this._vue.gpio[i].type = this._common.alias[device]['gpio' + i].type;
         this._vue.gpio[i].delay = this._common.alias[device]['gpio' + i].delay || 0;
-        if(this._vue.gpio[i].type == 'other') {
-          this._vue.gpio[i].valueLabel = this._common.alias[device]['gpio' + i].valueLabel || {'0':'off', '1':'on'};
+        if(this._vue.gpio[i].type === 'other') {
+          this._vue.gpio[i].valueLabel = this._common.alias[device]['gpio' + i].valueLabel || { '0': 'off', '1': 'on' };
         }
       } else {
         this._vue.gpio[i].name = '';
         this._vue.gpio[i].type = 'other';
-        this._vue.gpio[i].valueLabel = {'0':'off', '1':'on'};
+        this._vue.gpio[i].valueLabel = { '0': 'off', '1': 'on' };
       }
     }
     for(let i = 0; i < 2; i++) {
@@ -262,31 +259,31 @@ class AdvancedSetup {
       this._vue.ha[i].sw = (moduleOption >> (18 + i)) & 1;
       if(this._common.alias[device] && this._common.alias[device]['ha' + i]) {
         this._vue.ha[i].name = this._common.alias[device]['ha' + i].name;
-        this._vue.ha[i].valueLabel = this._common.alias[device]['ha' + i].valueLabel || {'0':'off', '1':'on'};
+        this._vue.ha[i].valueLabel = this._common.alias[device]['ha' + i].valueLabel || { '0': 'off', '1': 'on' };
       } else {
         this._vue.ha[i].name = '';
-        this._vue.ha[i].valueLabel = {'0':'off', '1':'on'};
+        this._vue.ha[i].valueLabel = { '0': 'off', '1': 'on' };
       }
       // HAI
       this._vue.hai[i].sw = (moduleOption >> (10 + i)) & 1;
       if(this._common.alias[device] && this._common.alias[device]['hai' + i]) {
         this._vue.hai[i].name = this._common.alias[device]['hai' + i].name;
-        this._vue.hai[i].valueLabel = this._common.alias[device]['hai' + i].valueLabel || {'0':'off', '1':'on'};
+        this._vue.hai[i].valueLabel = this._common.alias[device]['hai' + i].valueLabel || { '0': 'off', '1': 'on' };
       } else {
         this._vue.hai[i].name = '';
-        this._vue.hai[i].valueLabel = {'0':'off', '1':'on'};
-      }    
+        this._vue.hai[i].valueLabel = { '0': 'off', '1': 'on' };
+      }
       // HAO
       this._vue.hao[i].sw = (moduleOption >> (2 + i)) & 1;
       if(this._common.alias[device] && this._common.alias[device]['hao' + i]) {
         this._vue.hao[i].name = this._common.alias[device]['hao' + i].name;
-        this._vue.hao[i].valueLabel = this._common.alias[device]['hao' + i].valueLabel || {'0':'off', '1':'on'};
+        this._vue.hao[i].valueLabel = this._common.alias[device]['hao' + i].valueLabel || { '0': 'off', '1': 'on' };
       } else {
         this._vue.hao[i].name = '';
-        this._vue.hao[i].valueLabel = {'0':'off', '1':'on'};
-      }    
+        this._vue.hao[i].valueLabel = { '0': 'off', '1': 'on' };
+      }
     }
-    
+
     // SW
     this._vue.sw.sw = (moduleOption >> 20) & 1;
     if(this._common.alias[device] && this._common.alias[device].sw) {
@@ -294,23 +291,22 @@ class AdvancedSetup {
       this._vue.sw.optionValue = this._common.alias[device].sw.optionValue;
     } else {
       this._vue.sw.name = '';
-      this._vue.sw.optionValue = this._vue.sw.sw?param:0;
+      this._vue.sw.optionValue = this._vue.sw.sw ? param : 0;
     }
     // SWIO
     for(let i = 0; i < 3; i++) {
       this._vue.swio[i].sw = ((moduleOption >> (12 + i)) | (moduleOption >> (4 + i))) & 1;
       if(this._common.alias[device] && this._common.alias[device]['swio' + i]) {
         this._vue.swio[i].name = this._common.alias[device]['swio' + i].name;
-        this._vue.swio[i].valueLabel = this._common.alias[device]['swio' + i].valueLabel || {'0':'off', '1':'on'};
+        this._vue.swio[i].valueLabel = this._common.alias[device]['swio' + i].valueLabel || { '0': 'off', '1': 'on' };
       } else {
         this._vue.swio[i].name = '';
-        this._vue.swio[i].valueLabel = {'0':'off', '1':'on'};
+        this._vue.swio[i].valueLabel = { '0': 'off', '1': 'on' };
       }
     }
   }
 
   _ValidateValue() {
-
     if(this._vue.moduleNameAlert.length) return;
     if(!this._vue.isAVR) {
       let newOption = 0;
@@ -321,24 +317,24 @@ class AdvancedSetup {
       }
       const moduleAlias = {
         name: this._vue.moduleName,
-        option: newOption.toString(16)
+        option: newOption.toString(16),
       };
 
       for(let i = 2; i < 4; i++) {
         if(this._vue.ad[i].sw) {
           moduleAlias['ad' + i] = {
             name: this._vue.ad[i].name,
-            type: this._vue.ad[i].type
+            type: this._vue.ad[i].type,
           };
-          if(this._vue.ad[i].type == 'other') {
+          if(this._vue.ad[i].type === 'other') {
             moduleAlias['ad' + i].offset = this._vue.ad[i].offset;
             moduleAlias['ad' + i].gain = this._vue.ad[i].gain;
             moduleAlias['ad' + i].unit = this._vue.ad[i].unit;
           } else {
-            for(let j in this._vue.adFuncTable) {
+            for(const j in this._vue.adFuncTable) {
               const item = this._vue.adFuncTable[j];
-              if((item.type == this._vue.ad[i].type) ||
-                 (item.type == 'other')) {
+              if((item.type === this._vue.ad[i].type) ||
+                 (item.type === 'other')) {
                 moduleAlias['ad' + i].offset = item.offset;
                 moduleAlias['ad' + i].gain = item.gain;
                 moduleAlias['ad' + i].unit = item.unit;
@@ -354,15 +350,16 @@ class AdvancedSetup {
               type: this._vue.gpio[i].type,
             };
           }
-          if(this._vue.gpio[i].sw == 1)
-            moduleAlias['gpio' + i].type == 'out'
-          if(this._vue.gpio[i].type == 'other') {
+          if(parseInt(this._vue.gpio[i].sw) === 1) {
+            moduleAlias['gpio' + i].type = 'out';
+          }
+          if(this._vue.gpio[i].type === 'other') {
             moduleAlias['gpio' + i].valueLabel = this._vue.gpio[i].valueLabel;
           } else {
-            for(let j in this._vue.gpioFuncTable) {
+            for(const j in this._vue.gpioFuncTable) {
               const item = this._vue.gpioFuncTable[j];
-              if((item.type == this._vue.gpio[i].type) ||
-                 (item.type == 'other')) {
+              if((item.type === this._vue.gpio[i].type) ||
+                 (item.type === 'other')) {
                 moduleAlias['gpio' + i].valueLabel = item.valueLabel;
                 break;
               }
@@ -370,15 +367,15 @@ class AdvancedSetup {
           }
         }
       }
-      
+
       Vue.set(this._vue.alias, this._vue.selectedModule, moduleAlias);
       this._common.Trigger(this._common.events.changeAlias, this);
       this._configCommand = 'config ' + newOption.toString(16) + ' W';
       socket.emit(this._common.eventToBackend.command,
-          {type:'command', device:this._vue.selectedModule, command:this._configCommand});
+        { type: 'command', device: this._vue.selectedModule, command: this._configCommand });
       return;
     }
-    
+
     let newOption = (1 << 31);
     newOption |= this._vue.heartbeat.sw << 30;
     newOption |= this._vue.motor.sw << 26;
@@ -415,8 +412,8 @@ class AdvancedSetup {
         this._vue.hao[i].sw = 0;
       }
       newOption |= this._vue.ad[i].sw << (16 + i);
-      newOption |= (this._vue.gpio[i].sw == 1)?(1 << (0 + i)): 0;
-      newOption |= (this._vue.gpio[i].sw == 2)?(1 << (8 + i)): 0;
+      newOption |= (parseInt(this._vue.gpio[i].sw) === 1) ? (1 << (0 + i)) : 0;
+      newOption |= (parseInt(this._vue.gpio[i].sw) === 2) ? (1 << (8 + i)) : 0;
       newOption |= this._vue.ha[i].sw << (18 + i);
       newOption |= this._vue.hai[i].sw << (10 + i);
       newOption |= this._vue.hao[i].sw << (2 + i);
@@ -430,29 +427,31 @@ class AdvancedSetup {
 
     const moduleAlias = {
       name: this._vue.moduleName,
-      option: newOption.toString(16)
+      option: newOption.toString(16),
     };
     let param = '';
     if(this._vue.motor.sw) {
       moduleAlias['motor'] = {
         name: '',
         optionValue: this._vue.motor.optionValue,
-      }
-      if(!this._vue.motor.optionValue || (this._vue.motor.optionValue==''))
+      };
+      if(!this._vue.motor.optionValue || (this._vue.motor.optionValue === '')) {
         this._vue.motor.optionValue = 1;
+      }
       param = this._vue.motor.optionValue;
     } else if(this._vue.sw.sw) {
       moduleAlias['sw'] = {
         name: this._vue.sw.name,
         optionValue: this._vue.sw.optionValue,
         valueLabel: { '0': 'open', '1': 'stop', '2': 'close' },
-      }
-      if(!this._vue.sw.optionValue || (this._vue.sw.optionValue==''))
+      };
+      if(!this._vue.sw.optionValue || (this._vue.sw.optionValue === '')) {
         this._vue.sw.optionValue = 0;
+      }
       param = this._vue.sw.optionValue;
     } else {
       for(let i = 0; i < 2; i++) {
-        if((this._vue.gpio[i].sw == 2) && (this._vue.gpio[i].type == 'motion')) {
+        if((parseInt(this._vue.gpio[i].sw) === 2) && (this._vue.gpio[i].type === 'motion')) {
           param = this._vue.gpio[i].delay;
         }
       }
@@ -463,24 +462,24 @@ class AdvancedSetup {
         moduleAlias['swio' + i] = {
           name: this._vue.swio[i].name,
           valueLabel: this._vue.swio[i].valueLabel,
-        }
+        };
       }
-      if(i == 2) continue;
+      if(i === 2) continue;
 
       if(this._vue.ad[i].sw) {
         moduleAlias['ad' + i] = {
           name: this._vue.ad[i].name,
-          type: this._vue.ad[i].type
+          type: this._vue.ad[i].type,
         };
-        if(this._vue.ad[i].type == 'other') {
+        if(this._vue.ad[i].type === 'other') {
           moduleAlias['ad' + i].offset = this._vue.ad[i].offset;
           moduleAlias['ad' + i].gain = this._vue.ad[i].gain;
           moduleAlias['ad' + i].unit = this._vue.ad[i].unit;
         } else {
-          for(let j in this._vue.adFuncTable) {
-          const item = this._vue.adFuncTable[j];
-            if((item.type == this._vue.ad[i].type) ||
-               (item.type == 'other')) {
+          for(const j in this._vue.adFuncTable) {
+            const item = this._vue.adFuncTable[j];
+            if((item.type === this._vue.ad[i].type) ||
+               (item.type === 'other')) {
               moduleAlias['ad' + i].offset = item.offset;
               moduleAlias['ad' + i].gain = item.gain;
               moduleAlias['ad' + i].unit = item.unit;
@@ -490,7 +489,7 @@ class AdvancedSetup {
         }
       }
       if(this._vue.gpio[i].sw) {
-        if(this._vue.gpio[i].sw==1) {
+        if(parseInt(this._vue.gpio[i].sw) === 1) {
           moduleAlias['gpio' + i] = {
             name: this._vue.gpio[i].name,
             type: 'out',
@@ -499,16 +498,16 @@ class AdvancedSetup {
           moduleAlias['gpio' + i] = {
             name: this._vue.gpio[i].name,
             type: this._vue.gpio[i].type,
-            delay: (this._vue.gpio[i].type == 'motion')?this._vue.gpio[i].delay:0,
+            delay: (this._vue.gpio[i].type === 'motion') ? this._vue.gpio[i].delay : 0,
           };
         }
-        if((this._vue.gpio[i].type == 'other')||(this._vue.gpio[i].sw==1)) {
+        if((this._vue.gpio[i].type === 'other') || (parseInt(this._vue.gpio[i].sw) === 1)) {
           moduleAlias['gpio' + i].valueLabel = this._vue.gpio[i].valueLabel;
         } else {
-          for(let j in this._vue.gpioFuncTable) {
+          for(const j in this._vue.gpioFuncTable) {
             const item = this._vue.gpioFuncTable[j];
-            if((item.type == this._vue.gpio[i].type) ||
-               (item.type == 'other')) {
+            if((item.type === this._vue.gpio[i].type) ||
+               (item.type === 'other')) {
               moduleAlias['gpio' + i].valueLabel = item.valueLabel;
               break;
             }
@@ -519,28 +518,28 @@ class AdvancedSetup {
         moduleAlias['ha' + i] = {
           name: this._vue.ha[i].name,
           valueLabel: this._vue.ha[i].valueLabel,
-        }
+        };
       }
       if(this._vue.hai[i].sw) {
         moduleAlias['hai' + i] = {
           name: this._vue.hai[i].name,
           valueLabel: this._vue.hai[i].valueLabel,
-        }
+        };
       }
       if(this._vue.hao[i].sw) {
         moduleAlias['hao' + i] = {
           name: this._vue.hao[i].name,
           valueLabel: this._vue.hao[i].valueLabel,
-        }
+        };
       }
     }
-    
+
     Vue.set(this._vue.alias, this._vue.selectedModule, moduleAlias);
     this._common.Trigger(this._common.events.changeAlias, this);
     this._configCommand = ('config ' + newOption.toString(16) + ' F ' + param).trim();
     console.log(this._configCommand);
     socket.emit(this._common.eventToBackend.command,
-        {type:'command', device:this._vue.selectedModule, command:this._configCommand});
+      { type: 'command', device: this._vue.selectedModule, command: this._configCommand });
   }
 }
 

@@ -8,56 +8,54 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import Common from './common.js'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import Common from './common.js';
 
-import SystemSetup from './systemSetup.js'
-import Pairing from './pairing.js'
-import BasicSetup from './basicSetup.js'
-import AdvancedSetup from './advancedSetup.js'
-import ModuleList from './moduleList.js'
-import LinkDevices from './linkDevices.js'
-import Remocon from './remocon.js'
-import RemoconMacro from './remoconMacro.js'
-import RemoconAircon from './remoconAircon.js'
-import RemoconTV from './remoconTV.js'
-import UISetting from './uiSetting.js'
-import DebugPanel from './debugPanel.js'
-import ViewHomeServer from '../view/homeServer.html'
+import SystemSetup from './systemSetup.js';
+import Pairing from './pairing.js';
+import BasicSetup from './basicSetup.js';
+import AdvancedSetup from './advancedSetup.js';
+import ModuleList from './moduleList.js';
+import LinkDevices from './linkDevices.js';
+import Remocon from './remocon.js';
+import RemoconMacro from './remoconMacro.js';
+import RemoconAircon from './remoconAircon.js';
+import RemoconTV from './remoconTV.js';
+import UISetting from './uiSetting.js';
+import DebugPanel from './debugPanel.js';
+import ViewHomeServer from '../view/homeServer.html';
 
 // css
-import '../css/bootstrap.css'
-import '../css/localStyle.css'
+import '../css/bootstrap.css';
+import '../css/localStyle.css';
 
 // for webpack
-import '../index.html'
-import '../red/theme/css/nodeRed.css'
+import '../index.html';
+import '../red/theme/css/nodeRed.css';
 
 class HomeServer {
-
   constructor() {
-
     this._common = new Common();
     this._childrenTable = [
-      {name:'systemSetup',   func:SystemSetup },
-      {name:'pairing',       func:Pairing },
-      {name:'basicSetup',    func:BasicSetup },
-      {name:'advancedSetup', func:AdvancedSetup },
-      {name:'moduleList',    func:ModuleList },
-      {name:'linkDevices',   func:LinkDevices },
-      {name:'remocon',       func:Remocon },
-      {name:'remoconMacro',  func:RemoconMacro },
-      {name:'remoconAircon', func:RemoconAircon },
-      {name:'remoconTV',     func:RemoconTV },
-      {name:'uiSetting',     func:UISetting },
-      {name:'nodeRed',       func:null },
-      {name:'debugPanel',    func:DebugPanel },
+      { name: 'systemSetup', Func: SystemSetup },
+      { name: 'pairing', Func: Pairing },
+      { name: 'basicSetup', Func: BasicSetup },
+      { name: 'advancedSetup', Func: AdvancedSetup },
+      { name: 'moduleList', Func: ModuleList },
+      { name: 'linkDevices', Func: LinkDevices },
+      { name: 'remocon', Func: Remocon },
+      { name: 'remoconMacro', Func: RemoconMacro },
+      { name: 'remoconAircon', Func: RemoconAircon },
+      { name: 'remoconTV', Func: RemoconTV },
+      { name: 'uiSetting', Func: UISetting },
+      { name: 'nodeRed', Func: null },
+      { name: 'debugPanel', Func: DebugPanel },
     ];
 
-    for(let i in this._childrenTable) {
+    for(const i in this._childrenTable) {
       const child = this._childrenTable[i];
-      if(child.func) child.entity = new child.func(this._common, i);
+      if(child.Func) child.entity = new child.Func(this._common, i);
     }
     this._vue = null;
     this._nodeRed = null;
@@ -68,16 +66,16 @@ class HomeServer {
       this._common.Trigger(this._common.events.changeDevices, this);
       if(this._vue) {
         let f = false;
-        for(let dev of this._common.devices) {
-          if(dev.device == 'pairing') {
-            if(dev.state == 'connect') {
+        for(const dev of this._common.devices) {
+          if(dev.device === 'pairing') {
+            if(dev.state === 'connect') {
               this._vue.module = true;
               f = true;
             } else {
               this._vue.module = false;
             }
           } else {
-            if(dev.state == 'alive') f = true;
+            if(dev.state === 'alive') f = true;
           }
         }
         this._vue.moduleMenu = f;
@@ -108,21 +106,21 @@ class HomeServer {
       this._common.systemConfig = data;
       this._common.Trigger(this._common.events.changeSystemConfig, this);
       if(!this._vue) return;
-      this._vue.passwordValid = (data.password != '3b8d0b97514d2519c71664785a04e050d8090e7a616ec3c1374982d173e950ab');
+      this._vue.passwordValid = (data.password !== '3b8d0b97514d2519c71664785a04e050d8090e7a616ec3c1374982d173e950ab');
       if(!this._vue.passwordValid) toastr.error('最初にアカウントとパスワードを設定してください。', 0);
     });
 
     // common event handler from frontend other view
     this._common.On(this._common.events.changeAlias, (caller) => {
-      if(caller != this) socket.emit(this._common.eventToBackend.alias, this._common.alias);
+      if(caller !== this) socket.emit(this._common.eventToBackend.alias, this._common.alias);
     }, this);
 
     this._common.On(this._common.events.changeRemocon, (caller) => {
-      if(caller != this) socket.emit(this._common.eventToBackend.remocon, this._common.remocon);
+      if(caller !== this) socket.emit(this._common.eventToBackend.remocon, this._common.remocon);
     }, this);
 
     this._common.On(this._common.events.changeUITable, (caller) => {
-      if(caller != this) socket.emit(this._common.eventToBackend.uiTable, this._common.uiTable);
+      if(caller !== this) socket.emit(this._common.eventToBackend.uiTable, this._common.uiTable);
     }, this);
 
     // view
@@ -144,7 +142,7 @@ class HomeServer {
           navbar: VueStrap.navbar,
           tabs: VueStrap.tabs,
           tabGroup: VueStrap.tabGroup,
-          tab: VueStrap.tab
+          tab: VueStrap.tab,
         },
       });
 
@@ -155,9 +153,9 @@ class HomeServer {
         if(e.altKey) this._vue.debug = true;
       });
       window.addEventListener('keyup', (e) => {
-        if((this._selectedTab != 'debugPanel') &&
-           (!e.altKey))
+        if((this._selectedTab !== 'debugPanel') && (!e.altKey)) {
           this._vue.debug = false;
+        }
       });
       window.addEventListener('resize', () => {
         this._vue.debug = false;
@@ -166,9 +164,8 @@ class HomeServer {
   }
 
   _DisplayTab(tab) {
-
-    for(let i in this._childrenTable) {
-      if(tab == i) {
+    for(const i in this._childrenTable) {
+      if(parseInt(tab) === parseInt(i)) {
         document.getElementById('tab_' + this._childrenTable[i].name).style.display = 'block';
       } else {
         document.getElementById('tab_' + this._childrenTable[i].name).style.display = 'none';
@@ -176,22 +173,22 @@ class HomeServer {
     }
     this._selectedTab = this._childrenTable[tab].name;
     toastr.clear();
-    if(this._selectedTab != 'debugPanel') this._vue.debug = false;
-    switch(this._selectedTab) {
-    case 'remocon':
-    case 'remoconMacro':
-    case 'remoconAircon':
-    case 'remoconTV':
-      toastr.timeout(0);
-      break;
-    case 'nodeRed':
-      if(this._nodeRed.innerHTML == '') {
-        this._nodeRed.innerHTML = '<iframe src="/red/" id="node-red" scrolling="no" frameborder="no"></iframe>';
-      }
-      toastr.timeout(8000);
-      // fallthrough
-    default:
-      toastr.timeout(8000);
+    if(this._selectedTab !== 'debugPanel') this._vue.debug = false;
+    switch (this._selectedTab) {
+      case 'remocon':
+      case 'remoconMacro':
+      case 'remoconAircon':
+      case 'remoconTV':
+        toastr.timeout(0);
+        break;
+      case 'nodeRed':
+        if(this._nodeRed.innerHTML === '') {
+          this._nodeRed.innerHTML = '<iframe src="/red/" id="node-red" scrolling="no" frameborder="no"></iframe>';
+        }
+        toastr.timeout(8000);
+        // fallthrough
+      default:
+        toastr.timeout(8000);
     }
     this._common.Trigger(this._common.events.changeTab, this);
   }

@@ -8,16 +8,14 @@
 */
 'use strict';
 
-import Vue from 'vue'
-import VueStrap from 'vue-strap'
-import jsSHA from 'jssha'
-import SlideSwitch from './SlideSwitch.vue'
-import ViewSystemSetup from '../view/systemSetup.html'
+import Vue from 'vue';
+import VueStrap from 'vue-strap';
+import JsSHA from 'jssha';
+import SlideSwitch from './SlideSwitch.vue';
+import ViewSystemSetup from '../view/systemSetup.html';
 
 class SystemSetup {
-
   constructor(common) {
-
     this._common = common;
     this._reader = new FileReader();
 
@@ -25,7 +23,7 @@ class SystemSetup {
     this._common.On(this._common.events.changeSystemConfig, (_caller) => {
       this._serverKeys = this._common.systemConfig.serverKeys;
       this._sshKeys = this._common.systemConfig.sshKeys;
-      this._vue.passwordValid = this._common.systemConfig.password && this._common.systemConfig.initialPassword && (this._common.systemConfig.password != this._common.systemConfig.initialPassword);
+      this._vue.passwordValid = this._common.systemConfig.password && this._common.systemConfig.initialPassword && (this._common.systemConfig.password !== this._common.systemConfig.initialPassword);
       this._vue.smartMeter = this._common.systemConfig.smartMeter;
       this._SetSystemConfig();
     });
@@ -55,10 +53,10 @@ class SystemSetup {
         computed: {
           accountOK: function() {
             if(this.account.length >= 4) {
-              if(this.account == 'admin') {
+              if(this.account === 'admin') {
                 if(!this.passwordValid &&
-                  (this.password1 == 'dummypasswd') &&
-                  (this.password2 == 'dummypasswd')) {
+                  (this.password1 === 'dummypasswd') &&
+                  (this.password2 === 'dummypasswd')) {
                   return {
                     success: false,
                     error: true,
@@ -80,14 +78,14 @@ class SystemSetup {
             };
           },
           passwordOK: function() {
-            if((this.password1 == this.password2) && (this.password1.length >= 8)) {
-              if(this.password1 == 'dummypasswd') {
+            if((this.password1 === this.password2) && (this.password1.length >= 8)) {
+              if(this.password1 === 'dummypasswd') {
                 if(!this.passwordValid &&
-                  (this.account == 'admin')) {
+                  (this.account === 'admin')) {
                   return {
                     success: false,
                     error: true,
-                  }
+                  };
                 }
                 return {
                   success: false,
@@ -103,14 +101,14 @@ class SystemSetup {
               success: false,
               error: true,
             };
-          }
+          },
         },
         methods: {
           AuthSave: () => {
             const dt = new Date();
             this._authSave.href = this._authSave.origin +
-              '/auth/gecko_' + 
-              dt.getFullYear()+
+              '/auth/gecko_' +
+              dt.getFullYear() +
               ('0' + (dt.getMonth() + 1)).slice(-2) +
               ('0' + dt.getDate()).slice(-2) +
               '.sconf';
@@ -122,7 +120,7 @@ class SystemSetup {
           },
           AuthLoadFile: () => {
             this._reader.onloadend = (e) => {
-              if(e.target.readyState == FileReader.DONE) {
+              if(e.target.readyState === FileReader.DONE) {
                 socket.emit(this._common.eventToBackend.setAuth, this._reader.result);
                 this._Reload();
               } else {
@@ -134,8 +132,8 @@ class SystemSetup {
           ConfigSave: () => {
             const dt = new Date();
             this._configSave.href = this._configSave.origin +
-              '/config/gecko_' + 
-              dt.getFullYear()+
+              '/config/gecko_' +
+              dt.getFullYear() +
               ('0' + (dt.getMonth() + 1)).slice(-2) +
               ('0' + dt.getDate()).slice(-2) +
               '.gconf';
@@ -147,7 +145,7 @@ class SystemSetup {
           },
           ConfigLoadFile: () => {
             this._reader.onloadend = (e) => {
-              if(e.target.readyState == FileReader.DONE) {
+              if(e.target.readyState === FileReader.DONE) {
                 socket.emit(this._common.eventToBackend.setConfig, this._reader.result);
                 this._Reload();
               } else {
@@ -166,7 +164,7 @@ class SystemSetup {
           },
           UploadRemoteKeyFile: () => {
             this._reader.onloadend = (e) => {
-              if(e.target.readyState == FileReader.DONE) {
+              if(e.target.readyState === FileReader.DONE) {
                 this._serverKeys = this._reader.result;
               } else {
                 toastr.error('ファイルが読み込めません。');
@@ -179,7 +177,7 @@ class SystemSetup {
           },
           UploadSSHKeyFile: () => {
             this._reader.onloadend = (e) => {
-              if(e.target.readyState == FileReader.DONE) {
+              if(e.target.readyState === FileReader.DONE) {
                 this._sshKeys = this._reader.result;
               } else {
                 toastr.error('ファイルが読み込めません。');
@@ -190,8 +188,8 @@ class SystemSetup {
           Submit: this._ValidateValue.bind(this),
         },
         components: {
-          'slide-switch' : SlideSwitch,
-          'modal' : VueStrap.modal,
+          'slide-switch': SlideSwitch,
+          'modal': VueStrap.modal,
         },
       });
       this._authLoad = document.getElementById('auth-load');
@@ -219,16 +217,15 @@ class SystemSetup {
   }
 
   _Reload() {
-    setTimeout(() => {location.reload();}, 3000);
+    setTimeout(() => { location.reload(); }, 3000);
   }
 
   _ValidateValue() {
-
     if(this._vue.account.length < 4) {
       toastr.error('アカウント名が短すぎます。');
       return;
     }
-    if(this._vue.password1 != this._vue.password2) {
+    if(this._vue.password1 !== this._vue.password2) {
       toastr.error('パスワードが合っていません。');
       return;
     }
@@ -239,10 +236,10 @@ class SystemSetup {
 
     toastr.clear();
     this._common.systemConfig.account = this._vue.account;
-    if(this._vue.password1 != 'dummypasswd') {
-      let sha256 = new jsSHA('SHA-256', 'TEXT');
+    if(this._vue.password1 !== 'dummypasswd') {
+      const sha256 = new JsSHA('SHA-256', 'TEXT');
       sha256.update(this._vue.account + this._vue.password1);
-      const digest = sha256.getHash("HEX");
+      const digest = sha256.getHash('HEX');
       this._common.systemConfig.password = digest;
     }
     this._common.systemConfig.remote = this._vue.remote;
@@ -257,7 +254,6 @@ class SystemSetup {
     socket.emit(this._common.eventToBackend.systemConfig, this._common.systemConfig);
     toastr.success('設定しました。');
   }
-
 }
 
 export default SystemSetup;

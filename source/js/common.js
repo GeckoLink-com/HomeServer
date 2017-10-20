@@ -8,12 +8,10 @@
 */
 'use strict';
 
-import SocketClient from 'socket.io-client'
-import Vue from 'vue'
-import Toastr from './toastr'
+import SocketClient from 'socket.io-client';
+import Toastr from './toastr';
 
 class Common {
-
   constructor() {
     global.socket = SocketClient();
     global.toastr = new Toastr();
@@ -29,7 +27,7 @@ class Common {
       setAuth: 'setAuth',
       systemConfig: 'systemConfig',
     };
-    
+
     this.eventFromBackend = {
       deviceInfo: 'deviceInfo',
       status: 'status',
@@ -43,7 +41,7 @@ class Common {
       controllerLog: 'controllerLog',
       hueBridges: 'hueBridges',
     };
-    
+
     this.events = {
       changeDevices: 'changeDevices',
       changeAlias: 'changeAlias',
@@ -53,14 +51,14 @@ class Common {
       changeSystemConfig: 'changeSystemConfig',
       changeTab: 'changeTab',
     };
-    
+
     this.devices = [];
     this.hueBridges = [];
     this.deviceTable = {};
     this.alias = {};
     this.aliasTable = {};
     this.systemConfig = null;
-    this.remocon = {remoconTable:{}, remoconGroup:{}, remoconMacro:{}};
+    this.remocon = { remoconTable: {}, remoconGroup: {}, remoconMacro: {}};
     /*
       this.remocon = {
         remoconTable: {
@@ -133,9 +131,7 @@ class Common {
       }
     */
     this.uiTable = {};
-    
     this._handlers = {};
-    
     this._Ahead(this.events.changeDevices, this._ChangeDevices.bind(this));
     this._Ahead(this.events.changeAlias, this._ChangeAlias.bind(this));
     this._Ahead(this.events.changeRemocon, this._ChangeRemocon.bind(this));
@@ -144,17 +140,17 @@ class Common {
   }
 
   _Ahead(event, handler) {
-    (this._handlers[event] || (this._handlers[event] = {ahead:null, on:[]})).ahead = handler;    
+    (this._handlers[event] || (this._handlers[event] = { ahead: null, on: [] })).ahead = handler;
   }
 
   On(event, handler, caller) {
     if(!event) console.log('Error event == null', caller);
-    if(!this._handlers[event]) this._handlers[event] = {ahead:null, on:[]};
+    if(!this._handlers[event]) this._handlers[event] = { ahead: null, on: [] };
     let flag = true;
-    for(let i in this._handlers[event].on) {
-      if(this._handlers[event].on[i].handler == handler) flag = false;
+    for(const i in this._handlers[event].on) {
+      if(this._handlers[event].on[i].handler === handler) flag = false;
     }
-    if(flag) this._handlers[event].on.push({handler:handler, caller:caller});
+    if(flag) this._handlers[event].on.push({ handler: handler, caller: caller });
   }
 
   Trigger(event, caller) {
@@ -162,14 +158,14 @@ class Common {
     if(event in this._handlers) {
       if(this._handlers[event].ahead) this._handlers[event].ahead();
       this._handlers[event].on.forEach(function(h) {
-        if(h.caller != caller) h.handler(caller);
+        if(h.caller !== caller) h.handler(caller);
       }, this);
     }
   }
 
   _ChangeDevices() {
-    for(let i in this.devices) {
-      if(this.devices[i].device == 'pairing') continue;
+    for(const i in this.devices) {
+      if(this.devices[i].device === 'pairing') continue;
       this.deviceTable[this.devices[i].device] = this.devices[i];
     }
   }
@@ -178,8 +174,8 @@ class Common {
     if(!this.hueBridges) return;
     this.hueLights = [];
     for(let i = 0; i < this.hueBridges.length; i++) {
-      let bridge = this.hueBridges[i];
-      for(let idx in bridge.lights) {
+      const bridge = this.hueBridges[i];
+      for(const idx in bridge.lights) {
         this.hueLights.push({
           device: 'Hue_' + bridge.id + '_' + idx,
           bridge: bridge.id,
@@ -192,22 +188,22 @@ class Common {
 
   _ChangeAlias() {
     this.aliasTable = {};
-    for(let i in this.alias) {
-      this.aliasTable[this.alias[i].name] = {device: i, func: 'name', property: this.alias[i]};
-      for(let j in this.alias[i]) {
-        this.aliasTable[this.alias[i][j].name] = {device: i, deviceName: this.alias[i].name, func: j, property: this.alias[i][j]};
+    for(const i in this.alias) {
+      this.aliasTable[this.alias[i].name] = { device: i, func: 'name', property: this.alias[i] };
+      for(const j in this.alias[i]) {
+        this.aliasTable[this.alias[i][j].name] = { device: i, deviceName: this.alias[i].name, func: j, property: this.alias[i][j] };
       }
     }
   }
-  
+
   RemoconSearch(code) {
     let offset = 0;
     let length = 0;
-    if(!code || (code[0] != 0) || (code[1] != code.length) || !code[2]) return {};
-    if(code[2] < 4) {
+    if(!code || (parseInt(code[0]) !== 0) || (parseInt(code[1]) !== code.length) || !parseInt(code[2])) return {};
+    if(parseInt(code[2]) < 4) {
       offset = 4;
       length = code[1] - 4;
-    } else if(code[2] == 0xff) {
+    } else if(parseInt(code[2]) === 0xff) {
       offset = 5;
       length = code[3];
     } else {
@@ -215,12 +211,12 @@ class Common {
     }
 
     const data = {};
-    for(let name in this.remocon.remoconTable) {
+    for(const name in this.remocon.remoconTable) {
       const tcode = this.remocon.remoconTable[name].code;
       if(!tcode) break;
       let f = true;
       for(let i = offset; i < offset + length; i++) {
-        if(code[i] != tcode[i]) {
+        if(code[i] !== tcode[i]) {
           f = false;
           break;
         }
@@ -243,11 +239,11 @@ class Common {
     if(!this.remocon.remoconTable) this.remocon.remoconTable = {};
     if(!this.remocon.remoconGroup) this.remocon.remoconGroup = {};
   }
-  
+
   _ChangeUITable() {
     if(!this.uiTable.RoomList) this.uiTable.RoomList = [];
     if(!this.uiTable.ItemList) this.uiTable.ItemList = [];
-    if(this.uiTable.RoomList.length == 0) this.uiTable.RoomList.push('ホーム');
+    if(this.uiTable.RoomList.length === 0) this.uiTable.RoomList.push('ホーム');
   }
 }
 
