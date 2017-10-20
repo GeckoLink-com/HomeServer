@@ -38,6 +38,7 @@ class Pairing {
         data: {
           progress: 0,
           moduleLabel: '',
+          error: '',
         },
         computed: {
           progressing: function() {
@@ -58,6 +59,7 @@ class Pairing {
     if((msg.data[0].command === this._configCommand) || (msg.data[0].command === 'moduleauth')) {
       if(msg.data[0].status === 'error') {
         toastr.error(msg.data[0].message);
+        this._vue.error = msg.data[0].message;
         this._vue.progress = 0;
       } else if(msg.data[0].status === 'ok') {
         toastr.success('ペアリング完了');
@@ -139,6 +141,7 @@ class Pairing {
 
   _ExecutePairing() {
     toastr.clear();
+    this._vue.error = '';
     toastr.info('モジュール接続開始');
     this._vue.progress = 10;
 

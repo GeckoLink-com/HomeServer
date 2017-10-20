@@ -20,6 +20,10 @@
       </div>
     </div>
     <p>
+    <h5 class="error" v-if="error!=''">
+      子機のエラーが発生しています。<br>
+      {{error}}
+    </h5>
     <h4>{{moduleLabel}}</h4>
   </div>
 </div>
