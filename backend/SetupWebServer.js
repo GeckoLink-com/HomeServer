@@ -168,7 +168,7 @@ class SetupWebServer {
       // node-red
       const redSettings = {
         httpAdminRoot: '/red',
-        httpNodeRoot: '/api',
+        httpNodeRoot: '/',
         flowFile: 'flow.json',
         userDir: this._common.config.basePath + '/red',
         nodesDir: __dirname + '/../redNodes',
