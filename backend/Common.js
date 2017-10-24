@@ -22,12 +22,6 @@ class Common extends eventEmitter {
     this.config = config;
     this.config.basePath = this.config.basePath.replace(/\/$/, '');
     
-    let stat = false;
-    try {
-      stat = fs.statSync(this.config.wisunDevice).isCharacterDevice();
-    } catch(e) {
-    }
-    this.config.smartMeter = this.config.smartMeter && stat;
     this.alias = {};
     this.aliasTable = {};
     this.remocon = {};
@@ -173,6 +167,16 @@ class Common extends eventEmitter {
     this.on('changeSystemConfig', (caller) => {
       if(caller != this) this._Registry.SetRegistry('system', this.systemConfig);
     });
+
+    fs.watchFile(this.config.wisunDevice, (stat) => {
+      this.smartMeter = stat.nlink == 1;
+      this.emit('changeSmartMeter', this);
+    });
+    this.smartMeter = false;
+    try {
+      this.smartMeter = fs.statSync(this.config.wisunDevice).isCharacterDevice();
+    } catch(e) {}
+    this.emit('changeSmartMeter', this);
 
     this._Registry.GetRegistry('system', (err, data) => {
       this.systemConfig = data;

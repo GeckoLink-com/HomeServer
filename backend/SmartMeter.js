@@ -52,7 +52,7 @@ class SmartMeter {
     this.el = new EchonetLite({
       lang: 'en',
       type: 'wisunb',
-      adapter: this._common.systemConfig.smartMeterAdapter, // bp35a1 or rl7023
+      adapter: this._common.systemConfig.smartMeterAdapter, // bp35c2/bp35a1/rl7023
       path: this._common.config.wisunDevice,
       id: this._common.systemConfig.smartMeterID,
       pass: this._common.systemConfig.smartMeterPassword,

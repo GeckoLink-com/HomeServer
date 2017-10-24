@@ -97,6 +97,11 @@ class HomeServer {
       this._common.Trigger(this._common.events.changeHueBridges, this);
     });
 
+    socket.on(this._common.eventFromBackend.smartMeter, (data) => {
+      this._common.smartMeter = data;
+      this._common.Trigger(this._common.events.changeSmartMeter, this);
+    });
+
     socket.on(this._common.eventFromBackend.uiTable, (msg) => {
       this._common.uiTable = msg;
       this._common.Trigger(this._common.events.changeUITable, this);

@@ -40,6 +40,7 @@ class Common {
       systemConfig: 'systemConfig',
       controllerLog: 'controllerLog',
       hueBridges: 'hueBridges',
+      smartMeter: 'smartMeter',
     };
 
     this.events = {
@@ -48,6 +49,7 @@ class Common {
       changeRemocon: 'changeRemocon',
       changeUITable: 'changeUITable',
       changeHueBridges: 'changeHueBridges',
+      changeSmartMeter: 'changeSmartMeter',
       changeSystemConfig: 'changeSystemConfig',
       changeTab: 'changeTab',
     };
@@ -59,6 +61,7 @@ class Common {
     this.aliasTable = {};
     this.systemConfig = null;
     this.remocon = { remoconTable: {}, remoconGroup: {}, remoconMacro: {}};
+    this.smartMeter = false;
     /*
       this.remocon = {
         remoconTable: {

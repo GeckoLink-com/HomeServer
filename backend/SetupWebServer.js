@@ -49,6 +49,7 @@ class SetupWebServer {
       systemConfig: 'systemConfig',
       controllerLog: 'controllerLog',
       hueBridges: 'hueBridges',
+      smartMeter: 'smartMeter',
     };
 
     this._setupWebClientConnections = [];
@@ -87,6 +88,10 @@ class SetupWebServer {
 
     this._common.on('changeHueBridges', (caller) => {
       this._SendMessage(this._eventToFrontend.hueBridges, this._common.hueBridges);
+    });
+
+    this._common.on('changeSmartMeter', (caller) => {
+      this._SendMessage(this._eventToFrontend.smartMeter, this._common.smartMeter);
     });
 
     this._common.on('statusNotify', (caller) => {
@@ -418,6 +423,7 @@ class SetupWebServer {
     this._SendMessage(this._eventToFrontend.systemConfig, this._common.systemConfig);
     this._SendMessage(this._eventToFrontend.controllerLog, this._common.controllerLog);
     this._SendMessage(this._eventToFrontend.hueBridges, this._common.hueBridges);
+    this._SendMessage(this._eventToFrontend.smartMeter, this._common.smartMeter);
 
     this._common.emit('setupWebConnect', this);
   }

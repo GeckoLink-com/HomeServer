@@ -21,7 +21,7 @@ class LinkDevices {
       this._vue.hap = this._common.systemConfig.hap;
       this._vue.hapPin = this._common.systemConfig.bridge.pin;
       this._vue.hapDeviceId = this._common.systemConfig.bridge.username;
-      this._vue.smartMeter = this._common.systemConfig.smartMeter;
+      this._vue.smartMeterEnable = this._common.systemConfig.smartMeter;
       this._vue.smartMeterAdapter = this._common.systemConfig.smartMeterAdapter;
       if(!this._vue.smartMeterAdapter) this._vue.smartMeterAdapter = this._vue.smartMeterAdapters[0];
       const id = this._common.systemConfig.smartMeterID;
@@ -41,6 +41,9 @@ class LinkDevices {
         }
       }
     });
+    this._common.On(this._common.events.changeSmartMeter, (_caller) => {
+      if(this._vue) this._vue.smartMeterConnect = this._common.smartMeter;
+    });
     this._common.On(this._common.events.changeHueBridges, (_caller) => {
       if(this._vue) this._vue.hueBridges = this._common.hueBridges;
     });
@@ -58,12 +61,14 @@ class LinkDevices {
           hap: false,
           hapPin: '',
           hapDeviceId: '',
-          smartMeter: false,
+          smartMeterEnable: false,
+          smartMeterConnect: false,
           smartMeterAdapters: [
-            { id: 'bp35a1', name: 'ROHM WSR35A1-00' },
+            { id: 'bp35a1', name: 'JORJIN WSR35A1-00' },
             { id: 'rl7023', name: 'TESSERA TECHNOLOGY RL7023 Stick-D/DSS' },
+            { id: 'bp35c2', name: 'ROHM BP35C2' },
           ],
-          smartMeterAdapter: 'bp35a1',
+          smartMeterAdapter: '',
           smartMeterID: ['', '', '', '', '', '', '', ''],
           smartMeterPassword: ['', '', ''],
         },

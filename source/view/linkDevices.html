@@ -66,7 +66,7 @@
     </div>
   </div>
   <hr v-if="hap" class="separation">
-  <div v-if="smartMeter" class="row">
+  <div v-if="smartMeterEnable && smartMeterConnect" class="row">
     <div class="col-md-3">
       <br>
       <h4>SmartMeter</h4>
@@ -101,7 +101,7 @@
       </div>
     </div>
   </div>
-  <hr v-if="smartMeter" class="separation">
+  <hr v-if="smartMeterEnable && smartMeterConnect" class="separation">
   <div class="row">
     <div class="col-md-10">
       <div class="pull-right">
