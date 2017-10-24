@@ -22,6 +22,7 @@ class ServerConnection {
     this._connectMessage = true;
     this._intervalId = null;
     this._wssClient = null;
+    this._lastSendTime = new Date();
 
     //ApplicationServer
     this._common.on('changeUITable', this._SendClientUi.bind(this));
@@ -190,6 +191,11 @@ class ServerConnection {
         this._wssClient.terminate();
       });
 
+    } else {
+      const now = new Date();
+      if(now - this._lastSendTime >= 30 * 1000) {
+        this._SendData(this, {type:'interval', data:this._common.status});
+      }
     }
     if(this._intervalId == null) {
       this._intervalId = setInterval(() => { this._IntervalConnectWS(); }, 5 * 1000);
@@ -252,6 +258,7 @@ class ServerConnection {
     } // DEBUG
     try {
       this._wssClient.send(JSON.stringify(msg));
+      this._lastSendTime = new Date();
     } catch(e) {
       console.log('ServerConnection : wssClient send error'); // DEBUG
       console.dir(this._wssClient); // DEBUG
