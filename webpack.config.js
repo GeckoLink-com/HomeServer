@@ -1,5 +1,5 @@
 const webpack = require('webpack');
-const UglifyEsPlugin = require('uglify-es-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 
 process.noDeprecation = true;
@@ -115,7 +115,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new UglifyEsPlugin(),
+    new UglifyJsPlugin(),
     new webpack.LoaderOptionsPlugin({
       minimize: true
     }),
