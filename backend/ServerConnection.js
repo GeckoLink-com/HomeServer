@@ -138,6 +138,7 @@ class ServerConnection {
       this._wssClient.on('open', () => {
         console.log('ServerConnection : connected ', this._scheme + this._serverHost + ':' + this._serverPort);
         this._wssRetry = 0;
+        this._connectMessage = true;
         this._WSSConnect();
       });
 
