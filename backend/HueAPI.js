@@ -97,7 +97,6 @@ class HueAPI {
           alert: 'none',
           transitiontime: 0
         };
-        if(state.bri == 1) state.bri = 254;
         if(args[1] == 'on') state.on = true;
         if(args[1] == 'off') state.on = false;
         if(args[1] == 'toggle') state.on = !state.on;
@@ -206,7 +205,19 @@ class HueAPI {
       return;
     }
     const bridgeNo = res.request.bridgeNo;
-    this._bridges[bridgeNo].lights = body.lights;
+    for(const i in body.lights) {
+      if(body.lights[i].state.on) {
+        this._bridges[bridgeNo].lights[i] = body.lights[i];
+      } else {
+        for(const j in body.lights[i]) {
+          if(j == 'state') {
+            this._bridges[bridgeNo].lights[i][j].on = false;
+            continue;
+          }
+          this._bridges[bridgeNo].lights[i][j] = body.lights[i][j];
+        }
+      }
+    }
     this._bridges[bridgeNo].state = 1;
     this._bridges[bridgeNo].message = '';
     this._common.emit('changeHueBridges', this);
@@ -253,6 +264,7 @@ class HueAPI {
     this._SetLightState(origin, bridgeNo, light, state, (err, res, body) => {
       const origin = res.request.origin;
       this._SendResponse(origin, err);
+      this._common.emit('changeHueBridges', this);
     });
   }
 
