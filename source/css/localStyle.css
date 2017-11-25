@@ -255,6 +255,12 @@ table.ui-table tr th, table.ui-table tr td {
   height: 25px;
 }
 
+.hap-qr {
+  display: inline-block;
+  vertical-align: middle;
+  
+}
+
 #node-red {
   position: fixed;
   top: 80px;

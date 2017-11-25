@@ -12,6 +12,7 @@ const registry = require('./Registry');
 const fs = require('fs');
 const getmac = require('getmac');
 const moment = require('moment');
+var crypto = require('crypto');
 
 class Common extends eventEmitter {
 
@@ -191,10 +192,20 @@ class Common extends eventEmitter {
         return;
       }
 
-      const pin = ('00' + Math.floor(Math.random() * 256)).slice(-3) +
-            '-' + ('0' + Math.floor(Math.random() * 256)).slice(-2) + 
-            '-' + ('00' + Math.floor(Math.random() * 256)).slice(-3); 
-      
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const bytes = crypto.randomBytes(10);
+      const pin = ('00' + bytes.readUInt16BE(0)).slice(-3) +
+            '-' + ('0' + bytes.readUInt16BE(2)).slice(-2) +
+            '-' + ('00' + bytes.readUInt16BE(4)).slice(-3);
+      let setupID = '';
+      for (let i = 0; i < 4; i++) {
+        setupID += chars.charAt(bytes.readUInt8(i) % 26);
+      }
+      const setupCode = parseInt(pin.replace(/-/g, ''), 10);
+      const category = 2; // BRIDGE
+      const encodedPayload = ('00000000' + (setupCode + ( 1 << 28) /* Supports IP */ + (category << 31) + (category  >> 1) * Math.pow(2, 32)).toString(36).toUpperCase()).slice(-9);
+      const setupURI = "X-HM://" + encodedPayload + setupID;
+
       getmac.getMac((err, macAddr) => {
         this.systemConfig = {
           account: 'admin',
@@ -211,10 +222,12 @@ class Common extends eventEmitter {
           amesh: this.config.amesh,
           smartMeter: this.config.smartMeter,
           bridge: {
-            name: 'GeckoLink-' + macAddr.slice(-8).replace(':',''),
+            name: 'GeckoLink-' + macAddr.slice(-8).replace(/:/g,''),
             port: 51826,
-            username: macAddr,
+            username: macAddr.toUpperCase(),
             pin: pin,
+            setupID: setupID,
+            setupURI: setupURI,
           },
           platform: {
             name: 'GeckoLink HomeServer',

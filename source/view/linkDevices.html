@@ -48,9 +48,14 @@
     <div class="col-md-7 scrollable">
       <br>
       <div class="row">
-        <img src="../images/home.png" width="40px"/>
-        <div class="well well-homekit">
-          {{hapPin}}
+        <div class="col-md-4">
+          <img src="../images/home.png" width="40px"/>
+        </div>
+        <div class="col-md-8">
+          <qrcode class="hap-qr" :value="hapSetupURI"></qrcode>
+          <div class="well well-homekit">
+            {{hapPin}}
+          </div>
         </div>
       </div>
       <br>

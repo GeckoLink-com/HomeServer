@@ -157,12 +157,15 @@ class HomeBridgePlatform {
     if(!this._published) {
       console.log('HomeBridge publish');
       console.log('HomeBridge PIN-code : ', this._common.systemConfig.bridge.pin);
-      this._Bridge.publish({
+      console.log('HomeBridge setupURI : ', this._common.systemConfig.bridge.setupURI);
+      const publishInfo = {
         username: this._common.systemConfig.bridge.username,
         port: this._common.systemConfig.bridge.port,
         pincode: this._common.systemConfig.bridge.pin,
-        category: HomeBridgeAccessory.Categories.BRIDGE
-        }, false);
+        category: HomeBridgeAccessory.Categories.BRIDGE,
+        setupID: this._common.systemConfig.bridge.setupID,
+      };
+      this._Bridge.publish(publishInfo, false);
       this._published = true;
     }
   }

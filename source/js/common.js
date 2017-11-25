@@ -119,7 +119,6 @@ class Common {
               12: { display: <bool>, label: <string>},
             }
           },
-          
         },
         remoconMacro: {
           <macroLabel>: {

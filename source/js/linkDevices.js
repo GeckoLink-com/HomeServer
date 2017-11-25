@@ -10,6 +10,7 @@
 
 import Vue from 'vue';
 import ViewLinkDevices from '../view/linkDevices.html';
+import VueQRcode from 'v-qrcode';
 
 class LinkDevices {
   constructor(common) {
@@ -20,6 +21,7 @@ class LinkDevices {
       if(!this._vue) return;
       this._vue.hap = this._common.systemConfig.hap;
       this._vue.hapPin = this._common.systemConfig.bridge.pin;
+      this._vue.hapSetupURI = this._common.systemConfig.bridge.setupURI;
       this._vue.hapDeviceId = this._common.systemConfig.bridge.username;
       this._vue.smartMeterEnable = this._common.systemConfig.smartMeter;
       this._vue.smartMeterAdapter = this._common.systemConfig.smartMeterAdapter;
@@ -60,6 +62,7 @@ class LinkDevices {
           hueBridges: this._common.hueBridges || [],
           hap: false,
           hapPin: '',
+          hapSetupURI: '',
           hapDeviceId: '',
           smartMeterEnable: false,
           smartMeterConnect: false,
@@ -142,6 +145,9 @@ class LinkDevices {
             this._common.systemConfig.smartMeterPassword = pw;
             socket.emit(this._common.eventToBackend.systemConfig, this._common.systemConfig);
           },
+        },
+        components: {
+          'qrcode': VueQRcode,
         },
       });
     });
