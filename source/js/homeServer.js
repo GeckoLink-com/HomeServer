@@ -75,7 +75,7 @@ class HomeServer {
               this._vue.module = false;
             }
           } else {
-            if(dev.state === 'alive') f = true;
+            f = true;
           }
         }
         this._vue.moduleMenu = f;
