@@ -185,7 +185,7 @@ class SetupWebServer {
           }
         },
         debugMaxLength: 1000,
-        paletteCategories: ['subflows', 'gecko_link', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
+        paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
         editorTheme: {
           page: {
             css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
