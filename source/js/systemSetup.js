@@ -45,7 +45,6 @@ class SystemSetup {
           amesh: false,
           latitude: '',
           longitude: '',
-          radius: '',
           authLoadModal: false,
           configLoadModal: false,
           configInitModal: false,
@@ -212,7 +211,6 @@ class SystemSetup {
     this._vue.amesh = this._common.systemConfig.amesh;
     this._vue.latitude = this._common.systemConfig.latitude;
     this._vue.longitude = this._common.systemConfig.longitude;
-    this._vue.radius = this._common.systemConfig.radius;
     this._vue.autoUpdate = this._common.systemConfig.autoUpdate;
   }
 
@@ -247,7 +245,6 @@ class SystemSetup {
     this._common.systemConfig.mailto = this._vue.mailto;
     this._common.systemConfig.latitude = this._vue.latitude;
     this._common.systemConfig.longitude = this._vue.longitude;
-    this._common.systemConfig.radius = this._vue.radius;
     this._common.systemConfig.autoUpdate = this._vue.autoUpdate;
     this._common.systemConfig.serverKeys = this._serverKeys;
     this._common.systemConfig.sshKeys = this._sshKeys;

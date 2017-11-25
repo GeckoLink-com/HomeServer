@@ -223,12 +223,14 @@ class ServerConnection {
     const system = {
       mailto: this._common.systemConfig.mailto,
     };
+    if(!this._common.systemConfig.radius ||
+       (this._common.systemConfig.radius == '')) {
+      this._common.systemConfig.radius = '5000';
+    }
     if(this._common.systemConfig.latitude &&
        (this._common.systemConfig.latitude != '') &&
        this._common.systemConfig.longitude &&
-       (this._common.systemConfig.longitude != '') &&
-       this._common.systemConfig.radius &&
-       (this._common.systemConfig.radius != '')) {
+       (this._common.systemConfig.longitude != '')) {
       system.amesh = {
         latitude: 'N' + this._common.systemConfig.latitude,
         longitude: 'E' + this._common.systemConfig.longitude,

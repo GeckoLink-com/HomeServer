@@ -216,7 +216,7 @@ class Common extends eventEmitter {
           mailto: '',
           longitude: '',
           latitude: '',
-          radius: '',
+          radius: '5000',
           version: this.version,
           hap: this.config.hap,
           amesh: this.config.amesh,
