@@ -250,6 +250,9 @@ class SystemSetup {
     this._common.systemConfig.sshKeys = this._sshKeys;
     socket.emit(this._common.eventToBackend.systemConfig, this._common.systemConfig);
     toastr.success('設定しました。');
+    if(this._vue.password1 !== 'dummypasswd') {
+      setTimeout(window.location.reload.bind(window.location), 1000);
+    }
   }
 }
 
