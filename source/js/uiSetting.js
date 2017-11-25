@@ -472,7 +472,7 @@ class UISetting {
 
   _Drag(e) {
     const pos = this._getCursorLine(e);
-    this._select = this._vue.selectedItem.index === pos.index;
+    this._select = parseInt(this._vue.selectedItem.index) === parseInt(pos.index);
     if(pos.index === 'room') this._select = this._vue.selectedItem.index === pos.room;
     if(!this._select) return;
     e.preventDefault();
@@ -498,7 +498,7 @@ class UISetting {
     e.preventDefault();
     const pos = this._getCursorLine(e);
     if((pos.room === this._currentPos.room) &&
-       (pos.index === this._currentPos.index)) return;
+       (parseInt(pos.index) === parseInt(this._currentPos.index))) return;
     if(this._selectedPos.index === 'room') {
       if(pos.index !== 'room') return;
       if(pos.room === this._currentPos.room) return;
@@ -507,7 +507,7 @@ class UISetting {
       this._currentPos = pos;
       this._vue.selectedItem.index = this._currentPos.room;
     } else {
-      if((pos.index === 'room') && (pos.room === 0)) return;
+      if((pos.index === 'room') && (parseInt(pos.room) === 0)) return;
       this._vue.uiTable.ItemList.splice(this._currentPos.index, 1);
       if(pos.index === 'room') {
         if(pos.room === this._currentPos.room) {
@@ -536,7 +536,7 @@ class UISetting {
       this._currentPos = this._selectedPos;
       this._vue.selectedItem.index = this._currentPos.room;
     } else {
-      if(this._selectedPos.index === this._currentPos.index) return;
+      if(parseInt(this._selectedPos.index) === parseInt(this._currentPos.index)) return;
       this._vue.uiTable.ItemList.splice(this._currentPos.index, 1);
       this._vue.uiTable.ItemList.splice(this._selectedPos.index, 0, this._dragItem);
       this._currentPos = this._selectedPos;
