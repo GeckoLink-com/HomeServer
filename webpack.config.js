@@ -24,6 +24,17 @@ module.exports = {
         ]
       },
       {
+        test: /images\/(GeckoIcon\.png)|(GeckoIcon\.ico)/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '/images/[name].[ext]',
+            }
+          }
+        ]
+      },
+      {
         test: /red\/theme\/css\/nodeRed\.css/,
         use: [
           {
@@ -97,8 +108,13 @@ module.exports = {
         ],
       },
       {
-        test: /images\/.*\.(jpg|png)$/,
-        use: 'url-loader'
+        test: /images\/.*\.(jpg|png|ico|svg)$/,
+        exclude: /(GeckoIcon\.png)|(GeckoIcon\.ico)/,
+        use: [
+          {
+            loader: 'url-loader',
+          }
+        ],
       },
     ]
   },
