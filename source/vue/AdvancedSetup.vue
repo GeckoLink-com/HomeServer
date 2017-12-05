@@ -771,7 +771,7 @@
           }
           if(delay > 0) {
             delay = delay & ~3 | motionBit;
-            param = delay.toString(16);
+            param = delay.toString();
           }
         }
 

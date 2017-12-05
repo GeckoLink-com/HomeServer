@@ -244,11 +244,11 @@
                 let p = 300;
                 if(f.func === 'gpio0') p |= (1 << 0);
                 if(f.func === 'gpio1') p |= (1 << 1);
-                param = ' ' + p.toString(16);
+                param = ' ' + p.toString();
               }
               if(f.optionValue) {
                 moduleAlias[f.func].optionValue = f.optionValue;
-                param = ' ' + parseInt(f.optionValue).toString(16);
+                param = ' ' + f.optionValue;
               }
               break;
             }
