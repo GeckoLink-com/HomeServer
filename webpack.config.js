@@ -5,7 +5,7 @@ const CompressionPlugin = require('compression-webpack-plugin');
 process.noDeprecation = true;
 
 module.exports = {
-  entry: __dirname + '/source/js/homeserver.js',
+  entry: __dirname + '/source/js/HomeServer.js',
   output: {
     path: __dirname + '/frontend',
     filename: 'js/bundle.js'
@@ -40,8 +40,8 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets:  [['env', {modules: false}]],
-            }
+              presets: [['env', {modules: false}]],
+            },
           },
         ],
       },
@@ -58,12 +58,12 @@ module.exports = {
         ],
       },
       {
-        test: /js\/.*\.vue$/,
+        test: /vue\/.*\.vue$/,
         use: 'vue-loader',
       },
       {
         enforce: 'pre',
-        test: /js\/.*\.vue$/,
+        test: /vue\/.*\.vue$/,
         use: [
           {
             loader: 'eslint-loader',
@@ -72,10 +72,6 @@ module.exports = {
             },
           },
         ],
-      },
-      {
-        test: /view\/.*\.html$/,
-        use: 'html-loader',
       },
       {
         test: /css\/.*\.css$/,
