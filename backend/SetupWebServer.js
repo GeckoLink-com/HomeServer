@@ -320,6 +320,12 @@ class SetupWebServer {
         
         this._common.systemConfig = d3.system;
         this._common.systemConfig.version = this._common.version;
+        this._common.systemConfig.hap = this._common.config.hap;
+        this._common.systemConfig.led = this._common.config.led;
+        this._common.systemConfig.motor = this._common.config.motor;
+        this._common.systemConfig.smartMeter = this._common.config.smartMeter;
+        this._common.systemConfig.initialPassword = this._common.initialPassword;
+        this._common.systemConfig.defaultPassword = this._common.defaultPassword;
         let param = '';
         for(let i = 0; i < 24; i++)
           param += ' ' + ('0' + this._common.systemConfig.xbeeKey[i].toString(16)).slice(-2);

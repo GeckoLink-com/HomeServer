@@ -47,7 +47,8 @@ class Common extends eventEmitter {
     this.systemConfig.version = this.version;
     
     this.serial = '00000001';
-    this.initialPassword = this.config.initialPassword;
+    this.initialPassword = this.config.initialPassword || this.config.defaultPassword;
+    this.defaultPassword = this.config.defaultPassword || this.config.initialPassword;
     try {
       const data = JSON.parse(fs.readFileSync('/boot/system.conf', 'utf8'));
       if(data.serial) this.serial = data.serial;
@@ -188,6 +189,7 @@ class Common extends eventEmitter {
         this.systemConfig.motor = this.config.motor;
         this.systemConfig.smartMeter = this.config.smartMeter;
         this.systemConfig.initialPassword = this.initialPassword;
+        this.systemConfig.defaultPassword = this.defaultPassword;
         this.emit('changeSystemConfig', this);
         return;
       }
@@ -211,6 +213,7 @@ class Common extends eventEmitter {
           account: 'admin',
           password: this.initialPassword,
           initialPassword: this.initialPassword,
+          defaultPassword: this.defaultPassword,
           autoUpdate: 'on',
           remote: 'off',
           mailto: '',
