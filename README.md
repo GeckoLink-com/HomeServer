@@ -4,7 +4,7 @@ GeckoLink HomeServerのソースコードです。
 詳しい使い方の説明は
 <https://geckolink.com>
 にあります。
-Node.js v8.4.0で動作確認しています。
+Node.js v8.9.1で動作確認しています。
 
     # git@github.com:GeckoLink-com/HomeServer.git
     # cd HomeServer
