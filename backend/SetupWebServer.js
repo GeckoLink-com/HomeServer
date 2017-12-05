@@ -26,79 +26,53 @@ class SetupWebServer {
     this._common = common;
     this._server = null;
 
-    this._eventFromFrontend = {
-      command: 'command',
-      alias: 'alias',
-      remocon: 'remocon',
-      addRemocon: 'addRemocon',
-      uiTable: 'uiTable',
-      initConfig: 'initConfig',
-      setConfig: 'setConfig',
-      setAuth: 'setAuth',
-      systemConfig: 'systemConfig',
-    };
-    this._eventToFrontend = {
-      deviceInfo: 'deviceInfo',
-      status: 'status',
-      events: 'events',
-      queueInfo: 'queueInfo',
-      response: 'response',
-      alias: 'alias',
-      remocon: 'remocon',
-      uiTable: 'uiTable',
-      systemConfig: 'systemConfig',
-      controllerLog: 'controllerLog',
-      hueBridges: 'hueBridges',
-      smartMeter: 'smartMeter',
-    };
-
     this._setupWebClientConnections = [];
     
     this._common.on('changeStatus', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.events, msg);
+      this._SendMessage('events', msg);
     });
 
     this._common.on('irReceive', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.events, msg);
+      this._SendMessage('events', msg);
     });
 
     this._common.on('motor', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.events, msg);
+      this._SendMessage('events', msg);
     });
 
     this._common.on('response', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.response, msg);
+      this._SendMessage('response', msg);
     });
 
     this._common.on('message', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.response, msg);
+      this._SendMessage('response', msg);
     });
 
     this._common.on('deviceInfo', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.deviceInfo, msg);
+      this._SendMessage('deviceInfo', msg);
     });
 
     this._common.on('queueInfo', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.queueInfo, msg);
+      this._SendMessage('queueInfo', msg);
     });
 
     this._common.on('changeControllerLog', (caller, msg) => {
-      this._SendMessage(this._eventToFrontend.controllerLog, msg);
+      this._SendMessage('controllerLog', msg);
     });
 
-    this._common.on('changeHueBridges', (caller) => {
-      this._SendMessage(this._eventToFrontend.hueBridges, this._common.hueBridges);
+    this._common.on('changeHueBridges', (_caller) => {
+      this._SendMessage('hueBridges', this._common.hueBridges);
     });
 
-    this._common.on('changeSmartMeter', (caller) => {
-      this._SendMessage(this._eventToFrontend.smartMeter, this._common.smartMeter);
+    this._common.on('changeSmartMeter', (_caller) => {
+      this._SendMessage('smartMeter', this._common.smartMeter);
     });
 
-    this._common.on('statusNotify', (caller) => {
-      this._SendMessage(this._eventToFrontend.status, this._common.status);
+    this._common.on('statusNotify', (_caller) => {
+      this._SendMessage('status', this._common.status);
     });
 
-    this._common.on('changeSystemConfig', (caller) => {
+    this._common.on('changeSystemConfig', (_caller) => {
       if(this._common.initialState) return;
 
       const initialFlag = !this._server;
@@ -242,31 +216,31 @@ class SetupWebServer {
     this._setupWebClientConnections.push(socket);
     
   // receive jobs
-    socket.on(this._eventFromFrontend.command, (data) => {
+    socket.on('command', (data) => {
       this._common.emit('sendControllerCommand', this, data);
     });
 
-    socket.on(this._eventFromFrontend.alias, (data) => {
+    socket.on('alias', (data) => {
       this._common.alias = data;
       this._common.emit('changeAlias', this);
     });
 
-    socket.on(this._eventFromFrontend.remocon, (data) => {
+    socket.on('remocon', (data) => {
       this._common.remocon = data;
       this._common.emit('changeRemocon', this);
     });
 
-    socket.on(this._eventFromFrontend.uiTable, (data) => {
+    socket.on('uiTable', (data) => {
       this._common.uiTable = data;
       this._common.emit('changeUITable', this);
     });
     
-    socket.on(this._eventFromFrontend.systemConfig, (data) => {
+    socket.on('systemConfig', (data) => {
       this._common.systemConfig = data;
       this._common.emit('changeSystemConfig', this);
     });
     
-    socket.on(this._eventFromFrontend.setConfig, (data) => {
+    socket.on('setConfig', (data) => {
       zlib.gunzip(data, (err, d2) => {
         let d3 = null;
         try {
@@ -327,7 +301,7 @@ class SetupWebServer {
       });
     });
 
-    socket.on(this._eventFromFrontend.setAuth, (data) => {
+    socket.on('setAuth', (data) => {
       zlib.gunzip(data, (err, d2) => {
         let d3 = null;
         try {
@@ -353,7 +327,7 @@ class SetupWebServer {
       });
     });
 
-    socket.on(this._eventFromFrontend.initConfig, () => {
+    socket.on('initConfig', () => {
       try {
         fs.unlinkSync(this._common.config.basePath + '/alias.json');
       } catch(e) {};
@@ -388,7 +362,7 @@ class SetupWebServer {
       process.exit(0);
     });
 
-    socket.on(this._eventFromFrontend.addRemocon, (data) => {
+    socket.on('addRemocon', (data) => {
       let code = null;
       try {
         code = JSON.parse(data);
@@ -415,15 +389,15 @@ class SetupWebServer {
       }
     });
     
-    this._SendMessage(this._eventToFrontend.deviceInfo, {type:'deviceInfo', data:this._common.deviceInfo});
-    this._SendMessage(this._eventToFrontend.status, this._common.status);    
-    this._SendMessage(this._eventToFrontend.alias, this._common.alias);
-    this._SendMessage(this._eventToFrontend.remocon, this._common.remocon);
-    this._SendMessage(this._eventToFrontend.uiTable, this._common.uiTable);
-    this._SendMessage(this._eventToFrontend.systemConfig, this._common.systemConfig);
-    this._SendMessage(this._eventToFrontend.controllerLog, this._common.controllerLog);
-    this._SendMessage(this._eventToFrontend.hueBridges, this._common.hueBridges);
-    this._SendMessage(this._eventToFrontend.smartMeter, this._common.smartMeter);
+    this._SendMessage('deviceInfo', {type:'deviceInfo', data:this._common.deviceInfo});
+    this._SendMessage('status', this._common.status);    
+    this._SendMessage('alias', this._common.alias);
+    this._SendMessage('remocon', this._common.remocon);
+    this._SendMessage('uiTable', this._common.uiTable);
+    this._SendMessage('systemConfig', this._common.systemConfig);
+    this._SendMessage('controllerLog', this._common.controllerLog);
+    this._SendMessage('hueBridges', this._common.hueBridges);
+    this._SendMessage('smartMeter', this._common.smartMeter);
 
     this._common.emit('setupWebConnect', this);
   }
@@ -443,7 +417,7 @@ class SetupWebServer {
       this._common.remocon.remoconMacro[i] = code.remocon.remoconMacro[i];
     }
     this._common.emit('changeRemocon', this);
-    this._SendMessage(this._eventToFrontend.remocon, this._common.remocon);
+    this._SendMessage('remocon', this._common.remocon);
   }
 
   _SendMessage(cmd, data) {
