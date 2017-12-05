@@ -32,9 +32,13 @@ module.exports = function(RED) {
         let f = true;
         if(this.func == 'sw') {
           if((stat.valueName == 'opening') &&
-             (this.previousValueName != 'close')) f = false;
+             (this.previousValueName != 'close') &&
+             (this.previousValueName != 'closing') &&
+             (this.previousValueName != 'unknown')) f = false;
           if((stat.valueName == 'closing') &&
-             (this.previousValueName != 'open')) f = false;
+             (this.previousValueName != 'open') &&
+             (this.previousValueName != 'opening') &&
+             (this.previousValueName != 'unknown')) f = false;
         }
         for(let i in this.rules) {
           s[i] = f && this.rules[i].enable && (this.rules[i].val == stat.valueName);

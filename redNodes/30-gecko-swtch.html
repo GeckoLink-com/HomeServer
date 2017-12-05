@@ -9,7 +9,12 @@
             label: {value:'switch'},
             deviceName: {value:null, required:true},
             func: {value:null, required:true},
-            rules: {value:[{sel:'lt', val:'', enable:true},{sel:null, val:'', enable:true},{sel:'lt', val:'', enable:true}]},
+            rules: {value:[
+              {sel:'lt', val:'', enable:true},
+              {sel:null, val:'', enable:true},
+              {sel:'lt', val:'', enable:true},
+              {sel:null, val:'', enable:true},
+            ]},
             outputs: {value:1},
         },
         inputs:1,
@@ -42,10 +47,21 @@
               RedrawMode();
             }
 
-            if(!this.rules) this.rules = [{sel:'lt', val:'', enable:true},{sel:null, val:'', enable:true},{sel:'lt', val:'', enable:true}];
+            if(!this.rules) {
+              this.rules = [
+                {sel:'lt', val:'', enable:true},
+                {sel:null, val:'', enable:true},
+                {sel:'lt', val:'', enable:true},
+                {sel:null, val:'', enable:true},
+              ];
+            }
             this.checked = [];
-            for(let i = 0; i < 3; i++) {
-              this.checked[i] = this.rules[i].enable;
+            for(let i = 0; i < 4; i++) {
+              if(this.rules[i]) {
+                this.checked[i] = this.rules[i].enable;
+              } else {
+                this.checked[i] = true;
+              }
             }
             const RedrawMode = () => {
               $('#node-input-container').css('min-height','250px').css('min-width','450px').empty();
@@ -100,8 +116,12 @@
                 }
               } else {
                 let c = 0;
-                for(let i in funcObj.valueLabel) {
-                  const mode = funcObj.valueLabel[i];
+                let vlabel = funcObj.valueLabel;
+                if(this.func == 'sw') {
+                  vlabel = ['open', 'opening', 'closing', 'close'];
+                }
+                for(let i in vlabel) {
+                  const mode = vlabel[i];
                   let rightElement = $('<span/>',{style:"float: right;"});
                   if(this.checked[i]) {
                     c++;
@@ -122,7 +142,7 @@
             $('#node-input-deviceName').click((e) => {
               this.func = null;
               this.deviceName = e.target.value;
-              for(let i = 0; i < 3; i++) {
+              for(let i = 0; i < 4; i++) {
                 this.checked[i] = true;
               }
               RedrawFunc();
@@ -130,7 +150,7 @@
             RedrawFunc();
             $('#node-input-func').change((e) => {
               this.func = e.target.value;
-              for(let i = 0; i < 3; i++) {
+              for(let i = 0; i < 4; i++) {
                 this.checked[i] = true;
               }
               RedrawMode();
@@ -149,12 +169,16 @@
               if(this.checked[i]) this.outputs++;
             }
           } else {
-            for(let i = 0; i < 3; i++) {
+            for(let i = 0; i < 4; i++) {
               this.rules[i].enable = false;
             }
             this.outputs = 0;
             const funcObj = this.homeServer.aliasTable[this.deviceName].property[this.func];
-            for(let i in funcObj.valueLabel) {
+            let vlabel = funcObj.valueLabel;
+            if(this.func == 'sw') {
+              vlabel = ['open', 'opening', 'closing', 'close'];
+            }
+            for(let i in vlabel) {
               this.rules[i].val = $('#node-input-mode' + i).text();
               this.rules[i].enable = this.checked[i];
               if(this.checked[i]) this.outputs++;

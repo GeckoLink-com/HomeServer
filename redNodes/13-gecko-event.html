@@ -47,9 +47,21 @@
               RedrawMode();
             }
 
+            if(!this.rules) {
+              this.rules = [
+                {sel:'lt', val:'', enable:true},
+                {sel:null, val:'', enable:true},
+                {sel:'lt', val:'', enable:true},
+                {sel:null, val:'', enable:true},
+              ];
+            }
             this.checked = [];
             for(let i = 0; i < 4; i++) {
-              this.checked[i] = this.rules[i].enable;
+              if(this.rules[i]) {
+                this.checked[i] = this.rules[i].enable;
+              } else {
+                this.checked[i] = true;
+              }
             }
             const RedrawMode = () => {
               $('#node-input-container').css('min-height','250px').css('min-width','450px').empty();
@@ -127,9 +139,22 @@
               }
             }
                    
-            $('#node-input-deviceName').click((e) => {this.func = null;this.deviceName = e.target.value; RedrawFunc();});
+            $('#node-input-deviceName').click((e) => {
+              this.func = null;
+              this.deviceName = e.target.value;
+              for(let i = 0; i < 4; i++) {
+                this.checked[i] = true;
+              }
+              RedrawFunc();
+            });
             RedrawFunc();
-            $('#node-input-func').change((e) => {this.func = e.target.value; RedrawMode();});
+            $('#node-input-func').change((e) => {
+              this.func = e.target.value;
+              for(let i = 0; i < 4; i++) {
+                this.checked[i] = true;
+              }
+              RedrawMode();
+            });
           });
         },
         oneditsave: function() {

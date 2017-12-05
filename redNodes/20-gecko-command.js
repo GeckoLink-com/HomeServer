@@ -12,16 +12,6 @@ module.exports = function(RED) {
       if(this.func == 'script') {
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.script, id:this.id, func:this.script.replace(/[ \t].*$/,''), mode:this.script.replace(/^[^ \t]*/, '').trim()});
       } else {
-        if(homeServer.IsResponsiveCommandFunc(this.deviceName, this.func)) {
-          let stat = null;
-          for(let st of homeServer.status) {
-            if((st.deviceName == this.deviceName) && (st.func == this.func)) {
-              stat = st;
-              break;
-            }
-          }
-          if(stat.valueName == this.mode) return;
-        }
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.func + ' ' + this.mode, id:this.id, func:this.func, mode:this.mode});
       }
     });
