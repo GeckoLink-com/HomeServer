@@ -60,6 +60,7 @@ class SetupWebServer {
       this._SendMessage('controllerLog', msg);
     });
 
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._common.on('changeHueBridges', (_caller) => {
       this._SendMessage('hueBridges', this._common.hueBridges);
     });
@@ -107,12 +108,12 @@ class SetupWebServer {
           let nodeRedConfig = null;
           try {
             nodeRedConfig = JSON.parse(fs.readFileSync(this._common.config.basePath + '/red/.config.json'));
-          } catch(e) {} // dummy
+          } catch(e) {/* empty */}
 
           let nodeRedFlow = null;
           try {
             nodeRedFlow = JSON.parse(fs.readFileSync(this._common.config.basePath + '/red/flow.json'));
-          } catch(e) {} // dummy
+          } catch(e) {/* empty */}
 
           const buf = JSON.stringify({alias: this._common.alias, remocon: this._common.remocon, uiTable:this._common.uiTable, status:this._common.internalStatus, nodeRedConfig:nodeRedConfig, nodeRedFlow:nodeRedFlow}, null, 2);
           zlib.gzip(buf, (err, data) => {
@@ -142,7 +143,7 @@ class SetupWebServer {
         } else {
           fs.unlinkSync(this._common.config.basePath + '/autoupdate');
         }
-      } catch(e) {}
+      } catch(e) {/* empty */}
 
       // node-red
       const redSettings = {
@@ -187,7 +188,7 @@ class SetupWebServer {
       RED.start();
 
       if(initialFlag) {
-        this._app.get('/*', function(req, res, next) {
+        this._app.get('/*', function(req, res, _next) {
           res.redirect('/');
         });
 
@@ -330,34 +331,34 @@ class SetupWebServer {
     socket.on('initConfig', () => {
       try {
         fs.unlinkSync(this._common.config.basePath + '/alias.json');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/internalStatus.json');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/remocon.json');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/system.json');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/uiTable.json');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/devicetable.reg');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         execSync('rm -rf ' + this._common.config.basePath + '/log');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         execSync('rm -rf ' + this._common.config.basePath + '/red');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.unlinkSync(this._common.config.basePath + '/xbee.key');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       try {
         fs.mkdirSync(this._common.config.basePath + '/log');
-      } catch(e) {};
+      } catch(e) {/* empty */}
       this._common.emit('sendControllerCommand', this, {deviceName:'server', command:'reboot'});
       process.exit(0);
     });
@@ -421,7 +422,7 @@ class SetupWebServer {
   }
 
   _SendMessage(cmd, data) {
-    this._setupWebClientConnections.forEach((con, i) => {
+    this._setupWebClientConnections.forEach((con, _i) => {
       con.emit(cmd, data);
     });
   }

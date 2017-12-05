@@ -93,7 +93,8 @@ class LocalAddressRegister {
         },
         json: true,
       }, 
-      (err, res, body) => {
+      /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+      (err, res, _body) => {
         if(err) {
           console.log('error:', err);
         } else if(res.statusCode != 200){

@@ -7,7 +7,8 @@ module.exports = function(RED) {
     this.rules = config.rules || [{sel:'gt', val:'', enable:true},{sel:'gt', val:'', enable:true},{sel:'gt', val:'', enable:true}];
     this.outputs = config.outputs;
 
-    this.eventListener = (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.eventListener = (_caller) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       let status = homeServer.status;
       let stat = null;

@@ -7,7 +7,7 @@ module.exports = function(RED) {
     this.mode = config.mode;
     this.script = config.script;
 
-    this.on("input", (msg) => {
+    this.on("input", () => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       if(this.func == 'script') {
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.script, id:this.id, func:this.script.replace(/[ \t].*$/,''), mode:this.script.replace(/^[^ \t]*/, '').trim()});

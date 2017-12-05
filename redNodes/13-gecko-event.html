@@ -27,7 +27,7 @@
         oneditprepare: function() {
           $.getJSON('gecko/' + this.id, (homeServer) => {
             this.homeServer = homeServer;
-            for(i in this.homeServer.alias) {
+            for(const i in this.homeServer.alias) {
               $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
               if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
             }
@@ -35,7 +35,7 @@
             
             const RedrawFunc = () => {
               $('#node-input-func option').remove();
-              for(i in this.homeServer.aliasTable[this.deviceName].property) {
+              for(const i in this.homeServer.aliasTable[this.deviceName].property) {
                 if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
                 if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type == 'out')) continue;
                 let name = this.homeServer.aliasTable[this.deviceName].property[i].name;

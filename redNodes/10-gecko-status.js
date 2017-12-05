@@ -5,7 +5,8 @@ module.exports = function(RED) {
     this.deviceName = config.deviceName;
     this.func = config.func;
     
-    this.eventListener = (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.eventListener = (_caller) => {
       let status = RED.settings.functionGlobalContext.homeServer.status;
       for(let st of status) {
         if(((st.deviceName == this.deviceName) || (this.deviceName == 'all')) &&

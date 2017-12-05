@@ -9,7 +9,8 @@ module.exports = function(RED) {
     this.timer = null;
     this.sendState = false;
     
-    this.eventListener = (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.eventListener = (_caller) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       let status = homeServer.status;
       let stat = null;

@@ -27,7 +27,8 @@ class ServerConnection {
     //ApplicationServer
     this._common.on('changeUITable', this._SendClientUi.bind(this));
 
-    this._common.on('statusNotify', (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this._common.on('statusNotify', (_caller) => {
       this._SendData(this, {type:'interval', data:this._common.status});
     });
 
@@ -43,7 +44,7 @@ class ServerConnection {
 
     this._common.on('sendMail', this._SendData.bind(this));
     
-    this._common.on('changeSystemConfig', (caller) => {
+    this._common.on('changeSystemConfig', (_caller) => {
       if(this._connectState > 0) this._wssClient.terminate();
       if(this._intervalId) {
         clearInterval(this._intervalId);
@@ -113,10 +114,10 @@ class ServerConnection {
 
     try {
       fs.mkdirSync(this._common.home + '/.ssh', 0o700);
-    } catch(e) {}
+    } catch(e) {/* empty */}
     try {
       fs.unlinkSync(this._common.home + '/.ssh/authorized_keys');
-    } catch(e) {}
+    } catch(e) {/* empty */}
     
     if(this._authorizedKeys) {
       try {
@@ -158,7 +159,7 @@ class ServerConnection {
         }
       });
 
-      this._wssClient.on('close', (e) => {
+      this._wssClient.on('close', () => {
         this._connectMessage = false;
         if(this._connectState > 0) {
           console.log('ServerConnection : disconnect ' + this._serverHost);
@@ -186,7 +187,7 @@ class ServerConnection {
         console.log('----');
       });
 
-      this._wssClient.on('unexpected-response', (e) => {
+      this._wssClient.on('unexpected-response', () => {
         console.log('ServerConnection : unexpected-response ' + this._serverHost);
         if(this._connectState > 0) this._connectState = 0;
         this._wssClient.terminate();

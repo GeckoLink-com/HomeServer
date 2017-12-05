@@ -88,20 +88,22 @@ class HueAPI {
         if(light && (light != '')) this._SetLight(msg, bridgeNo, light, {hue: parseInt(args[1]), sat: parseInt(args[2]), bri: parseInt(args[3])});
         break;
       case 'switch':
-        let state = {
-          on: this._bridges[bridgeNo].lights[light].state.on,
-          ct: this._bridges[bridgeNo].lights[light].state.ct,
-          hue: this._bridges[bridgeNo].lights[light].state.hue,
-          sat: this._bridges[bridgeNo].lights[light].state.sat,
-          bri: this._bridges[bridgeNo].lights[light].state.bri,
-          alert: 'none',
-          transitiontime: 0
-        };
-        if(args[1] == 'on') state.on = true;
-        if(args[1] == 'off') state.on = false;
-        if(args[1] == 'toggle') state.on = !state.on;
+        {
+          let state = {
+            on: this._bridges[bridgeNo].lights[light].state.on,
+            ct: this._bridges[bridgeNo].lights[light].state.ct,
+            hue: this._bridges[bridgeNo].lights[light].state.hue,
+            sat: this._bridges[bridgeNo].lights[light].state.sat,
+            bri: this._bridges[bridgeNo].lights[light].state.bri,
+            alert: 'none',
+            transitiontime: 0
+          };
+          if(args[1] == 'on') state.on = true;
+          if(args[1] == 'off') state.on = false;
+          if(args[1] == 'toggle') state.on = !state.on;
 
-        if(light && (light != '')) this._SetLight(msg, bridgeNo, light, state);
+          if(light && (light != '')) this._SetLight(msg, bridgeNo, light, state);
+        }
         break;
       default:
         console.log('hue command error ', args[0]);
@@ -261,7 +263,8 @@ class HueAPI {
 
   _SetLight(origin, bridgeNo, light, state) {
     state.alert = 'none';
-    this._SetLightState(origin, bridgeNo, light, state, (err, res, body) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this._SetLightState(origin, bridgeNo, light, state, (err, res, _body) => {
       const origin = res.request.origin;
       this._SendResponse(origin, err);
       this._common.emit('changeHueBridges', this);
@@ -295,7 +298,7 @@ class HueAPI {
     this._bridges[bridgeNo].message = '新規ライトをサーチしています。数十秒かかります。';
     this._common.emit('changeHueBridges', this);
 
-    this._SearchNewLights(origin, bridgeNo, null, (err, res, body) => {
+    this._SearchNewLights(origin, bridgeNo, null, (err, res, _body) => {
       const bridgeNo = res.request.bridgeNo;
       const origin = res.request.origin;
       if(err) {

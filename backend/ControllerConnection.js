@@ -24,7 +24,8 @@ class ControllerConnection {
     this._lastStr = '';
     
     this._common.on('sendControllerCommand', this._ExecCommand.bind(this));
-    this._common.on('changeSystemConfig', (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this._common.on('changeSystemConfig', (_caller) => {
       if(!this._common.systemConfig) return;
       this._IntervalConnect();
     });
@@ -209,6 +210,7 @@ class ControllerConnection {
     case 'change':
       this._common.ControllerLog(msg);
       this._common.emit('changeStatus', this, msg);
+      // fall through
     case 'interval':
       for(let d of msg.data) {
         if((d.type == 'noise') && ((d.func == 'ad0') || (d.func == 'ad1'))) continue;

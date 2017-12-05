@@ -121,13 +121,14 @@ class SmartMeter {
       return;
 */
     }
-    this.GetValue(0xe7, (err, res) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.GetValue(0xe7, (err, _res) => {
       console.log('SmartMeter: 0xe7\n');
       if(err) {
         console.log('SmartMeter: GetValue 0xe7 error');
         console.log(err);
       }
-      this.GetValue(0xe8, (err, res) => {
+      this.GetValue(0xe8, (err, _res) => {
         console.log('SmartMeter: 0xe8\n');
         if(err) {
           console.log('SmartMeter: GetValue 0xe8 error');

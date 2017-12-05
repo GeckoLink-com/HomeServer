@@ -43,7 +43,7 @@ class Common extends eventEmitter {
     try {
       const data = JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf8'));
       if(data.version) this.version = data.version;
-    } catch(e) {}
+    } catch(e) {/* empty */}
     this.systemConfig.version = this.version;
     
     this.serial = '00000001';
@@ -52,7 +52,7 @@ class Common extends eventEmitter {
       const data = JSON.parse(fs.readFileSync('/boot/system.conf', 'utf8'));
       if(data.serial) this.serial = data.serial;
       if(data.initialPassword) this.initialPassword = data.initialPassword;
-    } catch(e) {}
+    } catch(e) {/* empty */}
     
     this.on('changeAlias', (caller) => {
       this._MakeAliasTable();
@@ -176,7 +176,7 @@ class Common extends eventEmitter {
     this.smartMeter = false;
     try {
       this.smartMeter = fs.statSync(this.config.wisunDevice).isCharacterDevice();
-    } catch(e) {}
+    } catch(e) {/* empty */}
     this.emit('changeSmartMeter', this);
 
     this._Registry.GetRegistry('system', (err, data) => {

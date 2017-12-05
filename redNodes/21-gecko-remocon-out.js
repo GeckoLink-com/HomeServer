@@ -6,7 +6,7 @@ module.exports = function(RED) {
     this.remoconGroup = config.remoconGroup;
     this.remoconCode = config.remoconCode;
 
-    this.on("input", (msg) => {
+    this.on("input", () => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.remoconCode, id:this.id});
     });

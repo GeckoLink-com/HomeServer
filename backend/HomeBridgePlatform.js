@@ -37,7 +37,8 @@ class HomeBridgePlatform {
     this._common.on('changeUITable', this._UITableNotify.bind(this));
     this._common.on('changeRemocon', this._UITableNotify.bind(this));
     this._common.on('statusNotify', this._StatusNotify.bind(this));
-    this._common.on('changeSystemConfig', (caller) => {
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this._common.on('changeSystemConfig', (_caller) => {
       if(!this._common.systemConfig) return;
       if(!this._common.systemConfig.platform) return;
       console.log("%s HomeBridge initialize", this._common.systemConfig.platform.name);
@@ -79,7 +80,7 @@ class HomeBridgePlatform {
     return this._UITable.TableList[table];
   }
 
-  _StatusNotify(caller) {
+  _StatusNotify(_caller) {
     for(let d of this._common.status) {
       if(this._statusChangeEvents[d.deviceName + ':' + d.func] != undefined) {
         this._statusChangeEvents[d.deviceName + ':' + d.func].forEach((event) => {
@@ -119,7 +120,7 @@ class HomeBridgePlatform {
     }
   }
 
-  _UITableNotify(caller) {
+  _UITableNotify(_caller) {
     if(!this._Bridge) return;
     if(!this._common.remocon.remoconGroup) return;
     if(!this._common.uiTable.ItemList) return;
