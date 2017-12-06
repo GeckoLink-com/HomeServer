@@ -29,7 +29,7 @@
       Common.on('toastr_info', (caller, msg, timeout) => {
         this.add(msg, 'info', timeout);
       });
-      Common.on('toastr_danger', (caller, msg, timeout) => {
+      Common.on('toastr_error', (caller, msg, timeout) => {
         this.add(msg, 'danger', timeout);
       });
       Common.on('toastr_clear', () => {

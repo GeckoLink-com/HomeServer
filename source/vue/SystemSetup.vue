@@ -291,9 +291,11 @@
       this._reader = new FileReader();
 
       Common.on('changeSystemConfig', () => {
+        if(!Common.systemConfig || !Common.systemConfig.password) return;
         this._serverKeys = Common.systemConfig.serverKeys;
         this._sshKeys = Common.systemConfig.sshKeys;
         this.passwordValid = Common.systemConfig.password && Common.systemConfig.defaultPassword && (Common.systemConfig.password !== Common.systemConfig.defaultPassword);
+        if(!this.passwordValid) Common.emit('toastr_error', this, '最初にアカウントとパスワードを設定してください。', 0);
         this.smartMeter = Common.systemConfig.smartMeter;
         this.SetSystemConfig();
       });

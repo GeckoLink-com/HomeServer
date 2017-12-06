@@ -362,12 +362,6 @@
       Common.on('changeUITable', () => {
         this.uiTable = Common.uiTable;
       });
-      Common.on('changeSystemConfig', () => {
-        if(!Common.systemConfig || !Common.systemConfig.password) return;
-        this.passwordValid = (Common.systemConfig.password !== '3b8d0b97514d2519c71664785a04e050d8090e7a616ec3c1374982d173e950ab');
-        if(!this.passwordValid) Common.emit('toastr_error', this, '最初にアカウントとパスワードを設定してください。', 0);
-      });
-
       this.SelectItem('new', -1);
 
       document.getElementById('ui-table').addEventListener('mousedown', (e) => {
