@@ -196,6 +196,9 @@
       Common.on('changeRemocon', () => {
         this.remocon = Common.remocon;
       });
+
+      this._remoconLoad = document.getElementById('remocon-load');
+      this._remoconSave = document.getElementById('remocon-save');
     },
     methods: {
       Save() {
