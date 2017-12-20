@@ -1,6 +1,6 @@
 {
   "name": "homeserver",
-  "version": "0.5.3",
+  "version": "0.5.5",
   "description": "Gecko HomeServer",
   "main": "backend/HomeServer.js",
   "dependencies": {
