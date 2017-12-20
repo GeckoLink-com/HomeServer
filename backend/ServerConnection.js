@@ -148,8 +148,9 @@ class ServerConnection {
           const strs = data.split('\0');
           for(let str of strs) {
             if(str.length) {
+              let jsonStr = null;
               try{
-                var jsonStr = JSON.parse(str);
+                jsonStr = JSON.parse(str);
               } catch(e) {
                 console.log('ServerConnection : json parse error : ', str);
               }

@@ -1,16 +1,15 @@
 <template>
   <div v-show="display" class="container-fluid tab-panel">
     <div class="col-sm-3 col-md-3 scrollable">
-      <p class="vertical-space1">
-      <div class="well">
+      <p class="vertical-space1"/><div class="well">
         <div class="row">
           <h5>
             システム設定 [ *.sconf ]
           </h5>
         </div>
-        <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin"></a>
+        <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin"/>
         <button @click="AuthSave" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
-        <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none" />
+        <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none" >
         <button type="button" @click="authLoadModal=true" class="btn btn-xs btn-primary system-config-btn">ファイルから復元</button>
         <modal v-model="authLoadModal">
           <div slot="modal-header" class="modal-header">
@@ -36,9 +35,9 @@
             それ以外の設定 [ *.gconf ]
           </h5>
         </div>
-        <a id="config-save" style="display:none" href="/config/gecko_system_config.bin"></a>
+        <a id="config-save" style="display:none" href="/config/gecko_system_config.bin"/>
         <button @click="ConfigSave" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
-        <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none" />
+        <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none" >
         <button type="button" @click="configLoadModal=true" class="btn btn-xs btn-primary system-config-btn">ファイルから復元</button>
         <modal v-model="configLoadModal">
           <div slot="modal-header" class="modal-header">
@@ -81,7 +80,7 @@
           <H5>システムバージョン</h5>
         </div>
         <div class="col-md-8">
-          <H5>{{version}}</h5>
+          <H5>{{ version }}</h5>
         </div>
       </div>
       <br>
@@ -91,7 +90,7 @@
           <H5>アカウント</h5>
         </div>
         <div class="col-md-8">
-          <input type="text" :class="accountOK" v-model="account"/>
+          <input type="text" :class="accountOK" v-model="account">
         </div>
       </div>
       <div class="row">
@@ -99,7 +98,7 @@
           <H5>パスワード</h5>
         </div>
         <div class="col-md-8">
-          <input type="password" :class="passwordOK" v-model="password1"/>
+          <input type="password" :class="passwordOK" v-model="password1">
         </div>
       </div>
       <div class="row">
@@ -107,7 +106,7 @@
           <H5>パスワード（確認）</h5>
         </div>
         <div class="col-md-8">
-          <input type="password" :class="passwordOK" v-model="password2"/>
+          <input type="password" :class="passwordOK" v-model="password2">
           <h6>このページへのlogin用。英数記号８文字以上</h6>
         </div>
       </div>
@@ -118,7 +117,7 @@
           <h5>リモートサーバー利用</h5>
         </div>
         <div class="col-md-8">
-          <slide-switch v-model="remote" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"></slide-switch>
+          <slide-switch v-model="remote" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
         </div>
       </div>
       <fieldset :disabled="remote=='off'">
@@ -127,7 +126,7 @@
             <H5>Proxy</h5>
           </div>
           <div class="col-md-6">
-            <input type="text" v-model="proxy"/>
+            <input type="text" v-model="proxy">
           </div>
         </div>
 
@@ -136,7 +135,7 @@
             <h5>接続認証</h5>
           </div>
           <div class="col-md-6">
-            <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none"/>
+            <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none">
             <button type="button" class="btn btn-xs btn-primary" @click="RemoteKeyFile">認証鍵ファイルを設定</button>
           </div>
         </div>
@@ -146,7 +145,7 @@
             <H5>メールアドレス</h5>
           </div>
           <div class="col-md-6">
-            <input type="mail" v-model="mailto"/>
+            <input type="mail" v-model="mailto">
           </div>
         </div>
 
@@ -156,7 +155,7 @@
           </div>
           <div class="col-md-6">
             N
-            <input type="text" v-model="latitude"/>
+            <input type="text" v-model="latitude">
           </div>
         </div>
 
@@ -166,7 +165,7 @@
           </div>
           <div class="col-md-6">
             E
-            <input type="text" v-model="longitude"/>
+            <input type="text" v-model="longitude">
           </div>
         </div>
         <br>
@@ -177,7 +176,7 @@
           <h5>自動update</h5>
         </div>
         <div class="col-md-8">
-          <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"></slide-switch>
+          <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
         </div>
         <br>
       </div>
@@ -187,7 +186,7 @@
           <h5>SSH</h5>
         </div>
         <div class="col-md-8">
-          <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none"/>
+          <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
           <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
           <div class="item-label">
             gecko@geckolink.local
@@ -207,13 +206,20 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
-  import SlideSwitch from './SlideSwitch.vue';
+  import { modal } from 'vue-strap';
+  import slideSwitch from './SlideSwitch.vue';
   import JsSHA from 'jssha';
 
   export default {
+    components: {
+      slideSwitch,
+      modal,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -441,10 +447,6 @@
           setTimeout(window.location.reload.bind(window.location), 1000);
         }
       },
-    },
-    components: {
-      slideSwitch: SlideSwitch,
-      modal: VueStrap.modal,
     },
   };
 </script>

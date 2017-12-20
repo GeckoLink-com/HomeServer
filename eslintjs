@@ -9,7 +9,6 @@
     "browser": true,
     "node": true,
   },
-  extends: ["plugin:vue-libs/recommended"],
   "rules": {
     "no-console": "off",
     "comma-dangle": ["error", {

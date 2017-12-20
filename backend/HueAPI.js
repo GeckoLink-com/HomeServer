@@ -146,8 +146,8 @@ class HueAPI {
       request.get({url:'https://www.meethue.com/api/nupnp', json:true}, (err, res, body) => {
         if(err) return;
         for(let device of body) {
-          var id = device.id.slice(-6);
-          var ip = device.internalipaddress;
+          const id = device.id.slice(-6);
+          const ip = device.internalipaddress;
           let no = -1;
           for(let i in this._bridges) {
             if(this._bridges[i].id == id) no = i;

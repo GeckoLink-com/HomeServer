@@ -1,12 +1,12 @@
 <template>
   <button-group :value="value">
     <radio :value="value" :disabled="disabled" v-for="button in buttons" button
-      :selected-value="button.val"
-      class="btn-xs btn-xs-wide"
-      @input="BtnClick"
-      :type="(value==button.val)?'primary':'default'"
-      :key="button.label"
-    >{{button.label}}</radio>
+           :selected-value="button.val"
+           class="btn-xs btn-xs-wide"
+           @input="BtnClick"
+           :type="(value==button.val)?'primary':'default'"
+           :key="button.label"
+    >{{ button.label }}</radio>
   </button-group>
 </template>
 
@@ -14,15 +14,30 @@
   import { radio, buttonGroup } from 'vue-strap';
 
   export default {
-    props: ['value', 'buttons', 'disabled'],
+    components: {
+      radio,
+      buttonGroup,
+    },
+    props: {
+      value: {
+        type: String,
+        default: null,
+      },
+      buttons: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
+      disabled: {
+        type: Boolean,
+        default: false,
+      },
+    },
     methods: {
       BtnClick(val) {
         this.$emit('input', val);
       },
-    },
-    components: {
-      radio: radio,
-      buttonGroup: buttonGroup,
     },
   };
 </script>

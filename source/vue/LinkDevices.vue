@@ -7,10 +7,10 @@
       </div>
       <div class="col-sm-7 col-md-7 scrollable">
         <br>
-        <div v-for="bridge of hueBridges">
+        <div v-for="bridge of hueBridges" :key="bridge.id">
           <div class="row">
             <div class="col-md-4">
-              Bridge {{bridge.id}}
+              Bridge {{ bridge.id }}
             </div>
             <div v-if="bridge.state==0" class="col-md-4">
               <button @click="HuePairing" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
@@ -24,12 +24,12 @@
             </div>
           </div>
           <h6>
-            {{bridge.message}}
+            {{ bridge.message }}
           </h6>
           <br>
-          <div v-for="(light,idx) of bridge.lights" class="row">
+          <div v-for="(light,idx) of bridge.lights" :key="idx" class="row">
             <div class="col-md-3 col-md-offset-1">
-              <input class="func-name" type="text" v-model="light.name"/>
+              <input class="func-name" type="text" v-model="light.name">
             </div>
             <div class="col-md-4">
               <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
@@ -50,12 +50,12 @@
         <br>
         <div class="row">
           <div class="col-md-4">
-            <img src="../images/home.png" width="40px"/>
+            <img src="../images/home.png" alt="home" width="40px">
           </div>
           <div class="col-md-8">
-            <qrcode class="hap-qr" :value="hapSetupURI"></qrcode>
+            <qrcode class="hap-qr" :value="hapSetupURI"/>
             <div class="well well-homekit">
-              {{hapPin}}
+              {{ hapPin }}
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@
             <H5>HAPデバイスID</h5>
           </div>
           <div class="col-md-8">
-            <input type="text" v-model="hapDeviceId"/>
+            <input type="text" v-model="hapDeviceId">
           </div>
           <br>
         </div>
@@ -85,7 +85,7 @@
           </div>
           <div class="col-md-8">
             <select class="form-control wisun-select-menu btn-inline" v-model="smartMeterAdapter">
-              <option v-for="item of smartMeterAdapters" :value="item.id">{{item.name}}</option>
+              <option v-for="item of smartMeterAdapters" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
           </div>
         </div>
@@ -94,7 +94,7 @@
             <H5>電力計ＩＤ</h5>
           </div>
           <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterID" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]"/>
+            <input v-for="(id, idx) in smartMeterID" :key="id" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
           </div>
         </div>
         <div class="row">
@@ -102,7 +102,7 @@
             <H5>電力計パスワード</h5>
           </div>
           <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterPassword" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]"/>
+            <input v-for="(id, idx) in smartMeterPassword" :key="id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
           </div>
         </div>
       </div>
@@ -119,11 +119,17 @@
 </template>
 
 <script>
-  import VueQRcode from 'v-qrcode';
+  import qrcode from 'v-qrcode';
 
   export default {
+    components: {
+      qrcode,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -261,9 +267,6 @@
         Common.systemConfig.smartMeterPassword = pw;
         Socket.emit('systemConfig', Common.systemConfig);
       },
-    },
-    components: {
-      qrcode: VueQRcode,
     },
   };
 </script>

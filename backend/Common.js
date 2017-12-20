@@ -12,7 +12,7 @@ const registry = require('./Registry');
 const fs = require('fs');
 const getmac = require('getmac');
 const moment = require('moment');
-var crypto = require('crypto');
+const crypto = require('crypto');
 
 class Common extends eventEmitter {
 

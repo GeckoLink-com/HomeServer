@@ -79,7 +79,7 @@ module.exports = {
           {
             loader: 'eslint-loader',
             options: {
-              configFile: './eslintjs'
+              configFile: './eslintvue'
             },
           },
         ],

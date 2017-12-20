@@ -5,37 +5,42 @@
       <h4>ペアリング</h4>
       <br>
       <div class="module-image">
-        <img src="../images/HB-6.png" width="200px" />
+        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
       </div>
     </div>
     <div class="col-sm-7 col-md-7">
       <br>
       <div class="row vertical-space2">
         <div class="col-md-8">
-        <div class="progress">
-          <progressbar :now="progress" type="primary" :striped="progressing" :animated="progressing"></progressbar>
-        </div>
+          <div class="progress">
+            <progressbar :now="progress" type="primary" :striped="progressing" :animated="progressing"/>
+          </div>
         </div>
         <div class="pull-right">
           <button class="btn btn-primary" type="button" :disabled="progressing" @click="ExecutePairing">モジュール書き込み</button>
         </div>
       </div>
-      <p>
-      <h5 class="error" v-if="error!=''">
+      <p/><h5 class="error" v-if="error!=''">
         子機のエラーが発生しています。<br>
-        {{error}}
+        {{ error }}
       </h5>
-      <h4>{{moduleLabel}}</h4>
+      <h4>{{ moduleLabel }}</h4>
     </div>
   </div>
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { progressbar } from 'vue-strap';
 
   export default {
+    components: {
+      progressbar,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -52,21 +57,6 @@
       progressing() {
         return (this.progress !== 0) && (this.progress !== 100);
       },
-    },
-    methods: {
-      ExecutePairing() {
-        Common.emit('toastr_clear', this);
-        this.error = '';
-        Common.emit('toastr_info', this, 'モジュール接続開始');
-        this.progress = 10;
-
-        this.configCommand = ('config ' + this.option.toString(16) + ' F ' + this.param).trim();
-        Socket.emit('command',
-          { type: 'command', device: '0', command: this.configCommand });
-      },
-    },
-    components: {
-      progressbar: VueStrap.progressbar,
     },
     mounted() {
       Socket.on('response', (msg) => {
@@ -182,6 +172,18 @@
           }
         }
       });
+    },
+    methods: {
+      ExecutePairing() {
+        Common.emit('toastr_clear', this);
+        this.error = '';
+        Common.emit('toastr_info', this, 'モジュール接続開始');
+        this.progress = 10;
+
+        this.configCommand = ('config ' + this.option.toString(16) + ' F ' + this.param).trim();
+        Socket.emit('command',
+          { type: 'command', device: '0', command: this.configCommand });
+      },
     },
   };
 </script>

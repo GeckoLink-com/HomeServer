@@ -8,8 +8,8 @@
           </div>
           <div class="col-md-8">
             <select class="form-control ui-select-menu" v-model="itemType">
-              <option v-for="type of validTypeTable" :value="type.value" :disabled="type.value=='disabled'">
-                {{type.label}}
+              <option v-for="type of validTypeTable" :key="type.label" :value="type.value" :disabled="type.value=='disabled'">
+                {{ type.label }}
               </option>
             </select>
           </div>
@@ -19,12 +19,12 @@
             <h5>項目名</h5>
           </div>
           <div class="col-md-8">
-            <input class="input-transparent ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck"/>
+            <input class="input-transparent ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck">
           </div>
         </div>
         <div class="row well well-transparent" v-if="nameAlert.length">
           <div class="col-md-offset-2">
-            <h6 class="error">{{nameAlert}}</h6>
+            <h6 class="error">{{ nameAlert }}</h6>
           </div>
         </div>
 
@@ -34,22 +34,22 @@
           </div>
           <div class="col-md-8">
             <select class="form-control ui-select-menu" v-model="itemRoom">
-              <option v-for="room of uiTable.RoomList" :value="room">
-                {{room}}
+              <option v-for="room of uiTable.RoomList" :key="room" :value="room">
+                {{ room }}
               </option>
             </select>
           </div>
         </div>
         <br>
 
-        <div v-show="(itemType!='room')&&(itemType!='hue')" class="row well well-transparent" v-for="(stat, statIdx) of status">
+        <div v-show="(itemType!='room')&&(itemType!='hue')" class="row well well-transparent" v-for="(stat, statIdx) of status" :key="stat">
           <div class="col-md-4">
-            <h5>ステータス{{statIdx}}</h5>
+            <h5>ステータス{{ statIdx }}</h5>
           </div>
           <div class="col-md-8">
             <select class="form-control ui-select-menu" v-model="status[statIdx]">
-              <option v-for="sensor of sensorList" :value="sensor">
-                {{sensor.label}}
+              <option v-for="sensor of sensorList" :key="sensor.label" :value="sensor">
+                {{ sensor.label }}
               </option>
             </select>
           </div>
@@ -63,8 +63,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="airconGroup">
-                <option v-for="(group, idx) of remocon.remoconGroup" v-if="group.type=='aircon'" :value="idx">
-                  {{group.comment}}
+                <option v-for="(group, idx) of remocon.remoconGroup" :key="idx" v-if="group.type=='aircon'" :value="idx">
+                  {{ group.comment }}
                 </option>
               </select>
             </div>
@@ -75,8 +75,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="airconModule">
-                <option v-for="module of remoconTxList" :value="module.deviceName">
-                  {{module.label}}
+                <option v-for="module of remoconTxList" :key="module.deviceName" :value="module.deviceName">
+                  {{ module.label }}
                 </option>
               </select>
             </div>
@@ -84,15 +84,15 @@
         </div>
         <br v-show="itemType=='aircon'">
 
-        <div v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')" class="row well well-func" v-for="(btn,btnIdx) of button" v-if="btnIdx<buttonNum">
+        <div v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="btnIdx" v-if="btnIdx<buttonNum">
           <div class="row well well-transparent">
             <div class="col-md-4">
-              <h5>ボタン{{btnIdx}}</h5>
+              <h5>ボタン{{ btnIdx }}</h5>
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="btn.command">
-                <option v-for="cmd of commandList" :value="cmd">
-                  {{cmd.label}}
+                <option v-for="cmd of commandList" :key="cmd" :value="cmd">
+                  {{ cmd.label }}
                 </option>
               </select>
             </div>
@@ -103,8 +103,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="btn.mode">
-                <option v-for="mode of btn.command.mode" :value="mode">
-                  {{mode}}
+                <option v-for="mode of btn.command.mode" :key="mode" :value="mode">
+                  {{ mode }}
                 </option>
               </select>
             </div>
@@ -115,8 +115,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="btn.remocon">
-                <option v-for="(item,idx) of remocon.remoconTable" :value="idx">
-                  {{item.comment}}
+                <option v-for="(item,idx) of remocon.remoconTable" :key="idx" :value="idx">
+                  {{ item.comment }}
                 </option>
               </select>
             </div>
@@ -127,8 +127,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="btn.macro">
-                <option v-for="(item,idx) of remocon.remoconMacro" :value="idx">
-                  {{item.comment}}
+                <option v-for="(item,idx) of remocon.remoconMacro" :key="idx" :value="idx">
+                  {{ item.comment }}
                 </option>
               </select>
             </div>
@@ -139,8 +139,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="btn.module">
-                <option v-for="(item,idx) of remoconTxList" :value="item.deviceName">
-                  {{item.label}}
+                <option v-for="(item,idx) of remoconTxList" :key="idx" :value="item.deviceName">
+                  {{ item.label }}
                 </option>
               </select>
             </div>
@@ -150,7 +150,7 @@
               <h5>ラベル</h5>
             </div>
             <div class="col-md-8">
-              <input class="ui-func-name" type="text" v-model="btn.label"/>
+              <input class="ui-func-name" type="text" v-model="btn.label">
             </div>
           </div>
         </div>
@@ -163,8 +163,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="tvGroup">
-                <option v-for="(group,idx) of remocon.remoconGroup" v-if="group.type=='tv'" :value="idx">
-                  {{group.comment}}
+                <option v-for="(group,idx) of remocon.remoconGroup" :key="idx" v-if="group.type=='tv'" :value="idx">
+                  {{ group.comment }}
                 </option>
               </select>
             </div>
@@ -175,8 +175,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="tvModule">
-                <option v-for="module of remoconTxList" :value="module.deviceName">
-                  {{module.label}}
+                <option v-for="module of remoconTxList" :key="module.deviceName" :value="module.deviceName">
+                  {{ module.label }}
                 </option>
               </select>
             </div>
@@ -191,8 +191,8 @@
             </div>
             <div class="col-md-8">
               <select class="form-control ui-select-menu" v-model="hueLight">
-                <option v-for="light of hueLights" :value="light">
-                  {{light.name}}
+                <option v-for="light of hueLights" :key="light.name" :value="light">
+                  {{ light.name }}
                 </option>
               </select>
             </div>
@@ -205,19 +205,19 @@
 
       <div class="row ui-submit-btn">
         <button class="btn btn-primary btn-sm pull-right" @click="Submit">
-          {{(selectedItem.index==-1)?'追加':'修正'}}
+          {{ (selectedItem.index==-1)?'追加':'修正' }}
         </button>
       </div>
     </div>
 
     <div class="col-sm-7 col-md-7 scrollable">
       <div class="well well-uisel" id="ui-table">
-        <table class="table ui-table" v-for="(room, roomIdx) of uiTable.RoomList">
+        <table class="table ui-table" v-for="(room, roomIdx) of uiTable.RoomList" :key="roomIdx">
           <thead>
             <tr class="gray" @click="SelectItem('room', roomIdx)" data-id="room" :class="{success:('room'==selectedItem.type)&&(roomIdx==selectedItem.index)}">
-              <th class="col-md-4">{{room}}</th>
-              <th class="col-md-2"></th>
-              <th class="col-md-2"></th>
+              <th class="col-md-4">{{ room }}</th>
+              <th class="col-md-2"/>
+              <th class="col-md-2"/>
               <th class="col-md-4">
                 <button v-show="RoomDeleteEnable(room)" class="btn btn-xs btn-danger delete-btn pull-right" @click="DeleteItem('room', room)">
                   -
@@ -226,10 +226,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, itemIdx) of uiTable.ItemList" v-if="item.room==room" @click="SelectItem(item.type, itemIdx)" :data-id="itemIdx" :class="{success:('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)}">
-              <td>{{item.label}}</td>
-              <td>{{StatusItem(item, 0)}}</td>
-              <td>{{StatusItem(item, 1)}}</td>
+            <tr v-for="(item, itemIdx) of uiTable.ItemList" :key="itemIdx" v-if="item.room==room" @click="SelectItem(item.type, itemIdx)" :data-id="itemIdx" :class="{success:('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)}">
+              <td>{{ item.label }}</td>
+              <td>{{ StatusItem(item, 0) }}</td>
+              <td>{{ StatusItem(item, 1) }}</td>
               <td>
                 <button v-if="item.type=='aircon'" class="btn btn-default btn-xs btn-margin">
                   aircon mode
@@ -242,8 +242,8 @@
                     bright
                   </button>
                 </div>
-                <button v-for="(btn, idx) of item.buttons" class="btn btn-primary btn-xs btn-margin">
-                  {{ButtonItem(item, idx)}}
+                <button v-for="(btn, idx) of item.buttons" :key="btn" class="btn btn-primary btn-xs btn-margin">
+                  {{ ButtonItem(item, idx) }}
                 </button>
                 <button v-if="item.type=='tv'" class="btn btn-default btn-xs btn-margin">
                   ch
@@ -259,9 +259,9 @@
           <thead>
             <tr class="blue" :class="{success:selectedItem.index==-1}" @click="SelectItem('new', -1)">
               <th class="col-md-4">新規項目追加</th>
-              <th class="col-md-2"></th>
-              <th class="col-md-2"></th>
-              <th class="col-md-4"></th>
+              <th class="col-md-2"/>
+              <th class="col-md-2"/>
+              <th class="col-md-4"/>
             </tr>
           </thead>
         </table>
@@ -273,7 +273,10 @@
 <script>
   export default {
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -560,6 +563,7 @@
           this.tvModule = '';
           return;
         }
+        if(this.uiTable.ItemList[idx] == null) return;
 
         const item = this.uiTable.ItemList[idx];
         this.selectedItem = { type: item.type, index: idx };

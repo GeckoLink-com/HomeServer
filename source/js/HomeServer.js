@@ -31,7 +31,7 @@ class HomeServer {
 
     document.addEventListener('DOMContentLoaded', (ev) => {
       // IE Error
-      var ua = window.navigator.userAgent.toLowerCase();
+      const ua = window.navigator.userAgent.toLowerCase();
       if((ua.indexOf('msie') > 0) ||
          (ua.indexOf('trident/7') > 0)) {
         document.body.innerHTML = '<h2><br>このページはHTML5ブラウザのみの対応です。<br>申し訳ありませんがChrome/Safari/Firefoxでアクセスしてください。<br></h2>';

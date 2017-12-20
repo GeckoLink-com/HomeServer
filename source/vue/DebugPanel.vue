@@ -3,20 +3,20 @@
     <div class="col-sm-5 col-md-5 scrollable">
       <div class="row">
         <h4>ControlServer Command</h4>
-        <textarea cols="40" rows="3" v-model="command"></textarea>
+        <textarea cols="40" rows="3" v-model="command"/>
       </div>
       <div class="row">
         <dropdown class="moduleLabel" text="Send">
-          <li v-for="dev of moduleList" class="module-list" :class="{disabled:!dev.enable}">
+          <li v-for="dev of moduleList" :key="dev.device" class="module-list" :class="{disabled:!dev.enable}">
             <a href="#" @click="SelectModule" :data-device="dev.device" :data-enable="dev.enable" :disabled="!dev.enable">
-              {{dev.label}}
+              {{ dev.label }}
             </a>
           </li>
         </dropdown>
         <h4>ControlServer Response</h4>
-        <textarea id="response" cols="40" rows="8" readonly :value="response" ></textarea>
+        <textarea id="response" cols="40" rows="8" readonly :value="response" />
         <h4>Sensor Event</h4>
-        <textarea id="events" cols="40" rows="8" readonly :value="events"></textarea>
+        <textarea id="events" cols="40" rows="8" readonly :value="events"/>
       </div>
     </div>
     <div class="col-sm-7 col-md-7 scrollable">
@@ -38,16 +38,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="dev of actualDevices">
-                <td>{{dev.deviceName?dev.deviceName:'-'}}</td>
-                <td>{{dev.device}}</td>
-                <td>{{dev.type?dev.type:'-'}}</td>
-                <td>{{dev.networkAddr?dev.networkAddr:'-'}}</td>
-                <td>{{dev.option?dev.option:'-'}}</td>
-                <td>{{dev.param?parseInt(dev.param, 16):'-'}}</td>
-                <td>{{dev.version?dev.version:'-'}}</td>
-                <td>{{dev.voltage?dev.voltage:'-'}}</td>
-                <td>{{dev.state}}</td>
+              <tr v-for="dev of actualDevices" :key="dev.device">
+                <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
+                <td>{{ dev.device }}</td>
+                <td>{{ dev.type?dev.type:'-' }}</td>
+                <td>{{ dev.networkAddr?dev.networkAddr:'-' }}</td>
+                <td>{{ dev.option?dev.option:'-' }}</td>
+                <td>{{ dev.param?parseInt(dev.param, 16):'-' }}</td>
+                <td>{{ dev.version?dev.version:'-' }}</td>
+                <td>{{ dev.voltage?dev.voltage:'-' }}</td>
+                <td>{{ dev.state }}</td>
               </tr>
             </tbody>
           </table>
@@ -64,10 +64,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="stat of status">
-                <td>{{stat.deviceName?stat.deviceName:stat.device}}</td>
-                <td>{{stat.funcName?stat.funcName:stat.func}}</td>
-                <td>{{stat.valueName?stat.valueName:stat.value}}</td>
+              <tr v-for="stat of status" :key="stat.device">
+                <td>{{ stat.deviceName?stat.deviceName:stat.device }}</td>
+                <td>{{ stat.funcName?stat.funcName:stat.func }}</td>
+                <td>{{ stat.valueName?stat.valueName:stat.value }}</td>
               </tr>
             </tbody>
           </table>
@@ -86,11 +86,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q of queue.writeQueue">
-                <td>{{q.device}}</td>
-                <td>{{q.sequenceID}}</td>
-                <td>{{q.command}}</td>
-                <td>{{QueueDecode(q.code)}}</td>
+              <tr v-for="q of queue.writeQueue" :key="q.device">
+                <td>{{ q.device }}</td>
+                <td>{{ q.sequenceID }}</td>
+                <td>{{ q.command }}</td>
+                <td>{{ QueueDecode(q.code) }}</td>
               </tr>
             </tbody>
           </table>
@@ -101,12 +101,12 @@
           <table class="queue-table">
             <thead>
               <tr>
-               <th>dump</th>
+                <th>dump</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q of queue.readQueue">
-                <td>{{QueueDecode(q.code)}}</td>
+              <tr v-for="q of queue.readQueue" :key="q.code">
+                <td>{{ QueueDecode(q.code) }}</td>
               </tr>
             </tbody>
           </table>
@@ -118,18 +118,18 @@
           <table class="controllerLog-table">
             <thead>
               <tr>
-               <th class="col-sm-2">time</th>
-               <th class="col-sm-1">type</th>
-               <th class="col-sm-2">module</th>
-               <th class="col-sm-7">message</th>
+                <th class="col-sm-2">time</th>
+                <th class="col-sm-1">type</th>
+                <th class="col-sm-2">module</th>
+                <th class="col-sm-7">message</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="l of controllerLog">
-                <td>{{l.timeStamp.substr(5, 11)}}</td>
-                <td>{{l.type}}</td>
-                <td>{{l.body.deviceName||l.body.device}}</td>
-                <td>{{LogText(l)}}</td>
+              <tr v-for="l of controllerLog" :key="l">
+                <td>{{ l.timeStamp.substr(5, 11) }}</td>
+                <td>{{ l.type }}</td>
+                <td>{{ l.body.deviceName||l.body.device }}</td>
+                <td>{{ LogText(l) }}</td>
               </tr>
             </tbody>
           </table>
@@ -142,11 +142,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { dropdown } from 'vue-strap';
 
   export default {
+    components: {
+      dropdown,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -267,6 +273,18 @@
         this.hueLights = Common.hueLights;
       });
     },
+    updated() {
+      if(this.responseFlag) {
+        const responsePanel = document.getElementById('response');
+        responsePanel.scrollTop = responsePanel.scrollHeight;
+        this.responseFlag = false;
+      }
+      if(this.eventsFlag) {
+        const eventPanel = document.getElementById('events');
+        eventPanel.scrollTop = eventPanel.scrollHeight;
+        this.eventsFlag = false;
+      }
+    },
     methods: {
       SelectModule(e) {
         if(!e.target.dataset.enable) return;
@@ -297,21 +315,6 @@
             return '';
         }
       },
-    },
-    updated() {
-      if(this.responseFlag) {
-        const responsePanel = document.getElementById('response');
-        responsePanel.scrollTop = responsePanel.scrollHeight;
-        this.responseFlag = false;
-      }
-      if(this.eventsFlag) {
-        const eventPanel = document.getElementById('events');
-        eventPanel.scrollTop = eventPanel.scrollHeight;
-        this.eventsFlag = false;
-      }
-    },
-    components: {
-      dropdown: VueStrap.dropdown,
     },
   };
 </script>

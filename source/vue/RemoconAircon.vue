@@ -9,13 +9,13 @@
             <h5>登録名</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!nameValid}" type="text" v-model="name" @input="NameCheck"/>
+            <input class="ui-func-name" :class="{error:!nameValid}" type="text" v-model="name" @input="NameCheck">
           </div>
         </div>
         <div class="row">
           <div class="col-md-offset-2">
             <h6>識別しやすい名前を付けてください。</h6>
-            <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
+            <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
           </div>
         </div>
         <div class="row">
@@ -23,12 +23,12 @@
             <h5>コメント</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck"/>
+            <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck">
           </div>
         </div>
         <div class="row" v-if="commentAlert.length">
           <div class="col-md-offset-2">
-            <h6 class="error">{{commentAlert}}</h6>
+            <h6 class="error">{{ commentAlert }}</h6>
           </div>
         </div>
         <br>
@@ -65,7 +65,7 @@
 
     <div class="col-sm-7 col-md-7">
       <div v-show="sequence!=0" class="row well well-transparent">
-         <h4>{{modeLabel[mode]}}</h4>
+        <h4>{{ modeLabel[mode] }}</h4>
       </div>
       <div class="well well-transparent">
         <div class="row">
@@ -74,8 +74,8 @@
               <h5>最低温度</h5>
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="lowTemp[mode]" @change="LowTemp">
-                  <option></option>
-                  <option v-for="temp in 9" :value="temp+11">{{temp+11}}°C</option>
+                  <option/>
+                  <option v-for="temp in 9" :key="temp" :value="temp+11">{{ temp+11 }}°C</option>
                 </select>
               </form>
             </div>
@@ -83,8 +83,8 @@
               <h5>温度間隔</h5>
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="tempStep[mode]" @change="TempStep">
-                  <option></option>
-                  <option v-for="temp in 2" :value="temp*0.5">{{temp*0.5}}°C</option>
+                  <option/>
+                  <option v-for="temp in 2" :key="temp" :value="temp*0.5">{{ temp*0.5 }}°C</option>
                 </select>
               </form>
             </div>
@@ -94,8 +94,8 @@
               <h5>最高温度</h5>
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="highTemp[mode]" @change="HighTemp">
-                  <option></option>
-                  <option v-for="temp in 9" :value="temp+25">{{temp+25}}°C</option>
+                  <option/>
+                  <option v-for="temp in 9" :key="temp" :value="temp+25">{{ temp+25 }}°C</option>
                 </select>
               </form>
             </div>
@@ -112,9 +112,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item,idx) of remoconTable[mode]" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
-              <td>{{(!lowTemp[mode]||(lowTemp[mode]==0))?'':((idx*tempStep[mode]+lowTemp[mode]) + '°C')}}</td>
-              <td>{{item?item.info:''}}</td>
+            <tr v-for="(item,idx) of remoconTable[mode]" :key="idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
+              <td>{{ (!lowTemp[mode]||(lowTemp[mode]==0))?'':((idx*tempStep[mode]+lowTemp[mode]) + '°C') }}</td>
+              <td>{{ item?item.info:'' }}</td>
             </tr>
           </tbody>
         </table>
@@ -125,11 +125,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { alert } from 'vue-strap';
 
   export default {
+    components: {
+      alert,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -486,9 +492,6 @@
           }
         } while(reentry);
       },
-    },
-    components: {
-      alert: VueStrap.alert,
     },
   };
 </script>

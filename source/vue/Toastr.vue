@@ -2,15 +2,19 @@
   <div class="toast-container">
     <transition-group appear name="toast-fade" tag="div">
       <alert class="toast-fade-item" v-for="msg of messages" :type="msg.type" :key="msg.key" width="100%">
-        <h5 class="toast-text" v-html="msg.text"></h5>
+        <h5 class="toast-text" v-html="msg.text"/>
       </alert>
     </transition-group>
   </div>
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { alert } from 'vue-strap';
+
   export default {
+    components: {
+      alert,
+    },
     data() {
       return {
         messages: [],
@@ -62,9 +66,6 @@
           }, timeout, data);
         }
       },
-    },
-    components: {
-      alert: VueStrap.alert,
     },
   };
 </script>

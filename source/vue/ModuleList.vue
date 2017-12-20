@@ -5,7 +5,7 @@
       <h4>子機一覧</h4>
       <br>
       <div class="module-image">
-        <img src="../images/HB-6.png" width="200px" />
+        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
       </div>
     </div>
     <div class="col-sm-7 col-md-7 scrollable">
@@ -22,14 +22,14 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="dev of actualDevices" @click.stop="selectedDevice=dev.device" :class="{success:(selectedDevice==dev.device)}">
-            <td>{{dev.deviceName?dev.deviceName:'-'}}</td>
-            <td>{{dev.device}}</td>
-            <td>{{dev.type?dev.type:'-'}}</td>
-            <td>{{dev.version?dev.version:'-'}}</td>
-            <td>{{dev.voltage?dev.voltage:'-'}}</td>
+          <tr v-for="dev of actualDevices" :key="dev.device" :class="{success:(selectedDevice==dev.device)}" @click.stop="selectedDevice=dev.device">
+            <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
+            <td>{{ dev.device }}</td>
+            <td>{{ dev.type?dev.type:'-' }}</td>
+            <td>{{ dev.version?dev.version:'-' }}</td>
+            <td>{{ dev.voltage?dev.voltage:'-' }}</td>
             <td v-if="dev.fwupdateSeq == dev.fwupdateNum">
-              {{dev.state}}
+              {{ dev.state }}
               <button v-show="(selectedDevice==dev.device)&&(dev.state=='dead')" class="btn btn-xs btn-danger delete-btn pull-right" @click.stop="Delete(dev.device)">
                 -
               </button>
@@ -38,7 +38,7 @@
               </button>
             </td>
             <td v-if="dev.fwupdateSeq != dev.fwupdateNum">
-              <progressbar :now="dev.fwupdateSeq * 100 / dev.fwupdateNum" type="primary" :striped="true" :animated="true" class="module-progress"></progressbar>
+              <progressbar :now="dev.fwupdateSeq * 100 / dev.fwupdateNum" type="primary" :striped="true" :animated="true" class="module-progress"/>
             </td>
           </tr>
         </tbody>
@@ -48,11 +48,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { progressbar } from 'vue-strap';
 
   export default {
+    components: {
+      progressbar,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -99,9 +105,6 @@
           { type: 'command', device: device, command: 'update' });
         this.selectedDevice = null;
       },
-    },
-    components: {
-      progressbar: VueStrap.progressbar,
     },
   };
 </script>

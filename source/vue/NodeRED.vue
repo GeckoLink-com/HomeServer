@@ -1,19 +1,21 @@
 <template>
-  <iframe v-if="initialized" v-show="display" src="/red/" id="node-red" scrolling="no" frameborder="no">
-  </iframe>
+  <iframe v-if="initialized()" v-show="display" src="/red/" id="node-red" scrolling="no" frameborder="no"/>
 </template>
 
 <script>
   export default {
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
         initializeState: false,
       };
     },
-    computed: {
+    methods: {
       initialized() {
         if(this.display === true) this.initializeState = true;
         return this.initializeState;

@@ -160,7 +160,7 @@ class ControllerConnection {
 
   _SendRemoconMacro(origin, device, macro, p) {
     if(p >= macro.length) {
-      var msg = {
+      this._common.emit('response', this, {
         type: 'response',
         data: [{
           type: 'command',
@@ -169,9 +169,8 @@ class ControllerConnection {
           deviceName: origin.deviceName,
           command: origin.command,
           status: 'ok',
-        }]
-      }
-      this._common.emit('response', this, msg);
+        }],
+      });
       return;
     }
     if(macro[p].wait) {

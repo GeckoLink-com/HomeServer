@@ -5,14 +5,14 @@
       <h4>詳細設定</h4>
       <br>
       <div class="module-image">
-        <img src="../images/HB-6.png" width="200px" />
+        <img src="../images/HB-6.png" alt="GL-1100" width="200px">
       </div>
       <br>
 
       <dropdown class="moduleLabel" :text="selectedModuleLabel">
-        <li v-for="module of moduleList" class="module-list" :class="{disabled:!module.enable}" >
+        <li v-for="module of moduleList" :key="module.name" class="module-list" :class="{disabled:!module.enable}" >
           <a href="#" :data-device="module.device" :data-name="module.name" :data-enable="module.enable" @click="Click" :disabled="!module.enable">
-            {{module.label}}
+            {{ module.label }}
           </a>
         </li>
       </dropdown>
@@ -23,9 +23,9 @@
       <div class="well" v-if="isAVR">
         <div>
           <label>モジュール名</label>
-          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck"/>
+          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck">
           <h6>設置場所等、識別しやすい名前を付けてください。</h6>
-          <h6 v-if="moduleNameAlert.length" class="error">{{moduleNameAlert}}</h6>
+          <h6 v-if="moduleNameAlert.length" class="error">{{ moduleNameAlert }}</h6>
         </div>
 
         <div class="row well well-transparent">
@@ -33,7 +33,7 @@
             <h5>Heartbeat LED</h5>
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="heartbeat.sw" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="heartbeat.sw" :buttons="buttonsOnOff"/>
           </div>
         </div>
 
@@ -42,10 +42,10 @@
             <h5>Motor制御</h5>
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="motor.sw" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="motor.sw" :buttons="buttonsOnOff"/>
             <fieldset class="btn-inline" :disabled="motor.sw==0">
               <div class="item-label">1回転のパルス数</div>
-              <input class="state" type="text" v-model="motor.optionValue"/>
+              <input class="state" type="text" v-model="motor.optionValue">
             </fieldset>
           </div>
         </div>
@@ -57,7 +57,7 @@
             </fieldset>
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="remoconTx.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="remoconTx.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"/>
           </div>
         </div>
 
@@ -68,29 +68,29 @@
             </fieldset>
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="remoconRx.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="remoconRx.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"/>
           </div>
         </div>
 
-        <div class="row well well-transparent" v-for="num of [0,1]">
+        <div class="row well well-transparent" v-for="num of [0,1]" :key="num">
           <div class="col-md-2">
-            <h5>AD{{num}}</h5>
+            <h5>AD{{ num }}</h5>
           </div>
           <div class="col-md-3">
-            <input class="func-name" type="text" v-model="ad[num].name" :disabled="ad[num].sw==0"/>
+            <input class="func-name" type="text" v-model="ad[num].name" :disabled="ad[num].sw==0">
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"/>
             <select class="form-control select-menu btn-inline" v-model="ad[num].type" :disabled="ad[num].sw==0">
-              <option v-for="item of adFuncTable" :value="item.type">{{item.name}}</option>
+              <option v-for="item of adFuncTable" :key="item.name" :value="item.type">{{ item.name }}</option>
             </select>
             <fieldset class="btn-inline" v-show="(ad[num].sw==1)&&(ad[num].type=='other')">
               <div class="item-label">offset</div>
-              <input class="state" type="text" v-model="ad[num].offset"/>
+              <input class="state" type="text" v-model="ad[num].offset">
               <div class="item-label">gain</div>
-              <input class="state" type="text" v-model="ad[num].gain"/>
+              <input class="state" type="text" v-model="ad[num].gain">
               <div class="item-label">unit</div>
-              <input class="state" type="text" v-model="ad[num].unit"/>
+              <input class="state" type="text" v-model="ad[num].unit">
             </fieldset>
           </div>
         </div>
@@ -103,7 +103,7 @@
               </fieldset>
             </div>
             <div class="col-md-7">
-              <slide-switch v-model="rainSensor.sw" :disabled="(ledTape.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"></slide-switch>
+              <slide-switch v-model="rainSensor.sw" :disabled="(ledTape.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"/>
             </div>
           </div>
           <div class="row" v-if="ledTapeEnable">
@@ -113,56 +113,56 @@
               </fieldset>
             </div>
             <div class="col-md-7">
-              <slide-switch v-model="ledTape.sw" :disabled="(rainSensor.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"></slide-switch>
+              <slide-switch v-model="ledTape.sw" :disabled="(rainSensor.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"/>
             </div>
           </div>
 
           <hr>
-          <div class="row" v-for="num of [0, 1]">
+          <div class="row" v-for="num of [0, 1]" :key="num">
             <div class="col-md-2">
               <fieldset :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)">
-                <h5>GPIO{{num}}</h5>
+                <h5>GPIO{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw==0)" />
+              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw==0)" >
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="gpio[num].sw" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)" :buttons="buttonsInOutOff"></slide-switch>
-              <slide-switch class="btn-inline" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw!=2)" v-model="gpio[num].pull" :buttons="buttonsPlupNone"></slide-switch>
+              <slide-switch class="btn-inline" v-model="gpio[num].sw" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)" :buttons="buttonsInOutOff"/>
+              <slide-switch class="btn-inline" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw!=2)" v-model="gpio[num].pull" :buttons="buttonsPlupNone"/>
               <select class="form-control select-menu btn-inline" v-model="gpio[num].type" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw!=2)">
-                <option v-for="item of gpioFuncTable" :value="item.type" :data-type="item.type">{{item.name}}</option>
+                <option v-for="item of gpioFuncTable" :key="item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
               </select>
               <fieldset class="btn-inline" v-show="(rainSensor.sw==0)&&((num!=0)||(ledTape.sw==0))&&(gpio[num].sw!=0)&&(motor.sw==0)&&(gpio[num].type=='other')">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="gpio[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="gpio[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="gpio[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="gpio[num].valueLabel[1]">
               </fieldset>
               <fieldset class="btn-inline" v-show="gpio[num].type=='motion'">
                 <div class="item-label">遅延時間</div>
-                <input class="state" type="text" v-model="gpio[num].delay"/>
+                <input class="state" type="text" v-model="gpio[num].delay">
                 <div class="item-label">秒</div>
               </fieldset>
             </div>
           </div>
         </div>
 
-        <div class="row well well-func" v-for="num of [0, 1]">
+        <div class="row well well-func" v-for="num of [0, 1]" :key="num">
           <div class="row">
             <div class="col-md-2">
-              <h5>HA端子{{num}}</h5>
+              <h5>HA端子{{ num }}</h5>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="ha[num].name" :disabled="ha[num].sw==0"/>
+              <input class="func-name" type="text" v-model="ha[num].name" :disabled="ha[num].sw==0">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="ha[num].sw" :buttons="buttonsOnOff"></slide-switch>
+              <slide-switch class="btn-inline" v-model="ha[num].sw" :buttons="buttonsOnOff"/>
               <fieldset class="btn-inline" :disabled="ha[num].sw==0">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="ha[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="ha[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="ha[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="ha[num].valueLabel[1]">
               </fieldset>
             </div>
           </div>
@@ -171,19 +171,19 @@
           <div class="row">
             <div class="col-md-2">
               <fieldset :disabled="ha[num].sw==1">
-                <h5>HAI{{num}}</h5>
+                <h5>HAI{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="hai[num].name" :disabled="(ha[num].sw==1)||(hai[num].sw==0)"/>
+              <input class="func-name" type="text" v-model="hai[num].name" :disabled="(ha[num].sw==1)||(hai[num].sw==0)">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="hai[num].sw" :buttons="buttonsOnOff" :disabled="ha[num].sw==1"></slide-switch>
+              <slide-switch class="btn-inline" v-model="hai[num].sw" :buttons="buttonsOnOff" :disabled="ha[num].sw==1"/>
               <fieldset class="btn-inline" :disabled="(ha[num].sw==1)||(hai[num].sw==0)">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="hai[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="hai[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="hai[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="hai[num].valueLabel[1]">
               </fieldset>
             </div>
           </div>
@@ -191,19 +191,19 @@
           <div class="row">
             <div class="col-md-2">
               <fieldset :disabled="ha[num].sw==1">
-                <h5>HAO{{num}}</h5>
+                <h5>HAO{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="hao[num].name" :disabled="(ha[num].sw==1)||(hao[num].sw==0)"/>
+              <input class="func-name" type="text" v-model="hao[num].name" :disabled="(ha[num].sw==1)||(hao[num].sw==0)">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="hao[num].sw" :buttons="buttonsOnOff" :disabled="ha[num].sw==1"></slide-switch>
+              <slide-switch class="btn-inline" v-model="hao[num].sw" :buttons="buttonsOnOff" :disabled="ha[num].sw==1"/>
               <fieldset class="btn-inline" :disabled="(ha[num].sw==1)||(hao[num].sw==0)">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="hao[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="hao[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="hao[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="hao[num].valueLabel[1]">
               </fieldset>
             </div>
           </div>
@@ -217,14 +217,14 @@
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="sw.name" :disabled="(sw.sw==0)||(motor.sw==1)"/>
+              <input class="func-name" type="text" v-model="sw.name" :disabled="(sw.sw==0)||(motor.sw==1)">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="sw.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"></slide-switch>
+              <slide-switch class="btn-inline" v-model="sw.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"/>
               <div class="btn-inline">
                 <fieldset :disabled="(sw.sw==0)||(motor.sw==1)">
                   <div class="item-label">動作時間</div>
-                  <input class="state" type="text" v-model="sw.optionValue"/>
+                  <input class="state" type="text" v-model="sw.optionValue">
                   <div class="item-label">秒</div>
                 </fieldset>
               </div>
@@ -232,22 +232,22 @@
           </div>
           <hr>
 
-          <div class="row" v-for="num of [0, 1, 2]">
+          <div class="row" v-for="num of [0, 1, 2]" :key="num">
             <div class="col-md-2">
               <fieldset :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))">
-                <h5>SWIO{{num}}</h5>
+                <h5>SWIO{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="swio[num].name" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))"/>
+              <input class="func-name" type="text" v-model="swio[num].name" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="swio[num].sw" :buttons="buttonsOnOff" :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))"></slide-switch>
+              <slide-switch class="btn-inline" v-model="swio[num].sw" :buttons="buttonsOnOff" :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))"/>
               <fieldset class="btn-inline" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="swio[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="swio[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="swio[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="swio[num].valueLabel[1]">
               </fieldset>
             </div>
           </div>
@@ -258,53 +258,53 @@
       <div class="well" v-if="!isAVR">
         <div>
           <label>モジュール名</label>
-          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck"/>
+          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck">
           <h6>設置場所等、識別しやすい名前を付けてください。</h6>
-          <h6 v-if="moduleNameAlert.length" class="error">{{moduleNameAlert}}</h6>
+          <h6 v-if="moduleNameAlert.length" class="error">{{ moduleNameAlert }}</h6>
         </div>
 
-        <div class="row well well-transparent" v-for="num of [2,3]">
+        <div class="row well well-transparent" v-for="num of [2,3]" :key="num">
           <div class="col-md-2">
-            <h5>AD{{num}}</h5>
+            <h5>AD{{ num }}</h5>
           </div>
           <div class="col-md-3">
-            <input class="func-name" type="text" v-model="ad[num].name" :disabled="ad[num].sw==0"/>
+            <input class="func-name" type="text" v-model="ad[num].name" :disabled="ad[num].sw==0">
           </div>
           <div class="col-md-7">
-            <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"></slide-switch>
+            <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"/>
             <select class="form-control select-menu btn-inline" v-model="ad[num].type" :disabled="ad[num].sw==0">
-              <option v-for="item of adFuncTable" :value="item.type">{{item.name}}</option>
+              <option v-for="item of adFuncTable" :key="item.name" :value="item.type">{{ item.name }}</option>
             </select>
             <fieldset class="btn-inline" v-show="(ad[num].sw==1)&&(ad[num].type=='other')">
               <div class="item-label">offset</div>
-              <input class="state" type="text" v-model="ad[num].offset"/>
+              <input class="state" type="text" v-model="ad[num].offset">
               <div class="item-label">gain</div>
-              <input class="state" type="text" v-model="ad[num].gain"/>
+              <input class="state" type="text" v-model="ad[num].gain">
               <div class="item-label">unit</div>
-              <input class="state" type="text" v-model="ad[num].unit"/>
+              <input class="state" type="text" v-model="ad[num].unit">
             </fieldset>
           </div>
         </div>
 
         <div class="row well well-func">
-          <div class="row" v-for="num of [2, 3]">
+          <div class="row" v-for="num of [2, 3]" :key="num">
             <div class="col-md-2">
-              <h5>GPI{{num}}</h5>
+              <h5>GPI{{ num }}</h5>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="gpio[num].sw==0"/>
+              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="gpio[num].sw==0">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="gpio[num].sw" :buttons="buttonsOnOff"></slide-switch>
-              <slide-switch class="btn-inline" :disabled="!gpio[num].sw" v-model="gpio[num].pull" :buttons="buttonsPlupNone"></slide-switch>
+              <slide-switch class="btn-inline" v-model="gpio[num].sw" :buttons="buttonsOnOff"/>
+              <slide-switch class="btn-inline" :disabled="!gpio[num].sw" v-model="gpio[num].pull" :buttons="buttonsPlupNone"/>
               <select class="form-control select-menu btn-inline" v-model="gpio[num].type" :disabled="!gpio[num].sw">
-                <option v-for="item of gpioFuncTable" :value="item.type" :data-type="item.type">{{item.name}}</option>
+                <option v-for="item of gpioFuncTable" :key="item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
               </select>
               <fieldset class="btn-inline" v-show="(gpio[num].sw!=0)&&(gpio[num].type=='other')">
                 <div class="item-label">０</div>
-                <input class="state" type="text" v-model="gpio[num].valueLabel[0]"/>
+                <input class="state" type="text" v-model="gpio[num].valueLabel[0]">
                 <div class="item-label">１</div>
-                <input class="state" type="text" v-model="gpio[num].valueLabel[1]"/>
+                <input class="state" type="text" v-model="gpio[num].valueLabel[1]">
               </fieldset>
             </div>
           </div>
@@ -321,11 +321,18 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
-  import SlideSwitch from './SlideSwitch.vue';
+  import { dropdown } from 'vue-strap';
+  import slideSwitch from './SlideSwitch.vue';
   export default {
+    components: {
+      dropdown,
+      slideSwitch,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       /*
@@ -866,10 +873,6 @@
         }
         Common.emit('changeModule', this, this.selectedModule, this.moduleName, newOption.toString(16), param, moduleType);
       },
-    },
-    components: {
-      dropdown: VueStrap.dropdown,
-      slideSwitch: SlideSwitch,
     },
   };
 </script>

@@ -12,8 +12,8 @@
                 <option value="newMacro">
                   新規追加
                 </option>
-                <option v-for="(item,index) of remocon.remoconMacro" :value="index">
-                  {{index}}
+                <option v-for="(item,index) of remocon.remoconMacro" :key="item" :value="index">
+                  {{ index }}
                 </option>
               </select>
             </form>
@@ -25,13 +25,13 @@
             <h5>登録名</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" v-model="name" :class="{error:!nameValid}" @input="NameCheck"/>
+            <input class="ui-func-name" v-model="name" :class="{error:!nameValid}" @input="NameCheck">
           </div>
         </div>
         <div class="row">
           <div class="col-md-offset-2">
             <h6>識別しやすい名前を付けてください。</h6>
-            <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
+            <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
           </div>
         </div>
         <br>
@@ -40,12 +40,12 @@
             <h5>コメント</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" v-model="comment" :class="{error:!commentValid}" @input="CommentCheck"/>
+            <input class="ui-func-name" v-model="comment" :class="{error:!commentValid}" @input="CommentCheck">
           </div>
         </div>
         <div class="row" v-if="commentAlert.length">
           <div class="col-md-offset-2">
-            <h6 class="error">{{commentAlert}}</h6>
+            <h6 class="error">{{ commentAlert }}</h6>
           </div>
         </div>
 
@@ -59,7 +59,7 @@
                 マクロ登録の削除
               </div>
               <div v-if="selectedMacro!='newMacro'" slot="modal-body" class="modal-body">
-                {{selectedMacro}}を削除します。よろしいですか？
+                {{ selectedMacro }}を削除します。よろしいですか？
               </div>
               <div v-if="selectedMacro=='newMacro'" slot="modal-body" class="modal-body">
                 削除しました。
@@ -86,21 +86,21 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item of macro">
+            <tr v-for="item of macro" :key="item">
               <td v-if="item.wait!=null">
-                <input class="remocon-inline-input" type="number" step="0.1" v-model="item.wait" @change="dirty=true"></input>
+                <input class="remocon-inline-input" type="number" step="0.1" v-model="item.wait" @change="dirty=true">
                 秒
               </td>
               <td v-if="item.wait!=null">待ち時間</td>
               <td v-if="item.wait==null">
                 <select class="form-control remocon-select-menu" v-model="item.label" @change="dirty=true">
-                  <option v-for="(remocon,idx) of remocon.remoconTable" :value="idx">
-                    {{idx}}
+                  <option v-for="(remocon,idx) of remocon.remoconTable" :key="remocon" :value="idx">
+                    {{ idx }}
                   </option>
                 </select>
               </td>
               <td v-if="item.wait==null">
-                {{item.label?remocon.remoconTable[item.label].comment:item.info}}
+                {{ item.label?remocon.remoconTable[item.label].comment:item.info }}
               </td>
             </tr>
           </tbody>
@@ -111,11 +111,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { modal } from 'vue-strap';
 
   export default {
+    components: {
+      modal,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -254,9 +260,6 @@
         this.selectedMacro = 'newMacro';
         this.SelectMacro();
       },
-    },
-    components: {
-      modal: VueStrap.modal,
     },
   };
 </script>

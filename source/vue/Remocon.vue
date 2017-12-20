@@ -7,9 +7,9 @@
         <h5>
           リモコンコード
         </h5>
-        <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json"></a>
+        <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json"/>
         <button @click="Save" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
-        <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none" />
+        <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none" >
         <button type="button" @click="Load" class="btn btn-xs btn-primary system-config-btn">ファイルから追加</button>
         <h6 class="system-config-btn">
           同じ登録名のコードは<br>
@@ -45,10 +45,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item of lastRemoconCode" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
-              <td>{{item.deviceName}}</td>
-              <td>{{item.format}}</td>
-              <td>{{item.info}}</td>
+            <tr v-for="item of lastRemoconCode" :key="item.deviceName" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
+              <td>{{ item.deviceName }}</td>
+              <td>{{ item.format }}</td>
+              <td>{{ item.info }}</td>
             </tr>
           </tbody>
         </table>
@@ -59,27 +59,26 @@
         <div class="row">
           <div class="col-md-5">
             <label>登録名</label>
-            <input type="text" :class="{error:!nameValid}" v-model="name" @input="NameCheck"/>
+            <input type="text" :class="{error:!nameValid}" v-model="name" @input="NameCheck">
           </div>
           <div class="col-md-5">
             <label>コメント</label>
-            <input type="text" :class="{error:!commentValid}" v-model="comment" @input="CommentCheck"/>
+            <input type="text" :class="{error:!commentValid}" v-model="comment" @input="CommentCheck">
           </div>
           <div class="col-md-2">
             <div class="row">
-            <button @click="Cancel" class="btn btn-danger" type="button">中止</button>
-            <button @click="Submit" :disabled="!nameValid||!commentValid" class="btn btn-primary" type="button">保存</button>
+              <button @click="Cancel" class="btn btn-danger" type="button">中止</button>
+              <button @click="Submit" :disabled="!nameValid||!commentValid" class="btn btn-primary" type="button">保存</button>
             </div>
           </div>
         </div>
         <h6>種類＋メーカー名＋シリーズ名＋機能名など、識別しやすい名前を付けて下さい。</h6>
-        <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
-        <h6 v-if="commentAlert.length" class="error">{{commentAlert}}</h6>
+        <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
+        <h6 v-if="commentAlert.length" class="error">{{ commentAlert }}</h6>
       </fieldset>
 
       <fieldset v-show="remocon.remoconTable && (Object.keys(remocon.remoconTable).length > 0)">
-        <p class="vertical-space2">
-        <h5>登録済みリモコン一覧</h5>
+        <p class="vertical-space2"/><h5>登録済みリモコン一覧</h5>
         <div class="well well-transparent">
           <table class="table remocon-table">
             <thead>
@@ -89,18 +88,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item,idx) of remocon.remoconTable" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
+              <tr v-for="(item,idx) of remocon.remoconTable" :key="idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
                 <td class="col-md-5">
                   <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
                     >
                   </button>
                   <div>
-                    {{idx}}<br>
-                    {{item.comment}}
+                    {{ idx }}<br>
+                    {{ item.comment }}
                   </div>
                 </td>
                 <td class="col-md-7">
-                  {{Decode(item.code)}}
+                  {{ Decode(item.code) }}
                   <button v-show="(idx===selectedIdx)" class="btn btn-xs btn-danger delete-btn pull-right remocon-btn" @click="DeleteItem(item, idx)">
                     -
                   </button>
@@ -108,12 +107,12 @@
               </tr>
             </tbody>
           </table>
-          <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup">
+          <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup" :key="groupName">
             <tbody>
               <tr @click.stop="SelectGroup(groupName)" :class="{success:(groupName==selectedGroup)}">
                 <td class="col-md-5">
                   <div>
-                    {{groupName}}<br>{{group.comment}}
+                    {{ groupName }}<br>{{ group.comment }}
                   </div>
                 </td>
                 <td class="col-md-7">
@@ -122,18 +121,18 @@
                   </button>
                 </td>
               </tr>
-              <tr v-for="(item,idx) of remocon.remoconTable" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
+              <tr v-for="(item,idx) of remocon.remoconTable" :key="idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
                 <td class="col-md-5">
                   <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
                     >
                   </button>
                   <div>
-                    {{idx}}<br>
-                    {{item.comment}}
+                    {{ idx }}<br>
+                    {{ item.comment }}
                   </div>
                 </td>
                 <td class="col-md-7">
-                  {{Decode(item.code)}}
+                  {{ Decode(item.code) }}
                 </td>
               </tr>
             </tbody>
@@ -146,11 +145,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { alert } from 'vue-strap';
 
   export default {
+    components: {
+      alert,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -322,9 +327,6 @@
         this.selectedIdx = null;
         this.selectedGroup = null;
       },
-    },
-    components: {
-      alert: VueStrap.alert,
     },
   };
 </script>

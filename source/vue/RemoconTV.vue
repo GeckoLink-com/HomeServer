@@ -10,13 +10,13 @@
             <h5>登録名</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!nameValid}" type="text" v-model="name" @input="NameCheck"/>
+            <input class="ui-func-name" :class="{error:!nameValid}" type="text" v-model="name" @input="NameCheck">
           </div>
         </div>
         <div class="row">
           <div class="col-md-offset-2">
             <h6>識別しやすい名前を付けてください。</h6>
-            <h6 v-if="nameAlert.length" class="error">{{nameAlert}}</h6>
+            <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
           </div>
         </div>
         <div class="row">
@@ -24,12 +24,12 @@
             <h5>コメント</h5>
           </div>
           <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck"/>
+            <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck">
           </div>
         </div>
         <div class="row" v-if="commentAlert.length">
           <div class="col-md-offset-2">
-            <h6 class="error">{{commentAlert}}</h6>
+            <h6 class="error">{{ commentAlert }}</h6>
           </div>
         </div>
         <br>
@@ -66,9 +66,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, idx) of remoconTable" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
-              <td>{{item.label}}</td>
-              <td>{{item.info}}</td>
+            <tr v-for="(item, idx) of remoconTable" :key="idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
+              <td>{{ item.label }}</td>
+              <td>{{ item.info }}</td>
             </tr>
           </tbody>
         </table>
@@ -79,19 +79,19 @@
           <thead>
             <tr>
               <th class="col-md-2">ボタン</th>
-              <th class="col-md-3" v-for="net of ['UHF','BS','CS']">
-                <input type="checkbox" v-model="channelTable[net].display" :data-net="net"/>
-                {{channelTable[net].label}}
+              <th class="col-md-3" v-for="net of ['UHF','BS','CS']" :key="net">
+                <input type="checkbox" v-model="channelTable[net].display" :data-net="net">
+                {{ channelTable[net].label }}
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="ch of 12">
-              <td>{{ch}}</td>
-              <td v-for="net of ['UHF', 'BS', 'CS']">
+            <tr v-for="ch of 12" :key="ch">
+              <td>{{ ch }}</td>
+              <td v-for="net of ['UHF', 'BS', 'CS']" :key="net">
                 <fieldset :disabled="!channelTable[net].display">
-                  <input type="checkbox" v-model="channelTable[net][ch].display"/>
-                  <input class="channelList" type="text" v-model="channelTable[net][ch].label"/>
+                  <input type="checkbox" v-model="channelTable[net][ch].display">
+                  <input class="channelList" type="text" v-model="channelTable[net][ch].label">
                 </fieldset>
               </td>
             </tr>
@@ -104,11 +104,17 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { alert } from 'vue-strap';
 
   export default {
+    components: {
+      alert,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -430,9 +436,6 @@
         } while(reentry);
       },
 
-    },
-    components: {
-      alert: VueStrap.alert,
     },
   };
 </script>

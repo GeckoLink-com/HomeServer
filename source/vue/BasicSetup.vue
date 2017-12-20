@@ -5,14 +5,14 @@
       <h4>基本設定</h4>
       <br>
       <div class="module-image">
-        <img src="../images/HB-6.png" width="200px" />
+        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
       </div>
       <br>
 
       <dropdown class="moduleLabel" :text="selectedModuleLabel">
-        <li v-for="module of moduleList" class="module-list" :class="{disabled:!module.enable}" >
+        <li v-for="module of moduleList" :key="module.name" class="module-list" :class="{disabled:!module.enable}" >
           <a href="#" :data-device="module.device" :data-name="module.name" :data-enable="module.enable" @click="Click" :disabled="!module.enable">
-            {{module.label}}
+            {{ module.label }}
           </a>
         </li>
       </dropdown>
@@ -23,15 +23,15 @@
       <div class="well">
         <div>
           <label>モジュール名</label>
-          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck"/>
+          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck">
           <h6>設置場所等、識別しやすい名前を付けてください。</h6>
-          <h6 v-if="moduleNameAlert.length" class="error">{{moduleNameAlert}}</h6>
+          <h6 v-if="moduleNameAlert.length" class="error">{{ moduleNameAlert }}</h6>
         </div>
 
         <br>
         <h5>機能設定</h5>
         <div class="form-group" id="basicFuncSel">
-          <div class="row" v-for="(item, idx) of typeTable" v-show="item.name != ''">
+          <div class="row" v-for="(item, idx) of typeTable" :key="idx" v-show="item.name != ''">
             <div class="col-sm-offset-1 col-sm-10">
               <radio :selected-value="idx" v-model="selectedType" type="primary">
                 {{ item.name }}
@@ -40,21 +40,21 @@
           </div>
         </div>
 
-        <div v-for="(item, idx) of funcTable" v-show="ItemCheck(idx)">
+        <div v-for="(item, idx) of funcTable" :key="idx" v-show="ItemCheck(idx)">
           <div class="row well well-transparent">
             <div class="col-md-3">
-              <h5>{{item.name}}</h5>
+              <h5>{{ item.name }}</h5>
             </div>
             <div class="col-md-4">
-              <input class="func-name" type="text" v-model="item.value"/>
+              <input class="func-name" type="text" v-model="item.value">
             </div>
             <div v-show="item.option != null">
               <div class="item-label">
-              {{item.option}}
+                {{ item.option }}
               </div>
-              <input class="option-param" type="text" v-model="item.optionValue"/>
+              <input class="option-param" type="text" v-model="item.optionValue">
               <div class="item-label">
-              {{item.optionUnit}}
+                {{ item.optionUnit }}
               </div>
             </div>
           </div>
@@ -71,11 +71,18 @@
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
+  import { radio, dropdown } from 'vue-strap';
 
   export default {
+    components: {
+      radio,
+      dropdown,
+    },
     props: {
-      display: false,
+      display: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -268,10 +275,6 @@
         }
         Common.emit('changeModule', this, this.selectedModule, this.moduleName, parseInt(type.funcId, 16), param, moduleType);
       },
-    },
-    components: {
-      radio: VueStrap.radio,
-      dropdown: VueStrap.dropdown,
     },
   };
 </script>

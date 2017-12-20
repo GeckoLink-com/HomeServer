@@ -2,11 +2,11 @@
   <div class="container-fluid">
     <navbar placement="top" type="default" id="top-bar" class="nav-tabs" @click="Click">
       <div slot="brand">
-        <img src="../images/GeckoLogo.png" class="logo"
-          @mousedown="TouchLogoStart"
-          @touchstart="TouchLogoStart"
-          @mouseup="TouchLogoEnd"
-          @touchend="TouchLogoEnd"/>
+        <img src="../images/GeckoLogo.png" class="logo" alt="GeckoLink"
+             @mousedown="TouchLogoStart"
+             @touchstart="TouchLogoStart"
+             @mouseup="TouchLogoEnd"
+             @touchend="TouchLogoEnd">
       </div>
       <ul class="nav nav-tabs">
         <li id="defaultTab" @click="Click" data-tab="systemSetup"><a>システム設定</a></li>
@@ -30,43 +30,64 @@
 
     </navbar>
 
-    <system-setup :display="selectedTab==='systemSetup'"></system-setup>
-    <pairing :display="selectedTab==='pairing'"></pairing>
-    <basic-setup :display="selectedTab==='basicSetup'"></basic-setup>
-    <advanced-setup :display="selectedTab==='advancedSetup'"></advanced-setup>
-    <module-list :display="selectedTab=='moduleList'"></module-list>
-    <link-devices :display="selectedTab==='linkDevices'"></link-devices>
-    <remocon :display="selectedTab==='remocon'"></remocon>
-    <remocon-macro :display="selectedTab==='remoconMacro'"></remocon-macro>
-    <remocon-aircon :display="selectedTab==='remoconAircon'"></remocon-aircon>
-    <remocon-tv :display="selectedTab==='remoconTV'"></remocon-tv>
-    <ui-setting :display="selectedTab==='uiSetting'"></ui-setting>
-    <node-red :display="selectedTab==='nodeRED'"></node-red>
-    <debug-panel :display="selectedTab==='debugPanel'"></debug-panel>
+    <system-setup :display="selectedTab==='systemSetup'"/>
+    <pairing :display="selectedTab==='pairing'"/>
+    <basic-setup :display="selectedTab==='basicSetup'"/>
+    <advanced-setup :display="selectedTab==='advancedSetup'"/>
+    <module-list :display="selectedTab=='moduleList'"/>
+    <link-devices :display="selectedTab==='linkDevices'"/>
+    <remocon :display="selectedTab==='remocon'"/>
+    <remocon-macro :display="selectedTab==='remoconMacro'"/>
+    <remocon-aircon :display="selectedTab==='remoconAircon'"/>
+    <remocon-tv :display="selectedTab==='remoconTV'"/>
+    <ui-setting :display="selectedTab==='uiSetting'"/>
+    <node-red :display="selectedTab==='nodeRED'"/>
+    <debug-panel :display="selectedTab==='debugPanel'"/>
 
-    <toastr></toastr>
+    <toastr/>
   </div>
 </template>
 
 <script>
-  import VueStrap from 'vue-strap';
-  import Toastr from './Toastr.vue';
+  import { navbar, dropdown, tabs, tabGroup, tab } from 'vue-strap';
+  import toastr from './Toastr.vue';
 
-  import SystemSetup from './SystemSetup.vue';
-  import Pairing from './Pairing.vue';
-  import BasicSetup from './BasicSetup.vue';
-  import AdvancedSetup from './AdvancedSetup.vue';
-  import ModuleList from './ModuleList.vue';
-  import LinkDevices from './LinkDevices.vue';
-  import Remocon from './Remocon.vue';
-  import RemoconMacro from './RemoconMacro.vue';
-  import RemoconAircon from './RemoconAircon.vue';
-  import RemoconTV from './RemoconTV.vue';
-  import UISetting from './UISetting.vue';
-  import NodeRED from './NodeRED.vue';
-  import DebugPanel from './DebugPanel.vue';
+  import systemSetup from './SystemSetup.vue';
+  import pairing from './Pairing.vue';
+  import basicSetup from './BasicSetup.vue';
+  import advancedSetup from './AdvancedSetup.vue';
+  import moduleList from './ModuleList.vue';
+  import linkDevices from './LinkDevices.vue';
+  import remocon from './Remocon.vue';
+  import remoconMacro from './RemoconMacro.vue';
+  import remoconAircon from './RemoconAircon.vue';
+  import remoconTv from './RemoconTV.vue';
+  import uiSetting from './UISetting.vue';
+  import nodeRed from './NodeRED.vue';
+  import debugPanel from './DebugPanel.vue';
 
   export default {
+    components: {
+      navbar,
+      dropdown,
+      tabs,
+      tabGroup,
+      tab,
+      toastr,
+      systemSetup,
+      pairing,
+      basicSetup,
+      advancedSetup,
+      moduleList,
+      linkDevices,
+      remocon,
+      remoconMacro,
+      remoconAircon,
+      remoconTv,
+      uiSetting,
+      nodeRed,
+      debugPanel,
+    },
     data() {
       return {
         activeTab: 0,
@@ -186,36 +207,11 @@
         }
       },
       TouchPosition(e) {
-        var x = e.changedTouches[0].clientX;
-        var y = e.changedTouches[0].clientY;
-        return [x, y];
+        return [e.changedTouches[0].clientX, e.changedTouches[0].clientY];
       },
       MousePosition(e) {
-        var x = e.clientX;
-        var y = e.clientY;
-        return [x, y];
+        return [e.clientX, e.clientY];
       },
-    },
-    components: {
-      navbar: VueStrap.navbar,
-      dropdown: VueStrap.dropdown,
-      tabs: VueStrap.tabs,
-      tabGroup: VueStrap.tabGroup,
-      tab: VueStrap.tab,
-      toastr: Toastr,
-      systemSetup: SystemSetup,
-      pairing: Pairing,
-      basicSetup: BasicSetup,
-      advancedSetup: AdvancedSetup,
-      moduleList: ModuleList,
-      linkDevices: LinkDevices,
-      remocon: Remocon,
-      remoconMacro: RemoconMacro,
-      remoconAircon: RemoconAircon,
-      remoconTv: RemoconTV,
-      uiSetting: UISetting,
-      nodeRed: NodeRED,
-      debugPanel: DebugPanel,
     },
   };
 </script>
