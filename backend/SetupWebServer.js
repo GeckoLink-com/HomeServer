@@ -81,7 +81,7 @@ class SetupWebServer {
 
       if(initialFlag) {
         this._app = express();
-        this._app.use(basicAuth((user, password) => {
+        this._app.use(/^(?!\/node\/)/, basicAuth((user, password) => {
           const sha256 = new jssha('SHA-256', 'TEXT');
           sha256.update(user + password);
           const pw = sha256.getHash('HEX');
@@ -147,8 +147,8 @@ class SetupWebServer {
 
       // node-red
       const redSettings = {
-        httpAdminRoot: '/red',
-        httpNodeRoot: '/',
+        httpAdminRoot: '/red/',
+        httpNodeRoot: '/node/',
         flowFile: 'flow.json',
         userDir: this._common.config.basePath + '/red',
         nodesDir: __dirname + '/../redNodes',
@@ -184,11 +184,15 @@ class SetupWebServer {
 
       RED.init(this._server, redSettings);
       this._app.use(redSettings.httpAdminRoot, RED.httpAdmin);
-      this._app.use(redSettings.httpNodeRoot, RED.httpNode);
+      this._app.use(redSettings.httpNodeRoot, (req, res) => { RED.httpNode(req, res); });
       RED.start();
 
       if(initialFlag) {
         this._app.get('/*', function(req, res, _next) {
+
+          if(req.path.indexOf('/node/') === 0) {
+            return res.sendStatus(404);
+          }
           res.redirect('/');
         });
 
