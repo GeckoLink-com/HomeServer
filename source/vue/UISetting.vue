@@ -22,6 +22,14 @@
             <input class="input-transparent ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck">
           </div>
         </div>
+        <div class="row well well-transparent">
+          <div class="col-md-4">
+            <h5>他の呼び方</h5>
+          </div>
+          <div class="col-md-8">
+            <input class="input-transparent ui-func-name" type="text" v-model="itemAlias">
+          </div>
+        </div>
         <div class="row well well-transparent" v-if="nameAlert.length">
           <div class="col-md-offset-2">
             <h6 class="error">{{ nameAlert }}</h6>
@@ -84,7 +92,7 @@
         </div>
         <br v-show="itemType=='aircon'">
 
-        <div v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx" v-if="btnIdx<buttonNum">
+        <div v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx" v-if="btnIdx<buttonNum">
           <div class="row well well-transparent">
             <div class="col-md-4">
               <h5>ボタン{{ btnIdx }}</h5>
@@ -145,7 +153,7 @@
               </select>
             </div>
           </div>
-          <div v-show="(btn.command.type=='remocon')||(btn.command.type=='macro')" class="row well well-transparent">
+          <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&(itemType!='light')&&(itemType!='onOff')" class="row well well-transparent">
             <div class="col-md-4">
               <h5>ラベル</h5>
             </div>
@@ -153,8 +161,20 @@
               <input class="ui-func-name" type="text" v-model="btn.label">
             </div>
           </div>
+          <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&((itemType==='light')||(itemType==='onOff'))" class="row well well-transparent">
+            <div class="col-md-4">
+              <h5>モード</h5>
+            </div>
+            <div class="col-md-8">
+              <select class="form-control ui-select-menu" v-model="btn.mode">
+                <option v-for="mode of remoconMode" :key="'ui-remoconMode' + mode" :value="mode">
+                  {{ mode }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
-        <br v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')&&(itemType!='colorLight')">
+        <br v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
 
         <div v-show="itemType=='tv'" class="row well well-func">
           <div class="row well well-transparent">
@@ -338,10 +358,13 @@
         statusFunc: ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter'],
         commandFunc: ['gpio0', 'gpio1', 'ha0', 'ha1', 'hao0', 'hao1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3'],
         gpioinType: ['motion', 'alarm', 'flap', 'other'],
+        remoconMode: ['on', 'off', 'toggle'],
+        remoconLabel: { on: 'on', off: 'off', toggle: 'on/off' },
 
         selectedItem: { type: 'new', index: -1 },
         itemType: '',
         itemName: '',
+        itemAlias: '',
         nameAlert: '',
         itemRoom: '',
         status: [],
@@ -494,7 +517,6 @@
         return lbl;
       },
       ChangeAlias() {
-        console.log('ChangeAlias ', this.alias);
         const sensorList = [{}];
         for(const dev in this.alias) {
           for(const func in this.alias[dev]) {
@@ -583,6 +605,7 @@
           this.selectedItem = { type: 'new', index: -1 };
           this.itemType = 'other';
           this.itemName = '新しい項目';
+          this.itemAlias = '';
           this.NameCheck();
           this.itemRoom = 'ホーム';
           this.status = [];
@@ -612,6 +635,7 @@
         this.selectedItem = { type: item.type, index: idx };
         this.itemType = item.type;
         this.itemName = item.label;
+        this.itemAlias = item.alias;
         this.NameCheck();
         this.itemRoom = item.room;
 
@@ -653,6 +677,10 @@
                   remocon = j;
                   module = item.buttons[i].deviceName;
                   label = item.buttons[i].label;
+                  if((this.itemType === 'light') || (this.itemType === 'onOff')) {
+                    mode = item.buttons[i].mode;
+                    label = this.remoconLabel[mode];
+                  }
                   break;
                 }
               }
@@ -664,6 +692,10 @@
                   macro = j;
                   module = item.buttons[i].deviceName;
                   label = item.buttons[i].label;
+                  if((this.itemType === 'light') || (this.itemType === 'onOff')) {
+                    mode = item.buttons[i].mode;
+                    label = this.remoconLabel[mode];
+                  }
                   break;
                 }
               }
@@ -740,6 +772,7 @@
         const item = {
           type: this.itemType,
           label: this.itemName,
+          alias: this.itemAlias,
           room: this.itemRoom,
         };
 
@@ -780,18 +813,36 @@
               });
               break;
             case 'remocon':
-              item.buttons.push({
-                command: btn.remocon,
-                deviceName: btn.module,
-                label: btn.label,
-              });
+              if((this.itemType === 'light') || (this.itemType === 'onOff')) {
+                item.buttons.push({
+                  deviceName: btn.module,
+                  command: btn.remocon,
+                  mode: btn.mode,
+                  label: btn.mode,
+                });
+              } else {
+                item.buttons.push({
+                  deviceName: btn.module,
+                  command: btn.remocon,
+                  label: btn.label,
+                });
+              }
               break;
             case 'macro':
-              item.buttons.push({
-                command: btn.macro,
-                deviceName: btn.module,
-                label: btn.label,
-              });
+              if((this.itemType === 'light') || (this.itemType === 'onOff')) {
+                item.buttons.push({
+                  deviceName: btn.module,
+                  command: btn.macro,
+                  mode: btn.mode,
+                  label: btn.mode,
+                });
+              } else {
+                item.buttons.push({
+                  deviceName: btn.module,
+                  command: btn.macro,
+                  label: btn.label,
+                });
+              }
               break;
             default:
           }

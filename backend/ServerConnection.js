@@ -138,7 +138,6 @@ class ServerConnection {
 
       this._wssClient.on('open', () => {
         console.log('ServerConnection : connected ', this._scheme + this._serverHost + ':' + this._serverPort);
-        this._wssRetry = 0;
         this._connectMessage = true;
         this._WSSConnect();
       });
@@ -169,7 +168,7 @@ class ServerConnection {
       });
 
       this._wssClient.on('error', (e) => {
-        if(this._connectState > 0) this._connectState = 0;
+        this._connectState = 0;
         this._wssClient.terminate();
         if((e.syscall == 'getaddrinfo') && (e.errno == 'ENOTFOUND')) {
           if(this._connectMessage) console.log('ApplicationServer connect error %s:%d', e.host, e.port);
@@ -190,7 +189,7 @@ class ServerConnection {
 
       this._wssClient.on('unexpected-response', () => {
         console.log('ServerConnection : unexpected-response ' + this._serverHost);
-        if(this._connectState > 0) this._connectState = 0;
+        this._connectState = 0;
         this._wssClient.terminate();
       });
 
@@ -206,16 +205,17 @@ class ServerConnection {
   }
 
   _WSSConnect() {
+
     if(this._wssClient.readyState == 0) {
-      this._wssRetry++;
-      console.log('ServerConnection : ---152 _WSSConnect no ready', this._wssRetry);  // DEBUG
-      if(this._wssRetry > 3) return this._wssClient.terminate();
-      return setTimeout(this._WSSConnect.bind(this), 300);
+      console.log('ServerConnection : ---152 _WSSConnect no ready');  // DEBUG
+      this._connectState = 0;
+      return this._wssClient.terminate();
     }
     if(this._connectState == 1) return;
 
     this._connectState = 1;
     this._connectMessage = true;
+    this._wssSendRetry = 0;
     console.log('ServerConnection : connect ' + this._serverHost); // DEBUG
     this._SendClientUi();
     this._SendData(this, {type:'interval', data:this._common.status});
@@ -265,9 +265,15 @@ class ServerConnection {
     try {
       this._wssClient.send(JSON.stringify(msg));
       this._lastSendTime = new Date();
+      this._wssSendRetry = 0;
     } catch(e) {
       console.log('ServerConnection : wssClient send error'); // DEBUG
       console.dir(this._wssClient); // DEBUG
+      this._wssSendRetry++;
+      if(this._wssSendRetry > 3) {
+        this._connectState = 0;
+        this._wssClient.terminate();
+      }
     }
   }
 }

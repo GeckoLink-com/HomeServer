@@ -177,6 +177,13 @@ class SetupWebServer {
           },
           userMenu: false,
         },
+        adminAuth: {
+          type: 'credentials',
+          users: [],
+          default: {
+            permissions: '*',
+          },
+        },
         functionGlobalContext: {
           homeServer: this._common,
         },
