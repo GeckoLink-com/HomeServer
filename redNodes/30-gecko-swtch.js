@@ -28,12 +28,12 @@ module.exports = function(RED) {
            ((this.rules[2].sel == 'lte') && (parseFloat(this.rules[2].val) <= parseFloat(stat.value))));
         s[1] = !s[0] && !s[2];
       } else {
-        for(let i = 0; i < 3; i++) {
+        for(let i = 0; i < this.rules.length; i++) {
           s[i] = this.rules[i].enable && (this.rules[i].val == stat.valueName);
         }
       }
       let outMsg = [];
-      for(let i = 0; i < 3; i++) {
+      for(let i = 0; i < this.rules.length; i++) {
         if(this.rules[i].enable) outMsg.push(s[i]?msg:null);
       }
       this.send(outMsg);

@@ -308,7 +308,7 @@
       },
       IRSend(item, idx) {
         const code = this.remocon.remoconTable[idx].code;
-        let cmd = 'ir 20';
+        let cmd = 'ir 01';
         for(let i = 0; i < code.length; i++) {
           cmd += ' ' + ('00' + code[i].toString(16)).slice(-2);
         }

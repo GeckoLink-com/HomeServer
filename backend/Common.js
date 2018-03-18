@@ -84,11 +84,11 @@ class Common extends eventEmitter {
     });
 
     this.on('changeInternalStatus', (caller) => {
-      for(let func in this.internalStatus.virtualSW) {
+      for(const func in this.internalStatus.virtualSW) {
         const val = this.internalStatus.virtualSW[func];
         let f = -1;
-        for(let j in this.status) {
-          if((this.status[j].device == 'server') && (this.status[j].func == func)) {
+        for(const j in this.status) {
+          if((this.status[j].device === 'server') && (this.status[j].func === func)) {
             f = j;
             break;
           }
@@ -98,6 +98,41 @@ class Common extends eventEmitter {
           this.status.push(stat);
         } else {
           this.status[f] = stat;
+        }
+      }
+      for(const deviceName in this.internalStatus.lastCommand) {
+        if((deviceName == null) || (deviceName === 'undefined')) continue;
+        if(!this.internalStatus.lastCommand[deviceName].remocon) continue;
+        const val = this.internalStatus.lastCommand[deviceName].remocon;
+        if(val === '') continue;
+        let f = -1;
+        for(const j in this.status) {
+          if((this.status[j].deviceName === deviceName) && (this.status[j].func === 'remocon')) {
+            f = j;
+            break;
+          }
+        }
+        const type = this.internalStatus.lastCommand[deviceName].type;
+        const state = {
+          lastCommand: val,
+          type: type,
+        };
+        if(type === 'aircon') {
+          const cmd = val.replace(/^.*_/, '');
+          state.mode = cmd.replace(/[0-9\.]*$/, '');
+          state.temparture = cmd.replace(state.mode, '');
+          state.prefix = val.replace(/_[^_]*$/,'');
+        }
+        if(f < 0) {
+          this.status.push({
+            deviceName: deviceName,
+            func: 'remocon',
+            valueName: val,
+            state: state,
+          });
+        } else {
+          this.status[f].valueName = val;
+          this.status[f].state = state;
         }
       }
       if(this.internalStatus.rainInfo != null) {

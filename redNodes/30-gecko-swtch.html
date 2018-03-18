@@ -170,6 +170,7 @@
             }
           } else {
             for(let i = 0; i < 4; i++) {
+              if(!this.rules[i]) this.rules[i] = {};
               this.rules[i].enable = false;
             }
             this.outputs = 0;

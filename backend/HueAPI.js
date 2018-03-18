@@ -76,7 +76,7 @@ class HueAPI {
           const state = {
             on: true,
             ct: this._bridges[bridgeNo].lights[light].state.ct,
-            hue: this._bridges[bridgeNo].lights[light].state.hue,
+            hue: null,
             sat: this._bridges[bridgeNo].lights[light].state.sat,
             bri: this._bridges[bridgeNo].lights[light].state.bri,
             alert: 'none',
@@ -111,7 +111,7 @@ class HueAPI {
         if(light && (light != '')) {
           const state = {
             on: true,
-            ct: this._bridges[bridgeNo].lights[light].state.ct,
+            ct: null,
             hue: this._bridges[bridgeNo].lights[light].state.hue,
             sat: this._bridges[bridgeNo].lights[light].state.sat,
             bri: this._bridges[bridgeNo].lights[light].state.bri,
@@ -269,6 +269,7 @@ class HueAPI {
         type: 'onOff',
         value: light.state.on,
         valueName: light.state.on?'on':'off',
+        state: light.state,
       }
       let f = false;
       for(let i in this._common.status) {
@@ -299,6 +300,17 @@ class HueAPI {
 
   _SetLight(origin, bridgeNo, light, state) {
     state.alert = 'none';
+    for(let i in this._common.status) {
+      const st = this._common.status[i];
+      if(st.device == 'Hue_' + this._bridges[bridgeNo].id + '_' + light) {
+        this._common.status[i].state = state;
+        this._common.status[i].value = state.on;
+        this._common.status[i].valueName = state.on?'on':'off';
+        break;
+      }
+    }
+    this._common.emit('statusNotify', this);
+
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this._SetLightState(origin, bridgeNo, light, state, (err, res, _body) => {
       const origin = res.request.origin;

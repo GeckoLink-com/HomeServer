@@ -140,11 +140,19 @@ class ControllerConnection {
         this._common.emit('changeInternalStatus', this);
         this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
       } else {
-        this._common.emit('changeInternalStatus', this);
         let cmd = (func + ' ' + param).replace(/[ \t]*$/, '');
         let f = this._SendRemoconCommand(msg, device, func);
         if(f) {
-          this._common.internalStatus.lastCommand[msg.deviceName][func.replace(/_[^_]*$/,'')] = func.replace(/^.*_/,'');
+          let type = null;
+          const prefix = func.replace(/_[^_]*$/, '');
+          if(this._common.remocon && this._common.remocon.remoconGroup && this._common.remocon.remoconGroup[prefix]) {
+            type = this._common.remocon.remoconGroup[prefix].type;
+          }
+          this._common.internalStatus.lastCommand[msg.deviceName] = {
+            remocon: func,
+            type: type,
+          };
+          this._common.emit('changeInternalStatus', this);
           return;
         }
         if(this._common.remocon && this._common.remocon.remoconMacro && (func in this._common.remocon.remoconMacro)) {
