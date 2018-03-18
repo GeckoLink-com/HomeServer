@@ -259,7 +259,7 @@
   #top-bar >>> .navbar-collapse {
     float: right;
     background-color: rgba(255,255,255,0.8);
-    font-size: 0.4vw;
+    font-size: 1em;
     padding: 0;
     margin: 0;
     box-shadow:1px 1px 2px rgba(0, 0, 0, .2);
@@ -330,6 +330,7 @@
   #top-bar >>> .dropdown-menu {
     text-align: center;
     line-height: 1.6em;
+    font-size: 1em;
     margin: 0;
     padding: 0;
     background-color: rgba(0, 0, 0, 0);
@@ -366,6 +367,10 @@
 
   #top-bar .display-off >>> a {
     display: none;
+  }
+
+  #top-bar >>> .nav-tabs > li {
+    float: none;
   }
 
   /* for PC */
@@ -437,6 +442,10 @@
 
     #top-bar >>> .dropdown:not(hover) .dropdown-menu {
         display: none;
+    }
+
+    #top-bar >>> .nav-tabs > li {
+      float: left;
     }
 
     .nav .open>a {

@@ -42,7 +42,7 @@
         </div>
         <br>
 
-        <div v-show="(itemType!='room')&&(itemType!='hue')" class="row well well-transparent" v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
+        <div v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-transparent" v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
           <div class="col-md-4">
             <h5>ステータス{{ statIdx }}</h5>
           </div>
@@ -54,7 +54,7 @@
             </select>
           </div>
         </div>
-        <br v-show="(itemType!='room')&&(itemType!='hue')">
+        <br v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
 
         <div v-show="itemType=='aircon'" class="row well well-func">
           <div class="row well well-transparent">
@@ -84,7 +84,7 @@
         </div>
         <br v-show="itemType=='aircon'">
 
-        <div v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx" v-if="btnIdx<buttonNum">
+        <div v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx" v-if="btnIdx<buttonNum">
           <div class="row well well-transparent">
             <div class="col-md-4">
               <h5>ボタン{{ btnIdx }}</h5>
@@ -154,7 +154,7 @@
             </div>
           </div>
         </div>
-        <br v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')">
+        <br v-show="(itemType!='room')&&(itemType!='status')&&(itemType!='hue')&&(itemType!='colorLight')">
 
         <div v-show="itemType=='tv'" class="row well well-func">
           <div class="row well well-transparent">
@@ -200,6 +200,22 @@
         </div>
         <br v-show="itemType=='hue'">
 
+        <div v-show="itemType=='colorLight'" class="row well well-func">
+          <div class="row well well-transparent">
+            <div class="col-md-4">
+              <h5>ライト</h5>
+            </div>
+            <div class="col-md-8">
+              <select class="form-control ui-select-menu" v-model="colorLight">
+                <option v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :value="light">
+                  {{ light.deviceName }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <br v-show="itemType=='colorLight'">
+
       </div>
       <br>
 
@@ -240,6 +256,17 @@
                   </button>
                   <button class="btn btn-default btn-xs btn-margin">
                     bright
+                  </button>
+                </div>
+                <div v-if="item.type=='colorLight'" class="btn-inline">
+                  <button class="btn btn-default btn-xs btn-margin">
+                    red
+                  </button>
+                  <button class="btn btn-default btn-xs btn-margin">
+                    green
+                  </button>
+                  <button class="btn btn-default btn-xs btn-margin">
+                    blue
                   </button>
                 </div>
                 <button v-for="(btn, idx) of item.buttons" :key="'ui-itemButtons' + idx" class="btn btn-primary btn-xs btn-margin">
@@ -291,6 +318,7 @@
           remoconMacro: {},
         },
         hueLights: [],
+        colorLights: [],
         typeTable: [
           { value: 'room', label: 'ルーム', buttons: 0 },
           { value: 'disabled', label: '-----------------------', buttons: 0 },
@@ -301,6 +329,7 @@
           { value: 'tv', label: 'テレビ', buttons: 4 },
           { value: 'aircon', label: 'エアコン', buttons: 1 },
           { value: 'light', label: '照明', buttons: 2 },
+          { value: 'colorLight', label: '照明(color)', buttons: 0 },
           { value: 'hue', label: '照明(Hue)', buttons: 0 },
           { value: 'onOff', label: 'on/offスイッチ', buttons: 2 },
           { value: 'openClose', label: 'open/closeスイッチ', buttons: 2 },
@@ -319,6 +348,7 @@
         airconGroup: '',
         airconModule: '',
         hueLight: '',
+        colorLight: '',
         button: [],
         tvGroup: '',
         tvModule: '',
@@ -464,6 +494,7 @@
         return lbl;
       },
       ChangeAlias() {
+        console.log('ChangeAlias ', this.alias);
         const sensorList = [{}];
         for(const dev in this.alias) {
           for(const func in this.alias[dev]) {
@@ -520,6 +551,17 @@
           }
         }
         this.remoconTxList = txList;
+
+        const colorLights = [];
+        for(const dev in this.alias) {
+          if(((parseInt(this.alias[dev].option, 16) >> 25) & 1) === 1) {
+            colorLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+            });
+          }
+        }
+        this.colorLights = colorLights;
       },
       RoomDeleteEnable(room) {
         if(this.selectedItem.type !== 'room') return false;
@@ -653,6 +695,14 @@
             }
           }
         }
+        if(item.type === 'colorLight') {
+          for(const i in this.colorLights) {
+            if(this.colorLights[i].deviceName === item.table.deviceName) {
+              this.colorLight = this.colorLights[i];
+              break;
+            }
+          }
+        }
       },
       DeleteItem(type, idx) {
         if(type === 'room') {
@@ -781,6 +831,30 @@
             prefix: '',
             deviceName: this.hueLight.name,
             device: this.hueLight.device,
+          };
+        }
+        if(this.itemType === 'colorLight') {
+          item.status = [{
+            deviceName: this.colorLight.deviceName,
+            func: 'led',
+            sensor: this.colorLight.deviceName,
+            type: 'colorLight',
+          }];
+          item.buttons = [
+            {
+              command: 'led on',
+              deviceName: this.colorLight.deviceName,
+              label: 'on',
+            },
+            {
+              command: 'led off',
+              deviceName: this.colorLight.deviceName,
+              label: 'off',
+            },
+          ];
+          item.table = {
+            prefix: '',
+            deviceName: this.colorLight.deviceName,
           };
         }
 

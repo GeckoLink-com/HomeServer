@@ -393,7 +393,7 @@ class SetupWebServer {
 
     socket.on('disconnect', (reason) => {
       console.log('disconnect webbrowser : ', reason);
-      for(let i in this._setupWebClientConnections) {
+      for(const i in this._setupWebClientConnections) {
         if(this._setupWebClientConnections[i].id == socket.id) {
           this._setupWebClientConnections.splice(i, 1);
         }
@@ -416,15 +416,15 @@ class SetupWebServer {
   _AddRemocon(code) {
     if(!code.remocon) return;
     if(!this._common.remocon.remoconTable) this._common.remocon.remoconTable = {};
-    for(let i in code.remocon.remoconTable) {
+    for(const i in code.remocon.remoconTable) {
       this._common.remocon.remoconTable[i] = code.remocon.remoconTable[i];
     }
     if(!this._common.remocon.remoconGroup) this._common.remocon.remoconGroup = {};
-    for(let i in code.remocon.remoconGroup) {
+    for(const i in code.remocon.remoconGroup) {
       this._common.remocon.remoconGroup[i] = code.remocon.remoconGroup[i];
     }
     if(!this._common.remocon.remoconMacro) this._common.remocon.remoconMacro = {};
-    for(let i in code.remocon.remoconMacro) {
+    for(const i in code.remocon.remoconMacro) {
       this._common.remocon.remoconMacro[i] = code.remocon.remoconMacro[i];
     }
     this._common.emit('changeRemocon', this);

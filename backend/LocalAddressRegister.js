@@ -20,9 +20,9 @@ class LocalAddressRegister {
     this.port = this._common.config.localIPRegistPort;
     this.localAddr = null;
 
-    for(let device in interfaces) {
+    for(const device in interfaces) {
       if(device.search(/^lo/) >= 0) continue;
-      for(let details of interfaces[device]) {
+      for(const details of interfaces[device]) {
        if(details.internal) continue;
         if(details.family == 'IPv4') {
           this.localAddr = details.address;

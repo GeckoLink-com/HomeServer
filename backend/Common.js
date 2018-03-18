@@ -49,12 +49,20 @@ class Common extends eventEmitter {
     this.serial = '00000001';
     this.initialPassword = this.config.initialPassword || this.config.defaultPassword;
     this.defaultPassword = this.config.defaultPassword || this.config.initialPassword;
+    this.updateMode = 'release';
     try {
       const data = JSON.parse(fs.readFileSync('/boot/system.conf', 'utf8'));
       if(data.serial) this.serial = data.serial;
       if(data.initialPassword) this.initialPassword = data.initialPassword;
+      if(data.updateMode) this.updateMode = data.updateMode;
     } catch(e) {/* empty */}
-    
+    try {
+      fs.mkdirSync('/etc/apt/sources.list.d', 0o755);
+    } catch(e) {/* empty */}
+    try {
+      fs.writeFileSync('/etc/apt/sources.list.d/geckolink.list', 'deb https://geckolink.com/archive stretch ' + this.updateMode + '\n', {mode: 0o644});
+    } catch(e) {/* empty */}
+
     this.on('changeAlias', (caller) => {
       this._MakeAliasTable();
       if(caller != this) this._Registry.SetRegistry('alias', this.alias);
@@ -119,8 +127,8 @@ class Common extends eventEmitter {
         };
         if(type === 'aircon') {
           const cmd = val.replace(/^.*_/, '');
-          state.mode = cmd.replace(/[0-9\.]*$/, '');
-          state.temparture = cmd.replace(state.mode, '');
+          state.mode = cmd.replace(/[0-9.]*$/, '');
+          state.temperature = cmd.replace(state.mode, '');
           state.prefix = val.replace(/_[^_]*$/,'');
         }
         if(f < 0) {
@@ -137,7 +145,7 @@ class Common extends eventEmitter {
       }
       if(this.internalStatus.rainInfo != null) {
         let f = -1;
-        for(let j in this.status) {
+        for(const j in this.status) {
           if((this.status[j].device == 'server') && (this.status[j].func == 'rainInfo')) {
             f = j;
             break;
@@ -162,7 +170,7 @@ class Common extends eventEmitter {
       }
       if(this.internalStatus.smartMeter != null) {
         let f = -1;
-        for(let j in this.status) {
+        for(const j in this.status) {
           if((this.status[j].device == 'server') && (this.status[j].func == 'smartMeter')) {
             f = j;
             break;
@@ -290,9 +298,9 @@ class Common extends eventEmitter {
       this.alias[0]['smartMeter'] = {name:'消費電力', type: 'energy', unit: 'W' };
     }
     this.aliasTable = {};
-    for(let i in this.alias) {
+    for(const i in this.alias) {
       this.aliasTable[this.alias[i].name] = {device:i, func:'name', property:this.alias[i]};
-      for(let j in this.alias[i]) {
+      for(const j in this.alias[i]) {
         if(j == 'basicSelect') continue;
         if(j == 'option') continue;
         let name = this.alias[i][j].name;

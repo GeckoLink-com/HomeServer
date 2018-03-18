@@ -62,7 +62,7 @@ class HomeBridgePlatform {
 
   _GetStatus(deviceName, func) {
     let val = null;
-    for(let st of this._common.status) {
+    for(const st of this._common.status) {
       if((st.deviceName == deviceName) &&
          (st.func == func)) {
         return st.valueName;
@@ -82,7 +82,7 @@ class HomeBridgePlatform {
   }
 
   _StatusNotify(_caller) {
-    for(let d of this._common.status) {
+    for(const d of this._common.status) {
       if(this._statusChangeEvents[d.deviceName + ':' + d.func] != undefined) {
         this._statusChangeEvents[d.deviceName + ':' + d.func].forEach((event) => {
           event.callback(event.service, d);
@@ -112,8 +112,8 @@ class HomeBridgePlatform {
   }
   
   _RemoveStatusChangeEvent(uuid) {
-    for(let name in this._statusChangeEvents) {
-      for(let i in this._statusChangeEvents[name]) {
+    for(const name in this._statusChangeEvents) {
+      for(const i in this._statusChangeEvents[name]) {
         if(this._statusChangeEvents[name][i].uuid == uuid) {
           this._statusChangeEvents[name].splice(i, i + 1);
         }
@@ -127,15 +127,15 @@ class HomeBridgePlatform {
     this._Bridge.removeBridgedAccessories(this._Bridge.bridgedAccessories);
     this._Bridge.bridgedAccessories = [];
     if(this._UITable.ItemList == null) this._UITable.ItemList = [];
-    for(let d of this._UITable.ItemList) {
+    for(const d of this._UITable.ItemList) {
       if(['onOff', 'openClose', 'hue', 'light', 'lock', 'window', 'brind', 'shutter', 'aircon', 'tv'].indexOf(d.type) >= 0) {
         if(d.label != undefined) this._AddAccessory(d, d.room, d.label);
       }
       if(d.type == 'tv') {
         if((d.table != null) && (this._UITable.TableList != null)) {
-          for(let band in this._UITable.TableList[d.table.prefix]) {
+          for(const band in this._UITable.TableList[d.table.prefix]) {
             if(!this._UITable.TableList[d.table.prefix][band].display) continue;
-            for(let ch in this._UITable.TableList[d.table.prefix][band]) {
+            for(const ch in this._UITable.TableList[d.table.prefix][band]) {
               if(!this._UITable.TableList[d.table.prefix][band][ch].display) continue;
               let item = {};
               item.type = 'tv';
@@ -146,7 +146,7 @@ class HomeBridgePlatform {
         }
       }
       if(d.status != undefined) {
-        for(let s of d.status) {
+        for(const s of d.status) {
           if(['temp', 'humidity', 'battery'].indexOf(s.type) >= 0) {
             if(s.label != undefined) {
               this._AddAccessory(s, d.room, s.label);

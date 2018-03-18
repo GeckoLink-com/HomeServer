@@ -146,7 +146,7 @@ class ServerConnection {
       this._wssClient.on('message', (data) => {
         if(this._connectState == 1) {
           const strs = data.split('\0');
-          for(let str of strs) {
+          for(const str of strs) {
             if(str.length) {
               let jsonStr = null;
               try{

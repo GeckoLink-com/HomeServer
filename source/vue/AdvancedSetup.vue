@@ -543,7 +543,7 @@
           if(Common.alias[device] && Common.alias[device]['gpio' + i]) {
             this.gpio[i].name = Common.alias[device]['gpio' + i].name;
             this.gpio[i].type = Common.alias[device]['gpio' + i].type;
-            this.gpio[i].delay = Common.alias[device]['gpio' + i].delay || 0;
+            this.gpio[i].delay = Common.alias[device]['gpio' + i].delay || ((this.gpio[i].type === 'motion') ? (moduleParam & ~3) : 0);
             if(this.gpio[i].type === 'other') {
               this.gpio[i].valueLabel = Common.alias[device]['gpio' + i].valueLabel || { '0': 'off', '1': 'on' };
             }
@@ -779,6 +779,12 @@
             delay = delay & ~3 | motionBit;
             param = delay.toString();
           }
+        }
+
+        if(this.ledTape.sw) {
+          moduleAlias['led'] = {
+            name: '',
+          };
         }
 
         for(let i = 0; i < 3; i++) {

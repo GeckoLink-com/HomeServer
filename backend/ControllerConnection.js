@@ -45,7 +45,7 @@ class ControllerConnection {
       this._client.on('data', (data) => {
         if(this._connectState == 1) {
           const strs = (this._lastStr + data).split('\0');
-          for(let i in strs) {
+          for(const i in strs) {
             this._lastStr = '';
             if(strs[i].length) {
               let msg = null;
@@ -114,7 +114,7 @@ class ControllerConnection {
     }
     let commands = msg.command;    
     if(!Array.isArray(commands)) commands = [commands];
-    for(let command of commands) {
+    for(const command of commands) {
       if(!command) continue;
       let func = command.replace(/[ \t].*$/, '');
       let param = command.replace(func, '').replace(/^[ \t]*/, '');
@@ -125,7 +125,7 @@ class ControllerConnection {
       if((func != 'name') && (device != 0) && (device in this._common.alias) &&
          (func in this._common.alias[device]) &&
          ('valueLabel' in this._common.alias[device][func])) {
-        for(let i in this._common.alias[device][func].valueLabel) {
+        for(const i in this._common.alias[device][func].valueLabel) {
           if(param == this._common.alias[device][func].valueLabel[i]) {
             param = i;
             break;
@@ -134,35 +134,88 @@ class ControllerConnection {
       }
       if(!this._common.internalStatus.lastCommand) this._common.internalStatus.lastCommand = {};
       if(!this._common.internalStatus.lastCommand[msg.deviceName]) this._common.internalStatus.lastCommand[msg.deviceName] = {};
+
+      // virtual switch
       if(func.indexOf('vsw') >= 0) {
         if(!('virtualSW' in this._common.internalStatus)) this._common.internalStatus.virtualSW = {};
         this._common.internalStatus.virtualSW[func] = param;
+        this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
         this._common.emit('changeInternalStatus', this);
-        this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
-      } else {
-        let cmd = (func + ' ' + param).replace(/[ \t]*$/, '');
-        let f = this._SendRemoconCommand(msg, device, func);
-        if(f) {
-          let type = null;
-          const prefix = func.replace(/_[^_]*$/, '');
-          if(this._common.remocon && this._common.remocon.remoconGroup && this._common.remocon.remoconGroup[prefix]) {
-            type = this._common.remocon.remoconGroup[prefix].type;
-          }
-          this._common.internalStatus.lastCommand[msg.deviceName] = {
-            remocon: func,
-            type: type,
-          };
-          this._common.emit('changeInternalStatus', this);
-          return;
-        }
-        if(this._common.remocon && this._common.remocon.remoconMacro && (func in this._common.remocon.remoconMacro)) {
-          this._SendRemoconMacro(msg, device, this._common.remocon.remoconMacro[func].macro, 0);
-          this._common.internalStatus.lastCommand[msg.deviceName][func.replace(/_[^_]*$/,'')] = func.replace(/^.*_/,'');
-          return;
-        }
-        this._SendData({type:'command', device: device, command: cmd, origin: msg, auth: msg.auth});
-        this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
+        this._common.emit('response', this, {
+          type: 'response',
+          data: [{
+            type: 'command',
+            origin: msg,
+            device: device,
+            deviceName: msg.deviceName,
+            command: msg.command,
+            status: 'ok',
+          }],
+        });
+        continue;
       }
+
+      let cmd = (func + ' ' + param).replace(/[ \t]*$/, '');
+
+      // remocon
+      let f = this._SendRemoconCommand(msg, device, func);
+      if(f) {
+        let type = null;
+        const prefix = func.replace(/_[^_]*$/, '');
+        if(this._common.remocon && this._common.remocon.remoconGroup && this._common.remocon.remoconGroup[prefix]) {
+          type = this._common.remocon.remoconGroup[prefix].type;
+        }
+        this._common.internalStatus.lastCommand[msg.deviceName] = {
+          remocon: func,
+          type: type,
+        };
+        this._common.emit('changeInternalStatus', this);
+        continue;
+      }
+
+      // remocon macro
+      if(this._common.remocon && this._common.remocon.remoconMacro && (func in this._common.remocon.remoconMacro)) {
+        this._SendRemoconMacro(msg, device, this._common.remocon.remoconMacro[func].macro, 0);
+        this._common.internalStatus.lastCommand[msg.deviceName][func.replace(/_[^_]*$/,'')] = func.replace(/^.*_/,'');
+        continue;
+      }
+
+      // led command
+      if(func === 'led') {
+        if(param === 'on') {
+          param = this._common.internalStatus.lastCommand[msg.deviceName][func];
+          if(!param) param = 'ffffff';
+        } else if(param === 'off') {
+          param = '000000';
+        } else {
+          this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
+        }
+        this._SendData({type:'command', device: device, command: func + ' ' + param, origin: msg, auth: msg.auth});
+        const d = {
+          device: device,
+          deviceName: msg.deviceName,
+          func: func,
+          funcName: func,
+          type: 'colorLight',
+          value: param,
+          valueName: parseInt(param, 16) ? 'on' : 'off',
+        };
+        let f = false;
+        for(const i in this._common.status) {
+          const st = this._common.status[i];
+          if((st.device === device) && (st.func === func)) {
+            this._common.status[i] = d;
+            f = true;
+          }
+        }
+        if(!f) this._common.status.push(d);
+        this._common.emit('statusNotify', this);
+        continue;
+      }
+
+      // command
+      this._SendData({type:'command', device: device, command: cmd, origin: msg, auth: msg.auth});
+      this._common.internalStatus.lastCommand[msg.deviceName][func] = param;
     }
   }
 
@@ -219,12 +272,12 @@ class ControllerConnection {
       this._common.emit('changeStatus', this, msg);
       // fall through
     case 'interval':
-      for(let d of msg.data) {
+      for(const d of msg.data) {
         if((d.type == 'noise') && ((d.func == 'ad0') || (d.func == 'ad1'))) continue;
         if((d.type != 'noise') && ((d.func == 'max0') || (d.func == 'max1'))) continue;
         d.func = d.func.replace('max', 'ad');
         let f = false;
-        for(let i in this._common.status) {
+        for(const i in this._common.status) {
           const st = this._common.status[i];
           if((st.device == d.device) && (st.func == d.func)) {
             this._common.status[i] = d;
@@ -274,7 +327,7 @@ class ControllerConnection {
 
   _StatusAlias(data) {
     if(!Array.isArray(data)) return;
-    for(let i in data) {
+    for(const i in data) {
       const d = data[i];
       if((parseInt(d.device, 16) == 0) || (d.device == 'server')) {
         d.deviceName = 'server';
@@ -324,7 +377,7 @@ class ControllerConnection {
       length = code[3];
     }
 
-    for(let name in this._common.remocon.remoconTable) {
+    for(const name in this._common.remocon.remoconTable) {
       const tcode = this._common.remocon.remoconTable[name].code;
       let f = true;
       for(let i = offset; i < offset + length; i++) {

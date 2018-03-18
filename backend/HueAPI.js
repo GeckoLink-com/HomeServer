@@ -37,7 +37,7 @@ class HueAPI {
       const light = device.replace('Hue_' + bridgeId, '').replace(/^_/, '');
       let bridgeNo = -1;
       if(this._bridges) {
-        for(let i in this._bridges) {
+        for(const i in this._bridges) {
           if(this._bridges[i].id == bridgeId) bridgeNo = i;
         }
       }
@@ -76,12 +76,17 @@ class HueAPI {
           const state = {
             on: true,
             ct: this._bridges[bridgeNo].lights[light].state.ct,
-            hue: null,
+            hue: this._bridges[bridgeNo].lights[light].state.hue,
             sat: this._bridges[bridgeNo].lights[light].state.sat,
             bri: this._bridges[bridgeNo].lights[light].state.bri,
             alert: 'none',
             transitiontime: 0
           };
+          if(this._bridges[bridgeNo].lights[light].state.colormode == 'hs') {
+            state.ct = null;
+          } else {
+            state.hue = null;
+          }
           if(args[1] >= 0) state.ct = parseInt(1000000 / args[1]);
           if(args[2] >= 0) state.bri = parseInt(args[2]);
           this._SetLight(msg, bridgeNo, light, state);
@@ -155,7 +160,7 @@ class HueAPI {
     ]
   */
 
-      for(let bridge of this._bridges) {
+      for(const bridge of this._bridges) {
         bridge.lastIp = bridge.ip;
         bridge.ip = null;
       }
@@ -166,7 +171,7 @@ class HueAPI {
           let ip = info.location.replace(/^.*http:\/\//,'').replace(/:.*$/,'');
           let id = info.usn.replace(/^.*-/,'').replace(/:.*$/,'').slice(-6);
           let no = -1;
-          for(let i in this._bridges) {
+          for(const i in this._bridges) {
             if(this._bridges[i].id == id) no = i;
           }
           if(no < 0) {
@@ -181,11 +186,11 @@ class HueAPI {
 
       request.get({url:'https://www.meethue.com/api/nupnp', json:true}, (err, res, body) => {
         if(err) return;
-        for(let device of body) {
+        for(const device of body) {
           const id = device.id.slice(-6);
           const ip = device.internalipaddress;
           let no = -1;
-          for(let i in this._bridges) {
+          for(const i in this._bridges) {
             if(this._bridges[i].id == id) no = i;
           }
           if(no < 0) {
@@ -197,7 +202,7 @@ class HueAPI {
       });
       
       setTimeout(() => {
-        for(let i in this._bridges) {
+        for(const i in this._bridges) {
           const bridge = this._bridges[i];
           if(!bridge.ip) bridge.ip = bridge.lastIp;
           if(bridge.user) {
@@ -259,7 +264,7 @@ class HueAPI {
     this._bridges[bridgeNo].state = 1;
     this._bridges[bridgeNo].message = '';
     this._common.emit('changeHueBridges', this);
-    for(let l in this._bridges[bridgeNo].lights) {
+    for(const l in this._bridges[bridgeNo].lights) {
       const light = this._bridges[bridgeNo].lights[l];
       const d = {
         device: 'Hue_' + this._bridges[bridgeNo].id + '_' + l,
@@ -272,7 +277,7 @@ class HueAPI {
         state: light.state,
       }
       let f = false;
-      for(let i in this._common.status) {
+      for(const i in this._common.status) {
         const st = this._common.status[i];
         if(st.device == d.device) {
           this._common.status[i] = d;
@@ -300,7 +305,7 @@ class HueAPI {
 
   _SetLight(origin, bridgeNo, light, state) {
     state.alert = 'none';
-    for(let i in this._common.status) {
+    for(const i in this._common.status) {
       const st = this._common.status[i];
       if(st.device == 'Hue_' + this._bridges[bridgeNo].id + '_' + light) {
         this._common.status[i].state = state;

@@ -149,7 +149,7 @@ class SmartMeter {
   GetValue(epc, callback) {
     this.el.getPropertyValue(this.device.address, this.device.eoj[0], epc, (err, res) => {
       if(err) console.log('SmartMeter:', err);
-      for(let i in res.message.data) {
+      for(const i in res.message.data) {
         this._deviceInfo[i] = res.message.data[i];
       }
       if(callback) callback(err, res);

@@ -87,8 +87,8 @@ class HomeBridgeAccessory extends Accessory {
   
   _SearchStatus(typeOrFunc) {
     if(!Array.isArray(typeOrFunc)) typeOrFunc = [typeOrFunc];
-    for(let t of typeOrFunc) {
-      for(let s in this._Item.status) {
+    for(const t of typeOrFunc) {
+      for(const s in this._Item.status) {
         if(this._Item.status[s].type == t) return this._GetStatus(this._Item.status[s].deviceName, this._Item.status[s].func);
         if(this._Item.status[s].func == t) return this._GetStatus(this._Item.status[s].deviceName, this._Item.status[s].func);
       }
@@ -98,8 +98,8 @@ class HomeBridgeAccessory extends Accessory {
   _AddStatusChange(service, callback, typeOrFunc) {
     if(this._Item.status == undefined) return;
     if(!Array.isArray(typeOrFunc)) typeOrFunc = [typeOrFunc];
-    for(let t of typeOrFunc) {
-      for(let s in this._Item.status) {
+    for(const t of typeOrFunc) {
+      for(const s in this._Item.status) {
         if((this._Item.status[s].type == t) || (this._Item.status[s].func == t))
           this._AddStatusChangeEvent(this._Item.status[s].deviceName, this._Item.status[s].func, this._uuid, service, callback);
       }
