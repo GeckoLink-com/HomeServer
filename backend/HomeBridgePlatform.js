@@ -74,6 +74,7 @@ class HomeBridgePlatform {
       val = this._common.internalStatus.lastCommand[deviceName][func];
       return val;
     }
+    return null;
   }
   
   _GetUITable(table) {
@@ -127,7 +128,7 @@ class HomeBridgePlatform {
     this._Bridge.bridgedAccessories = [];
     if(this._UITable.ItemList == null) this._UITable.ItemList = [];
     for(let d of this._UITable.ItemList) {
-      if(['onOff', 'openClose', 'lock', 'window', 'brind', 'shutter', 'aircon', 'tv'].indexOf(d.type) >= 0) {
+      if(['onOff', 'openClose', 'hue', 'light', 'lock', 'window', 'brind', 'shutter', 'aircon', 'tv'].indexOf(d.type) >= 0) {
         if(d.label != undefined) this._AddAccessory(d, d.room, d.label);
       }
       if(d.type == 'tv') {

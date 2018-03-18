@@ -22,7 +22,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="dev of actualDevices" :key="dev.device" :class="{success:(selectedDevice==dev.device)}" @click.stop="selectedDevice=dev.device">
+          <tr v-for="dev of actualDevices" :key="'mlist-actualDevices' + dev.device" :class="{success:(selectedDevice==dev.device)}" @click.stop="selectedDevice=dev.device">
             <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
             <td>{{ dev.device }}</td>
             <td>{{ dev.type?dev.type:'-' }}</td>

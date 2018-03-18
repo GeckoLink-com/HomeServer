@@ -48,6 +48,8 @@ class HomeBridgeAccessory extends Accessory {
       case 'status':
       case 'other':
       case 'tv':
+      case 'hue':
+      case 'light':
         service = this._ServiceSwitch();
         break;
       case 'lock':

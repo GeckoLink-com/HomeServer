@@ -57,39 +57,76 @@ class HueAPI {
         if(light && (light != '')) this._SetName(msg, bridgeNo, light, {name: args[1]});
         break;
       case 'ct':
-        if(!args[1] || (args[1] < 2000) || args[1] > 6500) {
+        if(!args[1] || (args[1] > 6500)) {
           console.log('ct illegal parameter ct:', args[1]);
           this._SendResponse(msg, true);
           return;
         }
-        if(!args[2] || (args[2] < 0) || args[2] > 254) {
+        if(!args[2] || (args[2] > 254)) {
           console.log('ct illegal parameter bri:', args[2]);
           this._SendResponse(msg, true);
           return;
         }
-        if(light && (light != '')) this._SetLight(msg, bridgeNo, light, {ct: parseInt(1000000 / args[1]), bri: parseInt(args[2])});
+        if((args[1] < 0) && (args[2] < 0)) {
+          console.log('ct illegal parameter ct and bri:', args[1], args[2]);
+          this._SendResponse(msg, true);
+          return;
+        }
+        if(light && (light != '')) {
+          const state = {
+            on: true,
+            ct: this._bridges[bridgeNo].lights[light].state.ct,
+            hue: this._bridges[bridgeNo].lights[light].state.hue,
+            sat: this._bridges[bridgeNo].lights[light].state.sat,
+            bri: this._bridges[bridgeNo].lights[light].state.bri,
+            alert: 'none',
+            transitiontime: 0
+          };
+          if(args[1] >= 0) state.ct = parseInt(1000000 / args[1]);
+          if(args[2] >= 0) state.bri = parseInt(args[2]);
+          this._SetLight(msg, bridgeNo, light, state);
+        }
         break;
       case 'hue':
-        if(!args[1] || (args[1] < 0) || args[1] > 65535) {
+        if(!args[1] || (args[1] > 65535)) {
           console.log('hue illegal parameter hue:', args[1]);
           this._SendResponse(msg, true);
           return;
         }
-        if(!args[2] || (args[2] < 0) || args[2] > 254) {
+        if(!args[2] || (args[2] > 254)) {
           console.log('hue illegal parameter sat:', args[2]);
           this._SendResponse(msg, true);
           return;
         }
-        if(!args[3] || (args[3] < 0) || args[3] > 254) {
+        if(!args[3] || (args[3] > 254)) {
           console.log('hue illegal parameter bri:', args[3]);
           this._SendResponse(msg, true);
           return;
         }
-        if(light && (light != '')) this._SetLight(msg, bridgeNo, light, {hue: parseInt(args[1]), sat: parseInt(args[2]), bri: parseInt(args[3])});
+        if((args[1] < 0) && (args[2] < 0) && (args[3] < 0)) {
+          console.log('hue illegal parameter hue, sat and bri:', args[1], args[2], args[3]);
+          this._SendResponse(msg, true);
+          return;
+        }
+        if(light && (light != '')) {
+          const state = {
+            on: true,
+            ct: this._bridges[bridgeNo].lights[light].state.ct,
+            hue: this._bridges[bridgeNo].lights[light].state.hue,
+            sat: this._bridges[bridgeNo].lights[light].state.sat,
+            bri: this._bridges[bridgeNo].lights[light].state.bri,
+            alert: 'none',
+            transitiontime: 0
+          };
+          if(args[1] >= 0) state.hue = parseInt(args[1]);
+          if(args[2] >= 0) state.sat = parseInt(args[2]);
+          if(args[3] >= 0) state.bri = parseInt(args[3]);
+          this._SetLight(msg, bridgeNo, light, state);
+        }
         break;
       case 'switch':
-        {
-          let state = {
+        if(light && (light != '')) {
+          const state = {
             on: this._bridges[bridgeNo].lights[light].state.on,
             ct: this._bridges[bridgeNo].lights[light].state.ct,
             hue: this._bridges[bridgeNo].lights[light].state.hue,
@@ -101,8 +138,7 @@ class HueAPI {
           if(args[1] == 'on') state.on = true;
           if(args[1] == 'off') state.on = false;
           if(args[1] == 'toggle') state.on = !state.on;
-
-          if(light && (light != '')) this._SetLight(msg, bridgeNo, light, state);
+          this._SetLight(msg, bridgeNo, light, state);
         }
         break;
       default:

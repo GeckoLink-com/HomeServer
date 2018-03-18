@@ -7,7 +7,7 @@
       </div>
       <div class="col-sm-7 col-md-7 scrollable">
         <br>
-        <div v-for="bridge of hueBridges" :key="bridge.id">
+        <div v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
           <div class="row">
             <div class="col-md-4">
               Bridge {{ bridge.id }}
@@ -27,7 +27,7 @@
             {{ bridge.message }}
           </h6>
           <br>
-          <div v-for="(light,idx) of bridge.lights" :key="idx" class="row">
+          <div v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" class="row">
             <div class="col-md-3 col-md-offset-1">
               <input class="func-name" type="text" v-model="light.name">
             </div>
@@ -85,7 +85,7 @@
           </div>
           <div class="col-md-8">
             <select class="form-control wisun-select-menu btn-inline" v-model="smartMeterAdapter">
-              <option v-for="item of smartMeterAdapters" :key="item.id" :value="item.id">{{ item.name }}</option>
+              <option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :value="item.id">{{ item.name }}</option>
             </select>
           </div>
         </div>
@@ -94,7 +94,7 @@
             <H5>電力計ＩＤ</h5>
           </div>
           <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterID" :key="id" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
+            <input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
           </div>
         </div>
         <div class="row">
@@ -102,7 +102,7 @@
             <H5>電力計パスワード</h5>
           </div>
           <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterPassword" :key="id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
+            <input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
           </div>
         </div>
       </div>

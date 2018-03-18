@@ -12,7 +12,7 @@
                 <option value="newMacro">
                   新規追加
                 </option>
-                <option v-for="(item,index) of remocon.remoconMacro" :key="item" :value="index">
+                <option v-for="(item,index) of remocon.remoconMacro" :key="'rm-remoconMacro' + index" :value="index">
                   {{ index }}
                 </option>
               </select>
@@ -86,7 +86,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item of macro" :key="item">
+            <tr v-for="(item, idx) of macro" :key="'rm-macro' + idx">
               <td v-if="item.wait!=null">
                 <input class="remocon-inline-input" type="number" step="0.1" v-model="item.wait" @change="dirty=true">
                 秒
@@ -94,7 +94,7 @@
               <td v-if="item.wait!=null">待ち時間</td>
               <td v-if="item.wait==null">
                 <select class="form-control remocon-select-menu" v-model="item.label" @change="dirty=true">
-                  <option v-for="(remocon,idx) of remocon.remoconTable" :key="remocon" :value="idx">
+                  <option v-for="(remocon,idx) of remocon.remoconTable" :key="'rm-remoconTable' + idx" :value="idx">
                     {{ idx }}
                   </option>
                 </select>

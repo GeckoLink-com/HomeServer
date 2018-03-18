@@ -45,7 +45,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item of lastRemoconCode" :key="item.deviceName" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
+            <tr v-for="item of lastRemoconCode" :key="'r-lastRemoconCode' + item.deviceName" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
               <td>{{ item.deviceName }}</td>
               <td>{{ item.format }}</td>
               <td>{{ item.info }}</td>
@@ -88,7 +88,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item,idx) of remocon.remoconTable" :key="idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
+              <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
                 <td class="col-md-5">
                   <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
                     >
@@ -107,7 +107,7 @@
               </tr>
             </tbody>
           </table>
-          <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup" :key="groupName">
+          <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup" :key="'r-remoconGroup' + groupName">
             <tbody>
               <tr @click.stop="SelectGroup(groupName)" :class="{success:(groupName==selectedGroup)}">
                 <td class="col-md-5">
@@ -121,7 +121,7 @@
                   </button>
                 </td>
               </tr>
-              <tr v-for="(item,idx) of remocon.remoconTable" :key="idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
+              <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
                 <td class="col-md-5">
                   <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
                     >

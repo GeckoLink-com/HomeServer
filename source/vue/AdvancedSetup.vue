@@ -10,7 +10,7 @@
       <br>
 
       <dropdown class="moduleLabel" :text="selectedModuleLabel">
-        <li v-for="module of moduleList" :key="module.name" class="module-list" :class="{disabled:!module.enable}" >
+        <li v-for="module of moduleList" :key="'as-moduleList' + module.name" class="module-list" :class="{disabled:!module.enable}" >
           <a href="#" :data-device="module.device" :data-name="module.name" :data-enable="module.enable" @click="Click" :disabled="!module.enable">
             {{ module.label }}
           </a>
@@ -72,7 +72,7 @@
           </div>
         </div>
 
-        <div class="row well well-transparent" v-for="num of [0,1]" :key="num">
+        <div class="row well well-transparent" v-for="num of [0,1]" :key="'as-ad' + num">
           <div class="col-md-2">
             <h5>AD{{ num }}</h5>
           </div>
@@ -82,7 +82,7 @@
           <div class="col-md-7">
             <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"/>
             <select class="form-control select-menu btn-inline" v-model="ad[num].type" :disabled="ad[num].sw==0">
-              <option v-for="item of adFuncTable" :key="item.name" :value="item.type">{{ item.name }}</option>
+              <option v-for="item of adFuncTable" :key="'as-adFuncTable' + item.name" :value="item.type">{{ item.name }}</option>
             </select>
             <fieldset class="btn-inline" v-show="(ad[num].sw==1)&&(ad[num].type=='other')">
               <div class="item-label">offset</div>
@@ -98,42 +98,32 @@
         <div class="row well well-func">
           <div class="row">
             <div class="col-md-5">
-              <fieldset :disabled="(ledTape.sw==1)||(motor.sw==1)">
+              <fieldset :disabled="motor.sw==1">
                 <h5>雨センサー</h5>
               </fieldset>
             </div>
             <div class="col-md-7">
-              <slide-switch v-model="rainSensor.sw" :disabled="(ledTape.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"/>
-            </div>
-          </div>
-          <div class="row" v-if="ledTapeEnable">
-            <div class="col-md-5">
-              <fieldset :disabled="(rainSensor.sw==1)||(motor.sw==1)">
-                <h5>LED Tape</h5>
-              </fieldset>
-            </div>
-            <div class="col-md-7">
-              <slide-switch v-model="ledTape.sw" :disabled="(rainSensor.sw==1)||(motor.sw==1)" :buttons="buttonsOnOff"/>
+              <slide-switch v-model="rainSensor.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"/>
             </div>
           </div>
 
           <hr>
-          <div class="row" v-for="num of [0, 1]" :key="num">
+          <div class="row" v-for="num of [0, 1]" :key="'as-gpio' + num">
             <div class="col-md-2">
-              <fieldset :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)">
+              <fieldset :disabled="(rainSensor.sw==1)||(motor.sw==1)">
                 <h5>GPIO{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw==0)" >
+              <input class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw==1)||(motor.sw==1)||(gpio[num].sw==0)" >
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="gpio[num].sw" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)" :buttons="buttonsInOutOff"/>
-              <slide-switch class="btn-inline" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw!=2)" v-model="gpio[num].pull" :buttons="buttonsPlupNone"/>
-              <select class="form-control select-menu btn-inline" v-model="gpio[num].type" :disabled="(rainSensor.sw==1)||((num==0)&&(ledTape.sw==1))||(motor.sw==1)||(gpio[num].sw!=2)">
-                <option v-for="item of gpioFuncTable" :key="item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
+              <slide-switch class="btn-inline" v-model="gpio[num].sw" :disabled="(rainSensor.sw==1)||(motor.sw==1)" :buttons="buttonsInOutOff"/>
+              <slide-switch class="btn-inline" :disabled="(rainSensor.sw==1)||(motor.sw==1)||(gpio[num].sw!=2)" v-model="gpio[num].pull" :buttons="buttonsPlupNone"/>
+              <select class="form-control select-menu btn-inline" v-model="gpio[num].type" :disabled="(rainSensor.sw==1)||(motor.sw==1)||(gpio[num].sw!=2)">
+                <option v-for="item of gpioFuncTable" :key="'as-gpioFuncTable' + item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
               </select>
-              <fieldset class="btn-inline" v-show="(rainSensor.sw==0)&&((num!=0)||(ledTape.sw==0))&&(gpio[num].sw!=0)&&(motor.sw==0)&&(gpio[num].type=='other')">
+              <fieldset class="btn-inline" v-show="(rainSensor.sw==0)&&(gpio[num].sw!=0)&&(motor.sw==0)&&(gpio[num].type=='other')">
                 <div class="item-label">０</div>
                 <input class="state" type="text" v-model="gpio[num].valueLabel[0]">
                 <div class="item-label">１</div>
@@ -148,7 +138,7 @@
           </div>
         </div>
 
-        <div class="row well well-func" v-for="num of [0, 1]" :key="num">
+        <div class="row well well-func" v-for="num of [0, 1]" :key="'as-ha' + num">
           <div class="row">
             <div class="col-md-2">
               <h5>HA端子{{ num }}</h5>
@@ -210,19 +200,28 @@
         </div>
 
         <div class="row well well-func">
+          <div class="row" v-if="ledTapeEnable">
+            <div class="col-md-5">
+              <h5>LED Tape</h5>
+            </div>
+            <div class="col-md-7">
+              <slide-switch v-model="ledTape.sw" :buttons="buttonsOnOff"/>
+            </div>
+          </div>
+
           <div class="row">
             <div class="col-md-2">
-              <fieldset :disabled="motor.sw==1">
+              <fieldset :disabled="(motor.sw==1)||(ledTape.sw==1)">
                 <h5>スイッチ制御</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="sw.name" :disabled="(sw.sw==0)||(motor.sw==1)">
+              <input class="func-name" type="text" v-model="sw.name" :disabled="(sw.sw==0)||(motor.sw==1)||(ledTape.sw==1)">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="sw.sw" :disabled="motor.sw==1" :buttons="buttonsOnOff"/>
+              <slide-switch class="btn-inline" v-model="sw.sw" :disabled="(motor.sw==1)||(ledTape.sw==1)" :buttons="buttonsOnOff"/>
               <div class="btn-inline">
-                <fieldset :disabled="(sw.sw==0)||(motor.sw==1)">
+                <fieldset :disabled="(sw.sw==0)||(motor.sw==1)||(ledTape.sw==1)">
                   <div class="item-label">動作時間</div>
                   <input class="state" type="text" v-model="sw.optionValue">
                   <div class="item-label">秒</div>
@@ -232,18 +231,18 @@
           </div>
           <hr>
 
-          <div class="row" v-for="num of [0, 1, 2]" :key="num">
+          <div class="row" v-for="num of [0, 1, 2]" :key="'as-swio' + num">
             <div class="col-md-2">
-              <fieldset :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))">
+              <fieldset :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))||((num==1)&&(ledTape.sw==1))">
                 <h5>SWIO{{ num }}</h5>
               </fieldset>
             </div>
             <div class="col-md-3">
-              <input class="func-name" type="text" v-model="swio[num].name" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))">
+              <input class="func-name" type="text" v-model="swio[num].name" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))||((num==1)&&(ledTape.sw==1))">
             </div>
             <div class="col-md-7">
-              <slide-switch class="btn-inline" v-model="swio[num].sw" :buttons="buttonsOnOff" :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))"/>
-              <fieldset class="btn-inline" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))">
+              <slide-switch class="btn-inline" v-model="swio[num].sw" :buttons="buttonsOnOff" :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))||((num==1)&&(ledTape.sw==1))"/>
+              <fieldset class="btn-inline" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))||((num==1)&&(ledTape.sw==1))">
                 <div class="item-label">０</div>
                 <input class="state" type="text" v-model="swio[num].valueLabel[0]">
                 <div class="item-label">１</div>
@@ -263,7 +262,7 @@
           <h6 v-if="moduleNameAlert.length" class="error">{{ moduleNameAlert }}</h6>
         </div>
 
-        <div class="row well well-transparent" v-for="num of [2,3]" :key="num">
+        <div class="row well well-transparent" v-for="num of [2,3]" :key="'as-adXbee' + num">
           <div class="col-md-2">
             <h5>AD{{ num }}</h5>
           </div>
@@ -273,7 +272,7 @@
           <div class="col-md-7">
             <slide-switch v-model="ad[num].sw" :buttons="buttonsOnOff"/>
             <select class="form-control select-menu btn-inline" v-model="ad[num].type" :disabled="ad[num].sw==0">
-              <option v-for="item of adFuncTable" :key="item.name" :value="item.type">{{ item.name }}</option>
+              <option v-for="item of adFuncTable" :key="'as-adFuncXbee' + item.name" :value="item.type">{{ item.name }}</option>
             </select>
             <fieldset class="btn-inline" v-show="(ad[num].sw==1)&&(ad[num].type=='other')">
               <div class="item-label">offset</div>
@@ -287,7 +286,7 @@
         </div>
 
         <div class="row well well-func">
-          <div class="row" v-for="num of [2, 3]" :key="num">
+          <div class="row" v-for="num of [2, 3]" :key="'as-gpi' + num">
             <div class="col-md-2">
               <h5>GPI{{ num }}</h5>
             </div>
@@ -298,7 +297,7 @@
               <slide-switch class="btn-inline" v-model="gpio[num].sw" :buttons="buttonsOnOff"/>
               <slide-switch class="btn-inline" :disabled="!gpio[num].sw" v-model="gpio[num].pull" :buttons="buttonsPlupNone"/>
               <select class="form-control select-menu btn-inline" v-model="gpio[num].type" :disabled="!gpio[num].sw">
-                <option v-for="item of gpioFuncTable" :key="item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
+                <option v-for="item of gpioFuncTable" :key="'as-gpioFuncTableXbee' + item.name" :value="item.type" :data-type="item.type">{{ item.name }}</option>
               </select>
               <fieldset class="btn-inline" v-show="(gpio[num].sw!=0)&&(gpio[num].type=='other')">
                 <div class="item-label">０</div>

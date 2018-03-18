@@ -7,7 +7,7 @@
       </div>
       <div class="row">
         <dropdown class="moduleLabel" text="Send">
-          <li v-for="dev of moduleList" :key="dev.device" class="module-list" :class="{disabled:!dev.enable}">
+          <li v-for="dev of moduleList" :key="'debug-moduleList' + dev.device" class="module-list" :class="{disabled:!dev.enable}">
             <a href="#" @click="SelectModule" :data-device="dev.device" :data-enable="dev.enable" :disabled="!dev.enable">
               {{ dev.label }}
             </a>
@@ -38,7 +38,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="dev of actualDevices" :key="dev.device">
+              <tr v-for="dev of actualDevices" :key="'debug-actualDevices' + dev.device">
                 <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
                 <td>{{ dev.device }}</td>
                 <td>{{ dev.type?dev.type:'-' }}</td>
@@ -64,7 +64,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="stat of status" :key="stat.device">
+              <tr v-for="(stat, idx) of status" :key="'debug-status' + idx">
                 <td>{{ stat.deviceName?stat.deviceName:stat.device }}</td>
                 <td>{{ stat.funcName?stat.funcName:stat.func }}</td>
                 <td>{{ stat.valueName?stat.valueName:stat.value }}</td>
@@ -86,7 +86,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q of queue.writeQueue" :key="q.device">
+              <tr v-for="q of queue.writeQueue" :key="'debug-writeQueue' + q.device">
                 <td>{{ q.device }}</td>
                 <td>{{ q.sequenceID }}</td>
                 <td>{{ q.command }}</td>
@@ -105,7 +105,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q of queue.readQueue" :key="q.code">
+              <tr v-for="q of queue.readQueue" :key="'debug-readQueue' + q.code">
                 <td>{{ QueueDecode(q.code) }}</td>
               </tr>
             </tbody>
@@ -125,7 +125,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="l of controllerLog" :key="l">
+              <tr v-for="(l,idx) of controllerLog" :key="'debug-controllerLog' + idx">
                 <td>{{ l.timeStamp.substr(5, 11) }}</td>
                 <td>{{ l.type }}</td>
                 <td>{{ l.body.deviceName||l.body.device }}</td>

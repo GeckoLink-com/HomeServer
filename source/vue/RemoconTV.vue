@@ -66,7 +66,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, idx) of remoconTable" :key="idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
+            <tr v-for="(item, idx) of remoconTable" :key="'rt-remoconTable' + idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
               <td>{{ item.label }}</td>
               <td>{{ item.info }}</td>
             </tr>
@@ -79,16 +79,16 @@
           <thead>
             <tr>
               <th class="col-md-2">ボタン</th>
-              <th class="col-md-3" v-for="net of ['UHF','BS','CS']" :key="net">
+              <th class="col-md-3" v-for="net of ['UHF','BS','CS']" :key="'rt-netHead' + net">
                 <input type="checkbox" v-model="channelTable[net].display" :data-net="net">
                 {{ channelTable[net].label }}
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="ch of 12" :key="ch">
+            <tr v-for="ch of 12" :key="'rt-ch' + ch">
               <td>{{ ch }}</td>
-              <td v-for="net of ['UHF', 'BS', 'CS']" :key="net">
+              <td v-for="net of ['UHF', 'BS', 'CS']" :key="'rt-netBody' + net">
                 <fieldset :disabled="!channelTable[net].display">
                   <input type="checkbox" v-model="channelTable[net][ch].display">
                   <input class="channelList" type="text" v-model="channelTable[net][ch].label">

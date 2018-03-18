@@ -102,7 +102,7 @@ class ControllerConnection {
   _ExecCommand(caller, msg) {
     let device = 0;
     msg.type = 'command';
-    msg.command = msg.command.replace("'", '');
+    if(!Array.isArray(msg.command)) msg.command = msg.command.replace("'", '');
     this._common.ControllerLog(msg);
     if(msg.deviceName != 'server') {
       if(this._common.aliasTable && msg.deviceName && (msg.deviceName in this._common.aliasTable)) {

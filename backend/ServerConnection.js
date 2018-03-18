@@ -209,9 +209,10 @@ class ServerConnection {
     if(this._wssClient.readyState == 0) {
       this._wssRetry++;
       console.log('ServerConnection : ---152 _WSSConnect no ready', this._wssRetry);  // DEBUG
-      if(this._wssRetry > 3) return;
+      if(this._wssRetry > 3) return this._wssClient.terminate();
       return setTimeout(this._WSSConnect.bind(this), 300);
     }
+    if(this._connectState == 1) return;
 
     this._connectState = 1;
     this._connectMessage = true;

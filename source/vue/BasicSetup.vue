@@ -10,7 +10,7 @@
       <br>
 
       <dropdown class="moduleLabel" :text="selectedModuleLabel">
-        <li v-for="module of moduleList" :key="module.name" class="module-list" :class="{disabled:!module.enable}" >
+        <li v-for="module of moduleList" :key="'bs-moduleList' + module.name" class="module-list" :class="{disabled:!module.enable}" >
           <a href="#" :data-device="module.device" :data-name="module.name" :data-enable="module.enable" @click="Click" :disabled="!module.enable">
             {{ module.label }}
           </a>
@@ -31,7 +31,7 @@
         <br>
         <h5>機能設定</h5>
         <div class="form-group" id="basicFuncSel">
-          <div class="row" v-for="(item, idx) of typeTable" :key="idx" v-show="item.name != ''">
+          <div class="row" v-for="(item, idx) of typeTable" :key="'bs-typeTable' + idx" v-show="item.name != ''">
             <div class="col-sm-offset-1 col-sm-10">
               <radio :selected-value="idx" v-model="selectedType" type="primary">
                 {{ item.name }}
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div v-for="(item, idx) of funcTable" :key="idx" v-show="ItemCheck(idx)">
+        <div v-for="(item, idx) of funcTable" :key="'bs-funcTable' + idx" v-show="ItemCheck(idx)">
           <div class="row well well-transparent">
             <div class="col-md-3">
               <h5>{{ item.name }}</h5>

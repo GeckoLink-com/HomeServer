@@ -75,7 +75,7 @@
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="lowTemp[mode]" @change="LowTemp">
                   <option/>
-                  <option v-for="temp in 9" :key="temp" :value="temp+11">{{ temp+11 }}°C</option>
+                  <option v-for="temp in 9" :key="'ra-lowTemp' + temp" :value="temp+11">{{ temp+11 }}°C</option>
                 </select>
               </form>
             </div>
@@ -84,7 +84,7 @@
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="tempStep[mode]" @change="TempStep">
                   <option/>
-                  <option v-for="temp in 2" :key="temp" :value="temp*0.5">{{ temp*0.5 }}°C</option>
+                  <option v-for="temp in 2" :key="'ra-lowTempStep' + temp" :value="temp*0.5">{{ temp*0.5 }}°C</option>
                 </select>
               </form>
             </div>
@@ -95,7 +95,7 @@
               <form class="btn-inline">
                 <select class="form-control ui-select-menu" v-model="highTemp[mode]" @change="HighTemp">
                   <option/>
-                  <option v-for="temp in 9" :key="temp" :value="temp+25">{{ temp+25 }}°C</option>
+                  <option v-for="temp in 9" :key="'ra-highTemp' + temp" :value="temp+25">{{ temp+25 }}°C</option>
                 </select>
               </form>
             </div>
@@ -112,7 +112,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item,idx) of remoconTable[mode]" :key="idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
+            <tr v-for="(item,idx) of remoconTable[mode]" :key="'ra-remoconTable' + idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
               <td>{{ (!lowTemp[mode]||(lowTemp[mode]==0))?'':((idx*tempStep[mode]+lowTemp[mode]) + '°C') }}</td>
               <td>{{ item?item.info:'' }}</td>
             </tr>
