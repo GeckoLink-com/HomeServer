@@ -122,17 +122,16 @@ class HomeBridgePlatform {
 
   _UITableNotify(_caller) {
     if(!this._Bridge) return;
-    if(!this._common.remocon.remoconGroup) return;
-    if(!this._common.uiTable.ItemList) return;
     this._UITable = { RoomList:this._common.uiTable.RoomList, ItemList:this._common.uiTable.ItemList, TableList:this._common.remocon.remoconGroup, System:this._common.uiTable.System};
     this._Bridge.removeBridgedAccessories(this._Bridge.bridgedAccessories);
     this._Bridge.bridgedAccessories = [];
-    for(let d of this._common.uiTable.ItemList) {
+    if(this._UITable.ItemList == null) this._UITable.ItemList = [];
+    for(let d of this._UITable.ItemList) {
       if(['onOff', 'openClose', 'lock', 'window', 'brind', 'shutter', 'aircon', 'tv'].indexOf(d.type) >= 0) {
         if(d.label != undefined) this._AddAccessory(d, d.room, d.label);
       }
       if(d.type == 'tv') {
-        if(d.table != undefined) {
+        if((d.table != null) && (this._UITable.TableList != null)) {
           for(let band in this._UITable.TableList[d.table.prefix]) {
             if(!this._UITable.TableList[d.table.prefix][band].display) continue;
             for(let ch in this._UITable.TableList[d.table.prefix][band]) {

@@ -108,19 +108,21 @@ class Common extends eventEmitter {
             break;
           }
         }
-        const stat = {
-          device: 'server',
-          deviceName: 'server',
-          func:'rainInfo',
-          funcName: this.alias[0].rainInfo?this.alias[0].rainInfo.name:'rainInfo',
-          type: this.alias[0].rainInfo?this.alias[0].rainInfo.type:'rain',
-          value: this.internalStatus.rainInfo,
-          valueName: this.internalStatus.rainInfo,
-        };
-        if(f < 0) {
-          this.status.push(stat);
-        } else {
-          this.status[f] = stat;
+        if(this.alias[0] != null) {
+          const stat = {
+            device: 'server',
+            deviceName: 'server',
+            func:'rainInfo',
+            funcName: this.alias[0].rainInfo?this.alias[0].rainInfo.name:'rainInfo',
+            type: this.alias[0].rainInfo?this.alias[0].rainInfo.type:'rain',
+            value: this.internalStatus.rainInfo,
+            valueName: this.internalStatus.rainInfo,
+          };
+          if(f < 0) {
+            this.status.push(stat);
+          } else {
+            this.status[f] = stat;
+          }
         }
       }
       if(this.internalStatus.smartMeter != null) {
@@ -181,64 +183,63 @@ class Common extends eventEmitter {
     this.emit('changeSmartMeter', this);
 
     this._Registry.GetRegistry('system', (err, data) => {
-      this.systemConfig = data;
-      if(this.systemConfig) {
-        if(this.version) this.systemConfig.version = this.version;
-        this.systemConfig.hap = this.config.hap;
-        this.systemConfig.led = this.config.led;
-        this.systemConfig.motor = this.config.motor;
-        this.systemConfig.smartMeter = this.config.smartMeter;
-        this.systemConfig.initialPassword = this.initialPassword;
-        this.systemConfig.defaultPassword = this.defaultPassword;
+      this.systemConfig = data || {};
+      if(this.version) this.systemConfig.version = this.version;
+      this.systemConfig.hap = this.config.hap;
+      this.systemConfig.amesh = this.config.amesh;
+      this.systemConfig.led = this.config.led;
+      this.systemConfig.motor = this.config.motor;
+      this.systemConfig.smartMeter = this.config.smartMeter;
+      this.systemConfig.initialPassword = this.initialPassword;
+      this.systemConfig.defaultPassword = this.defaultPassword;
+      this.systemConfig.platform = {
+        name: 'GeckoLink HomeServer',
+        manufacturer: 'GeckoLink',
+        model: 'HomeServer',
+        serial: this.serial,
+      };
+
+      if(this.systemConfig.account == null) this.systemConfig.account = 'admin';
+      if(this.systemConfig.password == null) this.systemConfig.password = this.initialPassword;
+      if(this.systemConfig.autoUpdate == null) this.systemConfig.autoUpdate = 'on';
+      if(this.systemConfig.remote == null) this.systemConfig.remote = 'off';
+      if(this.systemConfig.mailto == null) this.systemConfig.mailto = '';
+      if(this.systemConfig.longitude == null) this.systemConfig.longitude = '';
+      if(this.systemConfig.latitude == null) this.systemConfig.latitude = '';
+      if(this.systemConfig.radius == null) this.systemConfig.radius = '5000';
+      if(this.systemConfig.bridge == null) this.systemConfig.bridge = {};
+      if(this.systemConfig.bridge.port == null) this.systemConfig.bridge.port = 51826;
+     if(this.systemConfig.bridge.pin == null) {
+        const bytes = crypto.randomBytes(6);
+        this.systemConfig.bridge.pin = ('00' + bytes.readUInt16BE(0)).slice(-3) + '-' +
+                                       ('0' + bytes.readUInt16BE(2)).slice(-2) + '-' +
+                                       ('00' + bytes.readUInt16BE(4)).slice(-3);
+      }
+      if(this.systemConfig.bridge.setupID == null) {
+        const bytes = crypto.randomBytes(4);
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let setupID = '';
+        for (let i = 0; i < 4; i++) {
+          setupID += chars.charAt(bytes.readUInt8(i) % 26);
+        }
+        this.systemConfig.bridge.setupID = setupID;
+      }
+      if(this.systemConfig.bridge.setupURI == null) {
+        const setupCode = parseInt(this.systemConfig.bridge.pin.replace(/-/g, ''), 10);
+        const category = 2; // BRIDGE
+        const encodedPayload = ('00000000' + (setupCode + ( 1 << 28) /* Supports IP */ + (category << 31) + (category  >> 1) * Math.pow(2, 32)).toString(36).toUpperCase()).slice(-9);
+        this.systemConfig.bridge.setupURI = "X-HM://" + encodedPayload + this.systemConfig.bridge.setupID;
+      }
+
+      if((this.systemConfig.bridge.name != null) &&
+         (this.systemConfig.bridge.username != null)) {
         this.emit('changeSystemConfig', this);
         return;
       }
 
-      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const bytes = crypto.randomBytes(10);
-      const pin = ('00' + bytes.readUInt16BE(0)).slice(-3) +
-            '-' + ('0' + bytes.readUInt16BE(2)).slice(-2) +
-            '-' + ('00' + bytes.readUInt16BE(4)).slice(-3);
-      let setupID = '';
-      for (let i = 0; i < 4; i++) {
-        setupID += chars.charAt(bytes.readUInt8(i) % 26);
-      }
-      const setupCode = parseInt(pin.replace(/-/g, ''), 10);
-      const category = 2; // BRIDGE
-      const encodedPayload = ('00000000' + (setupCode + ( 1 << 28) /* Supports IP */ + (category << 31) + (category  >> 1) * Math.pow(2, 32)).toString(36).toUpperCase()).slice(-9);
-      const setupURI = "X-HM://" + encodedPayload + setupID;
-
       getmac.getMac((err, macAddr) => {
-        this.systemConfig = {
-          account: 'admin',
-          password: this.initialPassword,
-          initialPassword: this.initialPassword,
-          defaultPassword: this.defaultPassword,
-          autoUpdate: 'on',
-          remote: 'off',
-          mailto: '',
-          longitude: '',
-          latitude: '',
-          radius: '5000',
-          version: this.version,
-          hap: this.config.hap,
-          amesh: this.config.amesh,
-          smartMeter: this.config.smartMeter,
-          bridge: {
-            name: 'GeckoLink-' + macAddr.slice(-8).replace(/:/g,''),
-            port: 51826,
-            username: macAddr.toUpperCase(),
-            pin: pin,
-            setupID: setupID,
-            setupURI: setupURI,
-          },
-          platform: {
-            name: 'GeckoLink HomeServer',
-            manufacturer: 'GeckoLink',
-            model: 'HomeServer',
-            serial: this.serial,
-          },
-        };
+        if(this.systemConfig.bridge.name == null) this.systemConfig.bridge.name = 'GeckoLink-' + macAddr.slice(-8).replace(/:/g,'');
+        if(this.systemConfig.bridge.username == null) this.systemConfig.bridge.username = macAddr.toUpperCase();
         this.emit('changeSystemConfig', this);
       });
     });
