@@ -19,7 +19,7 @@
             <h5>項目名</h5>
           </div>
           <div class="col-md-8">
-            <input class="input-transparent ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck">
+            <input class="ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck">
           </div>
         </div>
         <div class="row well well-transparent">
@@ -27,7 +27,7 @@
             <h5>他の呼び方</h5>
           </div>
           <div class="col-md-8">
-            <input class="input-transparent ui-func-name" type="text" v-model="itemAlias">
+            <input class="ui-func-name" type="text" v-model="itemAlias">
           </div>
         </div>
         <div class="row well well-transparent" v-if="nameAlert.length">
@@ -1000,10 +1000,6 @@
   .blue {
     background-color: #337ab7;
     color: white;
-  }
-
-  .input-transparent {
-    background-color: rgba(255,255,255,0.5);
   }
 
   .ui-select-menu {
