@@ -34,6 +34,7 @@ class Common extends EventEmitter {
       ItemList: [],
     };
     this._handlers = {};
+
     /*
       this.remocon = {
         remoconTable: {
@@ -158,6 +159,11 @@ class Common extends EventEmitter {
     Socket.on('systemConfig', (data) => {
       this.systemConfig = data;
       this.emit('changeSystemConfig', this);
+    });
+
+    Socket.on('shutdownEnable', (data) => {
+      this.shutdownEnable = data;
+      this.emit('shutdownEnable', this);
     });
 
     // common event handler from frontend other view

@@ -71,8 +71,32 @@
             <button type="button" class="btn btn-primary" @click="ConfigInit" >実行</button>
           </div>
         </modal>
+        <br>
+
+        <div class="row">
+          <h5>
+            電源
+          </h5>
+        </div>
+        <button type="button" :disabled="!shutdownEnable" @click="shutdownModal=true" class="btn btn-xs btn-primary system-config-btn">シャットダウン</button>
+        <modal v-model="shutdownModal">
+          <div slot="modal-header" class="modal-header">
+            電源 シャットダウン
+          </div>
+          <div slot="modal-body" class="modal-body">
+            シャットダウン処理を行います。<br>
+            LEDの点滅が止まり、赤色のLEDの点灯のみになれば電源を抜いて大丈夫です。<br>
+            再起動は電源を一度抜いてから、再度つないでください。
+          </div>
+          <div slot="modal-footer" class="modal-footer">
+            <button type="button" class="btn btn-default" :disabled="!shutdownModalButton" @click="shutdownModal = false">中止</button>
+            <button type="button" class="btn btn-primary" :disabled="!shutdownModalButton" @click="Shutdown" >実行</button>
+          </div>
+        </modal>
+        <br>
       </div>
     </div>
+
     <div class="col-sm-9 col-md-9 scrollable">
       <br>
       <div class="row">
@@ -247,7 +271,10 @@
         authLoadModal: false,
         configLoadModal: false,
         configInitModal: false,
+        shutdownModal: false,
+        shutdownModalButton: true,
         powerLED: 'off',
+        shutdownEnable: false,
       };
     },
     computed: {
@@ -315,6 +342,9 @@
         this.smartMeter = Common.systemConfig.smartMeter;
         this.SetSystemConfig();
       });
+      Common.on('shutdownEnable', () => {
+        this.shutdownEnable = Common.shutdownEnable;
+      });
 
       this._authLoad = document.getElementById('auth-load');
       this._authSave = document.getElementById('auth-save');
@@ -379,6 +409,10 @@
         this.configInitModal = false;
         Socket.emit('initConfig');
         this.Reload();
+      },
+      Shutdown() {
+        Socket.emit('shutdown');
+        this.shutdownModalButton = false;
       },
       RemoteKeyFile() {
         this._remoteKeyFile.click();

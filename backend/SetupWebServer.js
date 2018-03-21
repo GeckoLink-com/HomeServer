@@ -230,7 +230,8 @@ class SetupWebServer {
 
   _Connection(socket) {
 
-    console.log('new webBrowser client');
+    const clientAddress = socket.handshake.address;
+    console.log(`new webBrowser client ${clientAddress}`);
     this._setupWebClientConnections.push(socket);
     
   // receive jobs
@@ -412,6 +413,14 @@ class SetupWebServer {
         }
       }
     });
+
+    socket.on('shutdown', () => {
+      console.log('shutdown');
+      this._common.emit('sendControllerCommand', this, {
+        deviceName: 'server',
+        command: 'shutdown',
+      });
+    });
     
     this._SendMessage('deviceInfo', {type:'deviceInfo', data:this._common.deviceInfo});
     this._SendMessage('status', this._common.status);    
@@ -422,6 +431,10 @@ class SetupWebServer {
     this._SendMessage('controllerLog', this._common.controllerLog);
     this._SendMessage('hueBridges', this._common.hueBridges);
     this._SendMessage('smartMeter', this._common.smartMeter);
+    this._common.shutdownEnable = ((clientAddress != null) &&
+                                   (clientAddress !== '::ffff:127.0.0.1') &&
+                                   (clientAddress !== '::1'));
+    this._SendMessage('shutdownEnable', this._common.shutdownEnable);
 
     if(!this._common.systemConfig.powerLED) this._common.systemConfig.powerLED = 'off';
     this._common.emit('sendControllerCommand', this, {
