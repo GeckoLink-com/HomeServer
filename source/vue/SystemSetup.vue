@@ -195,6 +195,15 @@
       </div>
 
       <div class="row">
+        <div class="col-md-4">
+          <h5>Power LED</h5>
+        </div>
+        <div class="col-md-8">
+          <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+        </div>
+      </div>
+
+      <div class="row">
         <div class="col-md-9">
           <div class="pull-right">
             <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
@@ -238,6 +247,7 @@
         authLoadModal: false,
         configLoadModal: false,
         configInitModal: false,
+        powerLED: 'off',
       };
     },
     computed: {
@@ -441,6 +451,7 @@
         Common.systemConfig.autoUpdate = this.autoUpdate;
         Common.systemConfig.serverKeys = this._serverKeys;
         Common.systemConfig.sshKeys = this._sshKeys;
+        Common.systemConfig.powerLED = this.powerLED;
         Socket.emit('systemConfig', Common.systemConfig);
         Common.emit('toastr_success', this, '設定しました。');
         if(this.password1 !== 'dummypasswd') {

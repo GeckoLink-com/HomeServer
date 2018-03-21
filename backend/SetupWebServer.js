@@ -218,6 +218,12 @@ class SetupWebServer {
         this._socketio = socketIO(this._server);
         if(this._common.config.setupWebServerProtocol) this._socketio.set('transports', this._common.config.setupWebServerProtocol);
         this._socketio.on('connection', (socket) => { this._Connection(socket); });
+      } else {
+        if(!this._common.systemConfig.powerLED) this._common.systemConfig.powerLED = 'off';
+        this._common.emit('sendControllerCommand', this, {
+          deviceName: 'server',
+          command: 'sysled ' + this._common.systemConfig.powerLED,
+        });
       }
     });
   }
@@ -416,6 +422,12 @@ class SetupWebServer {
     this._SendMessage('controllerLog', this._common.controllerLog);
     this._SendMessage('hueBridges', this._common.hueBridges);
     this._SendMessage('smartMeter', this._common.smartMeter);
+
+    if(!this._common.systemConfig.powerLED) this._common.systemConfig.powerLED = 'off';
+    this._common.emit('sendControllerCommand', this, {
+      deviceName: 'server',
+      command: 'sysled ' + this._common.systemConfig.powerLED,
+    });
 
     this._common.emit('setupWebConnect', this);
   }
