@@ -138,6 +138,39 @@
 
       <div class="row">
         <div class="col-md-4">
+          <h5>Power LED</h5>
+        </div>
+        <div class="col-md-8">
+          <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <h5>自動update</h5>
+        </div>
+        <div class="col-md-8">
+          <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+        </div>
+        <br>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <h5>SSH</h5>
+        </div>
+        <div class="col-md-8">
+          <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
+          <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
+          <div class="item-label">
+            gecko@geckolink.local
+          </div>
+        </div>
+      </div>
+      <br>
+
+      <div class="row">
+        <div class="col-md-4">
           <h5>リモートサーバー利用</h5>
         </div>
         <div class="col-md-8">
@@ -194,38 +227,6 @@
         </div>
         <br>
       </fieldset>
-
-      <div class="row">
-        <div class="col-md-4">
-          <h5>自動update</h5>
-        </div>
-        <div class="col-md-8">
-          <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
-        </div>
-        <br>
-      </div>
-
-      <div class="row">
-        <div class="col-md-4">
-          <h5>SSH</h5>
-        </div>
-        <div class="col-md-8">
-          <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
-          <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
-          <div class="item-label">
-            gecko@geckolink.local
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-4">
-          <h5>Power LED</h5>
-        </div>
-        <div class="col-md-8">
-          <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
-        </div>
-      </div>
 
       <div class="row">
         <div class="col-md-9">

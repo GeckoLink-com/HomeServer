@@ -397,6 +397,10 @@ class ControllerConnection {
   }
 
   _SendData(msg) {
+    if(!this._client) {
+      console.log('error : no controller connection');
+      return;
+    }
     this._client.write(JSON.stringify(msg));
   }
 }
