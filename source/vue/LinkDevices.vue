@@ -1,118 +1,147 @@
 <template>
   <div v-show="display" class="container-fluid tab-panel">
-    <div v-if="hueBridges && (hueBridges.length > 0)" class="row">
-      <div class="col-sm-3 col-md-3">
-        <br>
-        <h4>Hue</h4>
+    <div class="col-sm-12 col-md-12 scrollable">
+      <div v-if="hueBridges && (hueBridges.length > 0)" class="row">
+        <div class="col-sm-3 col-md-3">
+          <br>
+          <h4>Hue</h4>
+        </div>
+        <div class="col-sm-7 col-md-7 scrollable">
+          <br>
+          <div v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
+            <div class="row">
+              <div class="col-md-4">
+                Bridge {{ bridge.id }}
+              </div>
+              <div v-if="bridge.state==0" class="col-md-4">
+                <button @click="HuePairing" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
+                  ペアリング
+                </button>
+              </div>
+              <div v-if="bridge.state>=1" class="col-md-4">
+                <button :disabled="bridge.state==2" @click="HueTouchLink" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
+                  新規ライトのサーチ
+                </button>
+              </div>
+            </div>
+            <h6>
+              {{ bridge.message }}
+            </h6>
+            <br>
+            <div v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" class="row">
+              <div class="col-md-3 col-md-offset-1">
+                <input class="func-name" type="text" v-model="light.name">
+              </div>
+              <div class="col-md-4">
+                <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
+                  フラッシュ
+                </button>
+              </div>
+              <div class="col-md-4">
+                <button @click="DeleteLight" type="button" class="btn btn-danger btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
+                  削除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-10">
+            <div class="pull-right">
+              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
+            </div>
+          </div>
+        </div>
+        <hr class="separation">
+
       </div>
-      <div class="col-sm-7 col-md-7 scrollable">
-        <br>
-        <div v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
+
+      <div v-if="hap" class="row">
+        <div class="col-md-3">
+          <br>
+          <h4>HAP Device</h4>
+        </div>
+        <div class="col-md-7 scrollable">
+          <br>
           <div class="row">
             <div class="col-md-4">
-              Bridge {{ bridge.id }}
+              <img src="../images/home.png" alt="home" width="40px">
             </div>
-            <div v-if="bridge.state==0" class="col-md-4">
-              <button @click="HuePairing" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
-                ペアリング
-              </button>
-            </div>
-            <div v-if="bridge.state>=1" class="col-md-4">
-              <button :disabled="bridge.state==2" @click="HueSearch" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
-                新規ライトのサーチ
-              </button>
+            <div class="col-md-8">
+              <qrcode class="hap-qr" :value="hapSetupURI"/>
+              <div class="well well-homekit">
+                {{ hapPin }}
+              </div>
             </div>
           </div>
-          <h6>
-            {{ bridge.message }}
-          </h6>
           <br>
-          <div v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" class="row">
-            <div class="col-md-3 col-md-offset-1">
-              <input class="func-name" type="text" v-model="light.name">
-            </div>
+          <div class="row">
             <div class="col-md-4">
-              <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
-                フラッシュ
-              </button>
+              <H5>HAPデバイスID</h5>
+            </div>
+            <div class="col-md-8">
+              <input type="text" v-model="hapDeviceId">
+            </div>
+            <br>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-10">
+            <div class="pull-right">
+              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
             </div>
           </div>
         </div>
+        <hr class="separation">
+
       </div>
-    </div>
-    <hr class="separation">
-    <div v-if="hap" class="row">
-      <div class="col-md-3">
-        <br>
-        <h4>HAP Device</h4>
-      </div>
-      <div class="col-md-7 scrollable">
-        <br>
-        <div class="row">
-          <div class="col-md-4">
-            <img src="../images/home.png" alt="home" width="40px">
-          </div>
-          <div class="col-md-8">
-            <qrcode class="hap-qr" :value="hapSetupURI"/>
-            <div class="well well-homekit">
-              {{ hapPin }}
-            </div>
-          </div>
-        </div>
-        <br>
-        <div class="row">
-          <div class="col-md-4">
-            <H5>HAPデバイスID</h5>
-          </div>
-          <div class="col-md-8">
-            <input type="text" v-model="hapDeviceId">
-          </div>
+
+      <div v-if="smartMeterEnable && smartMeterConnect" class="row">
+        <div class="col-md-3">
           <br>
+          <h4>SmartMeter</h4>
         </div>
-      </div>
-    </div>
-    <hr v-if="hap" class="separation">
-    <div v-if="smartMeterEnable && smartMeterConnect" class="row">
-      <div class="col-md-3">
-        <br>
-        <h4>SmartMeter</h4>
-      </div>
-      <div class="col-md-7 scrollable">
-        <br>
+        <div class="col-md-7 scrollable">
+          <br>
+          <div class="row">
+            <div class="col-md-4">
+              <H5>Wi-SUNドングル</h5>
+            </div>
+            <div class="col-md-8">
+              <select class="form-control wisun-select-menu btn-inline" v-model="smartMeterAdapter">
+                <option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :value="item.id">{{ item.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <H5>電力計ＩＤ</h5>
+            </div>
+            <div class="col-md-8">
+              <input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <H5>電力計パスワード</h5>
+            </div>
+            <div class="col-md-8">
+              <input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
+            </div>
+          </div>
+        </div>
+
         <div class="row">
-          <div class="col-md-4">
-            <H5>Wi-SUNドングル</h5>
-          </div>
-          <div class="col-md-8">
-            <select class="form-control wisun-select-menu btn-inline" v-model="smartMeterAdapter">
-              <option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :value="item.id">{{ item.name }}</option>
-            </select>
+          <div class="col-md-10">
+            <div class="pull-right">
+              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
+            </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-4">
-            <H5>電力計ＩＤ</h5>
-          </div>
-          <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
-            <H5>電力計パスワード</h5>
-          </div>
-          <div class="col-md-8">
-            <input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
-          </div>
-        </div>
-      </div>
-    </div>
-    <hr v-if="smartMeterEnable && smartMeterConnect" class="separation">
-    <div class="row">
-      <div class="col-md-10">
-        <div class="pull-right">
-          <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
-        </div>
+        <hr class="separation">
+
       </div>
     </div>
   </div>
@@ -204,6 +233,12 @@
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id + '_' + light, command: 'flash' });
       },
+      DeleteLight(e) {
+        const id = e.target.dataset.id;
+        const light = e.target.dataset.light;
+        Socket.emit('command',
+          { type: 'command', device: 'Hue_' + id + '_' + light, command: 'delete' });
+      },
       HuePairing(e) {
         const id = e.target.dataset.id;
         Socket.emit('command',
@@ -213,6 +248,11 @@
         const id = e.target.dataset.id;
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'search' });
+      },
+      HueTouchLink(e) {
+        const id = e.target.dataset.id;
+        Socket.emit('command',
+          { type: 'command', device: 'Hue_' + id, command: 'touchlink' });
       },
       BTPairing(e) {
         console.log(e.target);
@@ -273,7 +313,7 @@
 
 <style scoped>
   .smart-meter-id {
-    width: 40px;
+    width: 50px;
   }
 
   .wisun-select-menu {

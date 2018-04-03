@@ -48,13 +48,25 @@ class HueAPI {
         this._Pairing(msg, bridgeNo, {devicetype: "geckolink"}, this._RegistBridge.bind(this));
         break;
       case 'search':
-        this._SearchLights(msg, bridgeNo);
+        this._SearchLights(msg, bridgeNo, false);
+        break;
+      case 'touchlink':
+        this._SearchLights(msg, bridgeNo, true);
         break;
       case 'flash':
         if(light && (light != '')) this._BlinkLight(msg, bridgeNo, light);
         break;
+      case 'delete':
+        console.log('delete', bridgeNo, light);
+        if(light && (light != '')) this._DeleteLight(msg, bridgeNo, light, () => {
+            delete this._bridges[bridgeNo].lights[light];
+            this._common.emit('changeHueBridges', this);
+          });
+        break;
       case 'name':
-        if(light && (light != '')) this._SetName(msg, bridgeNo, light, {name: args[1]});
+        if(light && (light != '')) this._SetName(msg, bridgeNo, light, {name: args[1]}, () => {
+            this._GetFullState(msg, bridgeNo, this._FullState.bind(this));
+          });
         break;
       case 'ct':
         if(!args[1] || (args[1] > 6500)) {
@@ -249,15 +261,15 @@ class HueAPI {
     }
     const bridgeNo = res.request.bridgeNo;
     for(const i in body.lights) {
-      if(body.lights[i].state.on) {
+      if(body.lights[i] && body.lights[i].state && body.lights[i].state.on) {
         this._bridges[bridgeNo].lights[i] = body.lights[i];
       } else {
+        if(!this._bridges[bridgeNo].lights[i]) this._bridges[bridgeNo].lights[i] = {};
         for(const j in body.lights[i]) {
+          this._bridges[bridgeNo].lights[i][j] = body.lights[i][j];
           if(j == 'state') {
             this._bridges[bridgeNo].lights[i][j].on = false;
-            continue;
           }
-          this._bridges[bridgeNo].lights[i][j] = body.lights[i][j];
         }
       }
     }
@@ -344,24 +356,27 @@ class HueAPI {
     this._SetLightState(origin, bridgeNo, light, state);
   }
 
-  _SearchLights(origin, bridgeNo) {
+  _SearchLights(origin, bridgeNo, touchLink) {
     
     if(this._bridges[bridgeNo].state != 1) return;
     this._bridges[bridgeNo].state = 2;
     this._bridges[bridgeNo].message = '新規ライトをサーチしています。数十秒かかります。';
     this._common.emit('changeHueBridges', this);
 
-    this._SearchNewLights(origin, bridgeNo, null, (err, res, _body) => {
-      const bridgeNo = res.request.bridgeNo;
-      const origin = res.request.origin;
-      if(err) {
-        console.log(err);
-        this._bridges[bridgeNo].state = 1;
-        this._bridges[bridgeNo].message = '';
-        this._common.emit('changeHueBridges', this);
-        return;
-      }
-      this._searchTimer = setTimeout((origin, bridgeNo) => {this._CheckNewLights(origin, bridgeNo);}, 5000, origin, bridgeNo);
+    this._SetConfig(origin, bridgeNo, { touchlink: touchLink }, (err) => {
+      if(err) console.log('touchlink', err);
+      this._SearchNewLights(origin, bridgeNo, null, (err, res) => {
+        const bridgeNo = res.request.bridgeNo;
+        const origin = res.request.origin;
+        if(err) {
+          console.log(err);
+          this._bridges[bridgeNo].state = 1;
+          this._bridges[bridgeNo].message = '';
+          this._common.emit('changeHueBridges', this);
+          return;
+        }
+        this._searchTimer = setTimeout((origin, bridgeNo) => {this._CheckNewLights(origin, bridgeNo);}, 5000, origin, bridgeNo);
+      });
     });
   }
 
@@ -386,8 +401,16 @@ class HueAPI {
     });
   }
 
+  _DeleteLight(origin, bridgeNo, light, callback) {
+    this._Request(origin, bridgeNo, '/lights/' + light, 'delete', null, callback);
+  }
+
   _GetNewLights(origin, bridgeNo, callback) {
     this._Request(origin, bridgeNo, '/lights/new', 'get', null, callback);
+  }
+
+  _SetConfig(origin, bridgeNo, body, callback) {
+    this._Request(origin, bridgeNo, '/config', 'put', body, callback);
   }
 
   _SearchNewLights(origin, bridgeNo, body, callback) {
@@ -431,6 +454,7 @@ class HueAPI {
         bridgeNo: bridgeNo,
         origin: origin,
     };
+    console.log(req);
     request(req, (err, req, body) => {
       if(callback) callback(err, req, body);
     });
