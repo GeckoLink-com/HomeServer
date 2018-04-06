@@ -261,10 +261,10 @@ class HueAPI {
     }
     const bridgeNo = res.request.bridgeNo;
     for(const i in body.lights) {
+      if(!this._bridges[bridgeNo].lights) this._bridges[bridgeNo].lights = {};
       if(body.lights[i] && body.lights[i].state && body.lights[i].state.on) {
         this._bridges[bridgeNo].lights[i] = body.lights[i];
       } else {
-        if(!this._bridges[bridgeNo].lights) this._bridges[bridgeNo].lights = {};
         if(!this._bridges[bridgeNo].lights[i]) this._bridges[bridgeNo].lights[i] = {};
         for(const j in body.lights[i]) {
           if(j == 'state') {
