@@ -1,7 +1,8 @@
 <template>
   <div v-show="display" class="container-fluid tab-panel">
     <div class="col-sm-3 col-md-3 scrollable">
-      <p class="vertical-space1"/><div class="well">
+      <p class="vertical-space1"/>
+      <div class="well">
         <div class="row">
           <h5>
             システム設定 [ *.sconf ]
@@ -113,36 +114,44 @@
         <div class="col-md-4">
           <H5>アカウント</h5>
         </div>
-        <div class="col-md-8">
-          <input type="text" :class="accountOK" v-model="account">
+        <div class="col-md-6">
+          <el-tooltip placement="top" content="モバイル端末で受け取れるメールアドレス" effect="light" open-delay="500">
+            <input type="text" name="account" :class="accountOK" v-model="account">
+          </el-tooltip>
         </div>
       </div>
       <div class="row">
         <div class="col-md-4">
           <H5>パスワード</h5>
         </div>
-        <div class="col-md-8">
-          <input type="password" :class="passwordOK" v-model="password1">
+        <div class="col-md-6">
+          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <input type="password" name="password1" :class="password1OK" v-model="password1">
+          </el-tooltip>
         </div>
       </div>
       <div class="row">
         <div class="col-md-4">
           <H5>パスワード（確認）</h5>
         </div>
-        <div class="col-md-8">
-          <input type="password" :class="passwordOK" v-model="password2">
-          <h6>このページへのlogin用。英数記号８文字以上</h6>
+        <div class="col-md-6">
+          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <input type="password" name="password2" :class="password2OK" v-model="password2">
+          </el-tooltip>
         </div>
       </div>
       <br>
 
       <div class="row">
         <div class="col-md-4">
-          <h5>Power LED</h5>
+          <h5>リモートアクセス</h5>
         </div>
         <div class="col-md-8">
-          <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+          <el-tooltip placement="right" content="モバイル端末からのアクセスを許可します" effect="light" open-delay="500">
+            <slide-switch v-model="remote" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+          </el-tooltip>
         </div>
+        <br>
       </div>
 
       <div class="row">
@@ -150,9 +159,45 @@
           <h5>自動update</h5>
         </div>
         <div class="col-md-8">
-          <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+          <el-tooltip placement="right" content="夜間にupdateを実行します" effect="light" open-delay="500">
+            <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+          </el-tooltip>
         </div>
         <br>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Power LED</h5>
+        </div>
+        <div class="col-md-8">
+          <el-tooltip placement="right" content="フロントパネルの電源LEDを設定します" effect="light" open-delay="500">
+            <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+          </el-tooltip>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <H5>通知用メールアドレス</h5>
+        </div>
+        <div class="col-md-6">
+          <el-tooltip placement="top" content="プログラム等でのイベント通知のメールアドレス" effect="light" open-delay="500">
+            <input type="email" :class="mailOK" v-model="mailto">
+          </el-tooltip>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <h5>リモートサーバー認証</h5>
+        </div>
+        <div class="col-md-6">
+          <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none">
+          <el-tooltip placement="right" content="プレミアムアカウント用" effect="light" open-delay="500">
+            <button type="button" class="btn btn-xs btn-primary" @click="RemoteKeyFile">認証鍵ファイルを設定</button>
+          </el-tooltip>
+        </div>
       </div>
 
       <div class="row">
@@ -161,78 +206,32 @@
         </div>
         <div class="col-md-8">
           <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
-          <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
-          <div class="item-label">
-            gecko@geckolink.local
-          </div>
+          <el-tooltip placement="right" content="ssh gecko@geckolink.localでloginできます" effect="light" open-delay="500">
+            <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
+          </el-tooltip>
         </div>
       </div>
+
       <br>
-
-      <div class="row">
-        <div class="col-md-4">
-          <h5>リモートサーバー利用</h5>
-        </div>
-        <div class="col-md-8">
-          <slide-switch v-model="remote" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
-        </div>
-      </div>
-      <fieldset :disabled="remote=='off'">
-        <div class="row">
-          <div class="col-md-4 col-md-offset-1">
-            <H5>Proxy</h5>
-          </div>
-          <div class="col-md-6">
-            <input type="text" v-model="proxy">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4 col-md-offset-1">
-            <h5>接続認証</h5>
-          </div>
-          <div class="col-md-6">
-            <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none">
-            <button type="button" class="btn btn-xs btn-primary" @click="RemoteKeyFile">認証鍵ファイルを設定</button>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4 col-md-offset-1">
-            <H5>メールアドレス</h5>
-          </div>
-          <div class="col-md-6">
-            <input type="mail" v-model="mailto">
-          </div>
-        </div>
-
-        <div class="row" v-if="amesh">
-          <div class="col-md-4 col-md-offset-1">
-            <H5>緯度(xx.xxxxx)</h5>
-          </div>
-          <div class="col-md-6">
-            N
-            <input type="text" v-model="latitude">
-          </div>
-        </div>
-
-        <div class="row" v-if="amesh">
-          <div class="col-md-4 col-md-offset-1">
-            <H5>経度(xxx.xxxxxx)</h5>
-          </div>
-          <div class="col-md-6">
-            E
-            <input type="text" v-model="longitude">
-          </div>
-        </div>
-        <br>
-      </fieldset>
 
       <div class="row">
         <div class="col-md-9">
           <div class="pull-right">
             <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
           </div>
+          <modal v-model="accountMailMessage">
+            <div slot="modal-header" class="modal-header">
+              アカウント設定
+            </div>
+            <div slot="modal-body" class="modal-body">
+              アカウントの確認のため、メールを送信しました。<br>
+              3分以内にメールのリンクにアクセスしてください。<br>
+              メールが届かない場合はアカウントの設定を再度確認してください。
+            </div>
+            <div slot="modal-footer" class="modal-footer">
+              <button type="button" class="btn btn-default" @click="accountMailMessage = false">中止</button>
+            </div>
+          </modal>
         </div>
       </div>
     </div>
@@ -241,6 +240,9 @@
 
 <script>
   import { modal } from 'vue-strap';
+  import { Tooltip } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/base.css';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
   import slideSwitch from './SlideSwitch.vue';
   import JsSHA from 'jssha';
 
@@ -248,6 +250,7 @@
     components: {
       slideSwitch,
       modal,
+      ElTooltip: Tooltip,
     },
     props: {
       display: {
@@ -259,8 +262,8 @@
       return {
         version: '',
         account: '',
-        password1: 'dummypasswd',
-        password2: 'dummypasswd',
+        password1: '',
+        password2: '',
         passwordValid: false,
         remote: 'off',
         proxy: '',
@@ -276,25 +279,18 @@
         shutdownModalButton: true,
         powerLED: 'off',
         shutdownEnable: false,
+        accountMailMessage: false,
       };
     },
     computed: {
       accountOK() {
-        if(this.account.length >= 4) {
-          if(this.account === 'admin') {
-            if(!this.passwordValid &&
-              (this.password1 === 'dummypasswd') &&
-              (this.password2 === 'dummypasswd')) {
-              return {
-                success: false,
-                error: true,
-              };
-            }
-            return {
-              success: false,
-              error: false,
-            };
-          }
+        if(this.serverKeys && this.account === 'admin') {
+          return {
+            success: false,
+            error: false,
+          };
+        }
+        if(this.account.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
           return {
             success: true,
             error: false,
@@ -303,23 +299,30 @@
         return {
           success: false,
           error: true,
+          message: '有効なメールアドレスを設定してください。',
         };
       },
-      passwordOK() {
-        if((this.password1 === this.password2) && (this.password1.length >= 8)) {
-          if(this.password1 === 'dummypasswd') {
-            if(!this.passwordValid &&
-              (this.account === 'admin')) {
-              return {
-                success: false,
-                error: true,
-              };
-            }
-            return {
-              success: false,
-              error: false,
-            };
-          }
+      password1OK() {
+        return this.PasswordCheck(this.password1);
+      },
+      password2OK() {
+        if(this.password1 !== this.password2) {
+          return {
+            success: false,
+            error: true,
+            message: '確認パスワードが合っていません。',
+          };
+        }
+        return this.PasswordCheck(this.password2);
+      },
+      mailOK() {
+        if(this.mailto === '') {
+          return {
+            success: false,
+            error: false,
+          };
+        }
+        if(this.mailto.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
           return {
             success: true,
             error: false,
@@ -328,83 +331,118 @@
         return {
           success: false,
           error: true,
+          message: '有効なメールアドレスを設定してください。',
         };
       },
     },
     mounted() {
-      this._reader = new FileReader();
+      this.reader = new FileReader();
 
       Common.on('changeSystemConfig', () => {
         if(!Common.systemConfig || !Common.systemConfig.password) return;
-        this._serverKeys = Common.systemConfig.serverKeys;
-        this._sshKeys = Common.systemConfig.sshKeys;
+        this.serverKeys = Common.systemConfig.serverKeys;
+        this.sshKeys = Common.systemConfig.sshKeys;
         this.passwordValid = Common.systemConfig.password && Common.systemConfig.defaultPassword && (Common.systemConfig.password !== Common.systemConfig.defaultPassword);
         if(!this.passwordValid) Common.emit('toastr_error', this, '最初にアカウントとパスワードを設定してください。', 0);
         this.smartMeter = Common.systemConfig.smartMeter;
+        if(this.accountMailMessage && (Common.systemConfig.remote === 'on')) this.accountMailMessage = false;
         this.SetSystemConfig();
       });
       Common.on('shutdownEnable', () => {
         this.shutdownEnable = Common.shutdownEnable;
       });
 
-      this._authLoad = document.getElementById('auth-load');
-      this._authSave = document.getElementById('auth-save');
-      this._configLoad = document.getElementById('config-load');
-      this._configSave = document.getElementById('config-save');
-      this._remoteKeyFile = document.getElementById('remote-keyfile');
-      this._sshKeyFile = document.getElementById('ssh-keyfile');
+      this.authLoad = document.getElementById('auth-load');
+      this.authSave = document.getElementById('auth-save');
+      this.configLoad = document.getElementById('config-load');
+      this.configSave = document.getElementById('config-save');
+      this.remoteKeyFile = document.getElementById('remote-keyfile');
+      this.sshKeyFile = document.getElementById('ssh-keyfile');
       this.SetSystemConfig();
     },
     methods: {
+      PasswordCheck(password) {
+        if(password === '') {
+          if(!this.passwordValid && (this.account === 'admin')) {
+            return {
+              success: false,
+              error: true,
+              message: 'パスワードを設定してください。',
+            };
+          }
+          if(!Common.systemConfig || (this.account !== Common.systemConfig.account)) {
+            return {
+              success: false,
+              error: true,
+              message: 'アカウント変更時はパスワードも再設定してください。',
+            };
+          }
+          return {
+            success: false,
+            error: false,
+          };
+        }
+        if(password.length < 8) {
+          return {
+            success: false,
+            error: true,
+            message: 'パスワードが短すぎます。',
+          };
+        }
+        return {
+          success: true,
+          error: false,
+        };
+      },
       AuthSave() {
         const dt = new Date();
-        this._authSave.href = this._authSave.origin +
+        this.authSave.href = this.authSave.origin +
           '/auth/gecko_' +
           dt.getFullYear() +
           ('0' + (dt.getMonth() + 1)).slice(-2) +
           ('0' + dt.getDate()).slice(-2) +
           '.sconf';
-        this._authSave.click();
+        this.authSave.click();
       },
       AuthLoad() {
         this.authLoadModal = false;
-        this._authLoad.click();
+        this.authLoad.click();
       },
       AuthLoadFile() {
-        this._reader.onloadend = (e) => {
+        this.reader.onloadend = (e) => {
           if(e.target.readyState === FileReader.DONE) {
-            Socket.emit('setAuth', this._reader.result);
+            Socket.emit('setAuth', this.reader.result);
             this.Reload();
           } else {
             Common.emit('toastr_error', this, 'ファイルが読み込めません。');
           }
         };
-        this._reader.readAsArrayBuffer(this._authLoad.files[0]);
+        this.reader.readAsArrayBuffer(this.authLoad.files[0]);
       },
       ConfigSave() {
         const dt = new Date();
-        this._configSave.href = this._configSave.origin +
+        this.configSave.href = this.configSave.origin +
           '/config/gecko_' +
           dt.getFullYear() +
           ('0' + (dt.getMonth() + 1)).slice(-2) +
           ('0' + dt.getDate()).slice(-2) +
           '.gconf';
-        this._configSave.click();
+        this.configSave.click();
       },
       ConfigLoad() {
         this.configLoadModal = false;
-        this._configLoad.click();
+        this.configLoad.click();
       },
       ConfigLoadFile() {
-        this._reader.onloadend = (e) => {
+        this.reader.onloadend = (e) => {
           if(e.target.readyState === FileReader.DONE) {
-            Socket.emit('setConfig', this._reader.result);
+            Socket.emit('setConfig', this.reader.result);
             this.Reload();
           } else {
             Common.emit('toastr_error', this, 'ファイルが読み込めません。');
           }
         };
-        this._reader.readAsArrayBuffer(this._configLoad.files[0]);
+        this.reader.readAsArrayBuffer(this.configLoad.files[0]);
       },
       ConfigInit() {
         this.configInitModal = false;
@@ -416,37 +454,39 @@
         this.shutdownModalButton = false;
       },
       RemoteKeyFile() {
-        this._remoteKeyFile.click();
+        this.remoteKeyFile.click();
       },
       UploadRemoteKeyFile() {
-        this._reader.onloadend = (e) => {
+        this.reader.onloadend = (e) => {
           if(e.target.readyState === FileReader.DONE) {
-            this._serverKeys = this._reader.result;
+            this.serverKeys = this.reader.result;
+            Common.systemConfig.changeAuthKey = true;
           } else {
             Common.emit('toastr_error', this, 'ファイルが読み込めません。');
           }
         };
-        this._reader.readAsArrayBuffer(this._remoteKeyFile.files[0]);
+        this.reader.readAsArrayBuffer(this.remoteKeyFile.files[0]);
       },
       SSHKeyFile() {
-        this._sshKeyFile.click();
+        this.sshKeyFile.click();
       },
       UploadSSHKeyFile() {
-        this._reader.onloadend = (e) => {
+        this.reader.onloadend = (e) => {
           if(e.target.readyState === FileReader.DONE) {
-            this._sshKeys = this._reader.result;
+            this.sshKeys = this.reader.result;
+            Common.systemConfig.changeAuthKey = true;
           } else {
             Common.emit('toastr_error', this, 'ファイルが読み込めません。');
           }
         };
-        this._reader.readAsText(this._sshKeyFile.files[0]);
+        this.reader.readAsText(this.sshKeyFile.files[0]);
       },
       SetSystemConfig() {
         if(!Common.systemConfig) return;
         this.version = Common.systemConfig.version;
         this.account = Common.systemConfig.account;
-        this.remote = Common.systemConfig.remote;
         this.proxy = Common.systemConfig.proxy;
+        this.remote = Common.systemConfig.remote;
         this.mailto = Common.systemConfig.mailto;
         this.amesh = Common.systemConfig.amesh;
         this.latitude = Common.systemConfig.latitude;
@@ -457,40 +497,53 @@
         setTimeout(() => { location.reload(); }, 3000);
       },
       Submit() {
-        if(this.account.length < 4) {
-          Common.emit('toastr_error', this, 'アカウント名が短すぎます。');
-          return;
-        }
-        if(this.password1 !== this.password2) {
-          Common.emit('toastr_error', this, 'パスワードが合っていません。');
-          return;
-        }
-        if(this.password1.length < 8) {
-          Common.emit('toastr_error', this, 'パスワードが短すぎます。');
+        const accountCheck = this.accountOK;
+        if(accountCheck.error) {
+          Common.emit('toastr_error', this, accountCheck.message);
           return;
         }
 
+        const passwordCheck = this.PasswordCheck(this.password1);
+        if(passwordCheck.error) {
+          Common.emit('toastr_error', this, passwordCheck.message);
+          return;
+        }
         Common.emit('toastr_clear', this);
+
+        const mailCheck = this.mailOK;
+        if(mailCheck.error) {
+          Common.emit('toastr_error', this, mailCheck.message);
+          return;
+        }
+        Common.emit('toastr_clear', this);
+
+        const changeAccount = (this.password1 !== '') ||
+                              (this.account !== Common.systemConfig.account);
         Common.systemConfig.account = this.account;
-        if(this.password1 !== 'dummypasswd') {
+        if(this.password1 !== '') {
           const sha256 = new JsSHA('SHA-256', 'TEXT');
           sha256.update(this.account + this.password1);
           const digest = sha256.getHash('HEX');
           Common.systemConfig.password = digest;
         }
-        Common.systemConfig.remote = this.remote;
         Common.systemConfig.proxy = this.proxy;
         Common.systemConfig.mailto = this.mailto;
         Common.systemConfig.latitude = this.latitude;
         Common.systemConfig.longitude = this.longitude;
         Common.systemConfig.autoUpdate = this.autoUpdate;
-        Common.systemConfig.serverKeys = this._serverKeys;
-        Common.systemConfig.sshKeys = this._sshKeys;
+        Common.systemConfig.serverKeys = this.serverKeys;
+        Common.systemConfig.sshKeys = this.sshKeys;
         Common.systemConfig.powerLED = this.powerLED;
+        if((this.remote !== 'on') || (Common.systemConfig.serverKeys != null)) {
+          Common.systemConfig.remote = this.remote;
+        }
+        this.accountMailMessage = Common.systemConfig.remote !== this.remote;
+        if(this.accountMailMessage) Common.systemConfig.requestRemoteAccessState = 1;
         Socket.emit('systemConfig', Common.systemConfig);
         Common.emit('toastr_success', this, '設定しました。');
-        if(this.password1 !== 'dummypasswd') {
-          setTimeout(window.location.reload.bind(window.location), 1000);
+
+        if(changeAccount && !this.accountMailMessage) {
+          setTimeout(window.location.reload.bind(window.location), 600);
         }
       },
     },
@@ -514,6 +567,10 @@
 
   fieldset:disabled  {
     color: #aaa;
+  }
+
+  input {
+    width: 80%;
   }
 </style>
 

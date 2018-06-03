@@ -16,131 +16,135 @@ class HomeBridgePlatform {
 
   constructor(common) {
 
-    this._common = common;
-    this._statusChangeEvents = {};
-    this._status = [];
-    this._published = false;
-    this._Bridge = null;
+    this.common = common;
+    this.statusChangeEvents = {};
+    this.status = [];
+    this.published = false;
+    this.Bridge = null;
 
-    init(this._common.config.basePath + '/homeBridge');
+    init(this.common.config.basePath + '/homeBridge');
 
-    this._API = {
-      SendCommand: this._SendCommand.bind(this),
-      GetStatus: this._GetStatus.bind(this),
-      GetUITable: this._GetUITable.bind(this),
-      AddStatusChangeEvent: this._AddStatusChangeEvent.bind(this),
-      RemoveStatusChangeEvent: this._RemoveStatusChangeEvent.bind(this),
-      SetLastCommand: this._SetLastCommand.bind(this),
-      GetLastCommand: this._GetLastCommand.bind(this),
+    this.API = {
+      SendCommand: this.SendCommand.bind(this),
+      GetStatus: this.GetStatus.bind(this),
+      GetUITable: this.GetUITable.bind(this),
+      AddStatusChangeEvent: this.AddStatusChangeEvent.bind(this),
+      RemoveStatusChangeEvent: this.RemoveStatusChangeEvent.bind(this),
+      SetLastCommand: this.SetLastCommand.bind(this),
+      GetLastCommand: this.GetLastCommand.bind(this),
     }; 
 
-    this._common.on('changeUITable', this._UITableNotify.bind(this));
-    this._common.on('changeRemocon', this._UITableNotify.bind(this));
-    this._common.on('statusNotify', this._StatusNotify.bind(this));
+    this.common.on('changeUITable', this.UITableNotify.bind(this));
+    this.common.on('changeRemocon', this.UITableNotify.bind(this));
+    this.common.on('statusNotify', this.StatusNotify.bind(this));
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this._common.on('changeSystemConfig', (_caller) => {
-      if(!this._common.systemConfig) return;
-      if(!this._common.systemConfig.platform) return;
-      console.log("%s HomeBridge initialize", this._common.systemConfig.platform.name);
-      if(this._Bridge && this._Bridge._server) {
-        this._Bridge._server._httpServer._tcpServer.close(() => {
-          this._Bridge = new Bridge(this._common.systemConfig.bridge.name, uuid.generate(this._common.systemConfig.bridge.name));
-          this._published = false;
-          this._UITableNotify();
+    this.common.on('changeSystemConfig', (_caller) => {
+      if(!this.common.systemConfig) return;
+      if(!this.common.systemConfig.platform) return;
+      if(!this.common.systemConfig.bridge) return;
+      if(!this.common.systemConfig.bridge.changeState) return;
+
+      console.log("%s HomeBridge initialize", this.common.systemConfig.platform.name);
+      if(this.Bridge && this.Bridge._server) {
+        this.Bridge._server._httpServer._tcpServer.close(() => {
+          this.Bridge = new Bridge(this.common.systemConfig.bridge.name, uuid.generate(this.common.systemConfig.bridge.name));
+          this.published = false;
+          this.UITableNotify();
         });
       } else {
-        this._Bridge = new Bridge(this._common.systemConfig.bridge.name, uuid.generate(this._common.systemConfig.bridge.name));
-        this._UITableNotify();
+        this.Bridge = new Bridge(this.common.systemConfig.bridge.name, uuid.generate(this.common.systemConfig.bridge.name));
+        this.UITableNotify();
       }
+      this.common.systemConfig.bridge.changeState = false;
     });
   }
 
-  _SendCommand(deviceName, command) {
+  SendCommand(deviceName, command) {
     console.log('_SendCommand : [%s] %s', deviceName, command);
-    this._common.emit('sendControllerCommand', this, {deviceName: deviceName, command: command});
+    this.common.emit('sendControllerCommand', this, {deviceName: deviceName, command: command});
   }
 
-  _GetStatus(deviceName, func) {
+  GetStatus(deviceName, func) {
     let val = null;
-    for(const st of this._common.status) {
+    for(const st of this.common.status) {
       if((st.deviceName == deviceName) &&
          (st.func == func)) {
         return st.valueName;
       }
     }
-    if(('lastCommand' in this._common.internalStatus) &&
-       (deviceName in this._common.internalStatus.lastCommand) &&
-       (func in this._common.internalStatus.lastCommand[deviceName])) {
-      val = this._common.internalStatus.lastCommand[deviceName][func];
+    if(('lastCommand' in this.common.internalStatus) &&
+       (deviceName in this.common.internalStatus.lastCommand) &&
+       (func in this.common.internalStatus.lastCommand[deviceName])) {
+      val = this.common.internalStatus.lastCommand[deviceName][func];
       return val;
     }
     return null;
   }
   
-  _GetUITable(table) {
-    return this._UITable.TableList[table];
+  GetUITable(table) {
+    return this.UITable.TableList[table];
   }
 
-  _StatusNotify(_caller) {
-    for(const d of this._common.status) {
-      if(this._statusChangeEvents[d.deviceName + ':' + d.func] != undefined) {
-        this._statusChangeEvents[d.deviceName + ':' + d.func].forEach((event) => {
+  StatusNotify(_caller) {
+    for(const d of this.common.status) {
+      if(this.statusChangeEvents[d.deviceName + ':' + d.func] != undefined) {
+        this.statusChangeEvents[d.deviceName + ':' + d.func].forEach((event) => {
           event.callback(event.service, d);
         });
       }
     }
   }
   
-  _AddStatusChangeEvent(deviceName, func, uuid, service, callback) {
-    if(this._statusChangeEvents[deviceName + ':' + func] == undefined) this._statusChangeEvents[deviceName + ':' + func] = [];
-    this._statusChangeEvents[deviceName + ':' + func].push({uuid: uuid, service:service, callback:callback});
+  AddStatusChangeEvent(deviceName, func, uuid, service, callback) {
+    if(this.statusChangeEvents[deviceName + ':' + func] == undefined) this.statusChangeEvents[deviceName + ':' + func] = [];
+    this.statusChangeEvents[deviceName + ':' + func].push({uuid: uuid, service:service, callback:callback});
   }
 
-  _SetLastCommand(deviceName, func, mode) {
-    if(!('lastCommand' in this._common.internalStatus)) this._common.internalStatus.lastCommand = {};
-    if(!(deviceName in this._common.internalStatus.lastCommand)) this._common.internalStatus.lastCommand[deviceName] = {};
-    this._common.internalStatus.lastCommand[deviceName][func] = mode;
-    this._common.emit('changeInternalStatus', this);
+  SetLastCommand(deviceName, func, mode) {
+    if(!('lastCommand' in this.common.internalStatus)) this.common.internalStatus.lastCommand = {};
+    if(!(deviceName in this.common.internalStatus.lastCommand)) this.common.internalStatus.lastCommand[deviceName] = {};
+    this.common.internalStatus.lastCommand[deviceName][func] = mode;
+    this.common.emit('changeInternalStatus', this);
   }
 
-  _GetLastCommand(deviceName, func) {
-    if(('lastCommand' in this._common.internalStatus) &&
-       (deviceName in this._common.internalStatus.lastCommand) &&
-       (func in this._common.internalStatus.lastCommand[deviceName])) {
-      return this._common.internalStatus.lastCommand[deviceName][func];
+  GetLastCommand(deviceName, func) {
+    if(('lastCommand' in this.common.internalStatus) &&
+       (deviceName in this.common.internalStatus.lastCommand) &&
+       (func in this.common.internalStatus.lastCommand[deviceName])) {
+      return this.common.internalStatus.lastCommand[deviceName][func];
     }
   }
   
-  _RemoveStatusChangeEvent(uuid) {
-    for(const name in this._statusChangeEvents) {
-      for(const i in this._statusChangeEvents[name]) {
-        if(this._statusChangeEvents[name][i].uuid == uuid) {
-          this._statusChangeEvents[name].splice(i, i + 1);
+  RemoveStatusChangeEvent(uuid) {
+    for(const name in this.statusChangeEvents) {
+      for(const i in this.statusChangeEvents[name]) {
+        if(this.statusChangeEvents[name][i].uuid == uuid) {
+          this.statusChangeEvents[name].splice(i, i + 1);
         }
       }
     }
   }
 
-  _UITableNotify(_caller) {
-    if(!this._Bridge) return;
-    this._UITable = { RoomList:this._common.uiTable.RoomList, ItemList:this._common.uiTable.ItemList, TableList:this._common.remocon.remoconGroup, System:this._common.uiTable.System};
-    this._Bridge.removeBridgedAccessories(this._Bridge.bridgedAccessories);
-    this._Bridge.bridgedAccessories = [];
-    if(this._UITable.ItemList == null) this._UITable.ItemList = [];
-    for(const d of this._UITable.ItemList) {
+  UITableNotify(_caller) {
+    if(!this.Bridge) return;
+    this.UITable = { RoomList:this.common.uiTable.RoomList, ItemList:this.common.uiTable.ItemList, TableList:this.common.remocon.remoconGroup, System:this.common.uiTable.System};
+    this.Bridge.removeBridgedAccessories(this.Bridge.bridgedAccessories);
+    this.Bridge.bridgedAccessories = [];
+    if(this.UITable.ItemList == null) this.UITable.ItemList = [];
+    for(const d of this.UITable.ItemList) {
       if(['onOff', 'openClose', 'hue', 'light', 'lock', 'window', 'brind', 'shutter', 'aircon', 'tv'].indexOf(d.type) >= 0) {
-        if(d.label != undefined) this._AddAccessory(d, d.room, d.label);
+        if(d.label != undefined) this.AddAccessory(d, d.room, d.label);
       }
       if(d.type == 'tv') {
-        if((d.table != null) && (this._UITable.TableList != null)) {
-          for(const band in this._UITable.TableList[d.table.prefix]) {
-            if(!this._UITable.TableList[d.table.prefix][band].display) continue;
-            for(const ch in this._UITable.TableList[d.table.prefix][band]) {
-              if(!this._UITable.TableList[d.table.prefix][band][ch].display) continue;
+        if((d.table != null) && (this.UITable.TableList != null)) {
+          for(const band in this.UITable.TableList[d.table.prefix]) {
+            if(!this.UITable.TableList[d.table.prefix][band].display) continue;
+            for(const ch in this.UITable.TableList[d.table.prefix][band]) {
+              if(!this.UITable.TableList[d.table.prefix][band][ch].display) continue;
               let item = {};
               item.type = 'tv';
               item.buttons = [{deviceName: d.table.deviceName, command:[d.table.prefix + '_' + band, d.table.prefix + '_' + ch]}, {deviceName: d.table.deviceName, command:[d.table.prefix + '_off']}];
-              this._AddAccessory(item, d.room, this._UITable.TableList[d.table.prefix][band][ch].label);
+              this.AddAccessory(item, d.room, this.UITable.TableList[d.table.prefix][band][ch].label);
             }
           }
         }
@@ -149,33 +153,33 @@ class HomeBridgePlatform {
         for(const s of d.status) {
           if(['temp', 'humidity', 'battery'].indexOf(s.type) >= 0) {
             if(s.label != undefined) {
-              this._AddAccessory(s, d.room, s.label);
+              this.AddAccessory(s, d.room, s.label);
             }
           }
         }
       }
     }
-    if(!this._published) {
+    if(!this.published) {
       console.log('HomeBridge publish');
-      console.log('HomeBridge PIN-code : ', this._common.systemConfig.bridge.pin);
-      console.log('HomeBridge setupURI : ', this._common.systemConfig.bridge.setupURI);
+      console.log('HomeBridge PIN-code : ', this.common.systemConfig.bridge.pin);
+      console.log('HomeBridge setupURI : ', this.common.systemConfig.bridge.setupURI);
       const publishInfo = {
-        username: this._common.systemConfig.bridge.username,
-        port: this._common.systemConfig.bridge.port,
-        pincode: this._common.systemConfig.bridge.pin,
+        username: this.common.systemConfig.bridge.username,
+        port: this.common.systemConfig.bridge.port,
+        pincode: this.common.systemConfig.bridge.pin,
         category: HomeBridgeAccessory.Categories.BRIDGE,
-        setupID: this._common.systemConfig.bridge.setupID,
+        setupID: this.common.systemConfig.bridge.setupID,
       };
-      this._Bridge.publish(publishInfo, false);
-      this._published = true;
+      this.Bridge.publish(publishInfo, false);
+      this.published = true;
     }
   }
   
-  _AddAccessory(itemConfig, room, name) {
+  AddAccessory(itemConfig, room, name) {
 
-    const accessory = new HomeBridgeAccessory(room, name, itemConfig, this._common.systemConfig, this._API);
+    const accessory = new HomeBridgeAccessory(room, name, itemConfig, this.common.systemConfig, this.API);
     try {
-      this._Bridge.addBridgedAccessory(accessory);
+      this.Bridge.addBridgedAccessory(accessory);
     } catch(e) {
       console.log(e);
     }

@@ -13,11 +13,12 @@ const interfaces = require('os').networkInterfaces();
 class LocalAddressRegister {
 
   constructor(common) {
-    this._common = common;
-    if(!this._common.config.localIPRegistHost) return;
+    this.common = common;
+    if(!this.common.config.registryHost) return;
     
-    this.host = this._common.config.localIPRegistHost;
-    this.port = this._common.config.localIPRegistPort;
+    this.registryHost = this.common.config.registryHost;
+    this.localIPRegistPort = this.common.config.localIPRegistPort;
+    this.applicationPort = this.common.config.applicationPort;
     this.localAddr = null;
 
     for(const device in interfaces) {
@@ -36,11 +37,11 @@ class LocalAddressRegister {
       console.log('LocalAddressRegister: network interface error');
       return;
     }
-    
-    this._common.on('requestAuthkey', (caller, msg) => {
+
+    this.common.on('requestAuthkey', (caller, msg) => {
       request.post(
         {
-          url: this.host + (this.port?':'+this.port:'') + '/requestAuthkey',
+          url: this.registryHost + (this.applicationPort ? ':' + this.applicationPort : '' ) + '/requestAuthkey',
           form: {
             reqData: msg.data[0].result,
             macAddr: this.macAddr,
@@ -63,8 +64,15 @@ class LocalAddressRegister {
             msg.data[0].status = 'error';
             msg.data[0].message = 'authentication error';
             msg.data[0].result = null;
+          } else if(msg.data[0].command.match(/^config [^ ]* n /)) {
+            msg.data[0].status = null;
+            msg.data[0].result = null;
+            this.common.systemConfig.freeKeys = body.resData.key;
+            this.common.systemConfig.changeAuthKey = true;
+            this.common.systemConfig.accessKey = body.resData.accessKey;
+            this.common.emit('changeSystemConfig', this);
           } else {
-            this._common.emit('sendControllerCommand', this, {
+            this.common.emit('sendControllerCommand', this, {
               type: 'command',
               device: 'server',
               command: 'moduleauth',
@@ -73,20 +81,20 @@ class LocalAddressRegister {
             msg.data[0].status = null;
             msg.data[0].result = null;
           }
-          this._common.emit('response', this, msg);
+          this.common.emit('response', this, msg);
         }
       );     
     });
 
     console.log('LocalAddressRegister:', this.localAddr, this.macAddr);
-    this._IntervalEvent();
+    this.IntervalEvent();
   }
 
-  _IntervalEvent() {
+  IntervalEvent() {
 
     request.post(
       {
-        url: this.host + (this.port?':'+this.port:'') + '/localAddrRegist',
+        url: this.registryHost + ( this.localIPRegistPort ? ':' + this.localIPRegistPort : '' ) + '/localAddrRegist',
         form: {
           localAddr: this.localAddr,
           macAddr: this.macAddr,
@@ -102,7 +110,7 @@ class LocalAddressRegister {
         }
       }
     );     
-    setTimeout(this._IntervalEvent.bind(this), 5 * 60 * 1000);
+    setTimeout(this.IntervalEvent.bind(this), 5 * 60 * 1000);
   }
 }
 

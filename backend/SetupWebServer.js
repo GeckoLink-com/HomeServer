@@ -9,254 +9,315 @@
 
 const http = require('http');
 const express = require('express');
+const expressSession = require('express-session');
+const cookieParser = require('cookie-parser');
+const nedbStore = require('connect-nedb-session')(expressSession);
+const moment = require('moment');
 const bodyParser = require('body-parser');
 const socketIO = require('socket.io');
 const fs = require('fs');
 const zlib = require('zlib');
-const jssha = require('jssha');
-const basicAuth = require('basic-auth-connect');
 const RED = require('node-red');
 const process = require('process');
 const execSync = require('child_process').execSync;
+const crypto = require('crypto');
 
 class SetupWebServer {
 
   constructor(common, initalCallback) {
-  
-    this._common = common;
-    this._server = null;
-
-    this._setupWebClientConnections = [];
+    this.common = common;
+    this.setupWebClientConnections = [];
     
-    this._common.on('changeStatus', (caller, msg) => {
-      this._SendMessage('events', msg);
+    this.common.on('changeStatus', (caller, msg) => {
+      this.SendMessage('events', msg);
     });
 
-    this._common.on('irReceive', (caller, msg) => {
-      this._SendMessage('events', msg);
+    this.common.on('irReceive', (caller, msg) => {
+      this.SendMessage('events', msg);
     });
 
-    this._common.on('motor', (caller, msg) => {
-      this._SendMessage('events', msg);
+    this.common.on('motor', (caller, msg) => {
+      this.SendMessage('events', msg);
     });
 
-    this._common.on('response', (caller, msg) => {
-      this._SendMessage('response', msg);
+    this.common.on('response', (caller, msg) => {
+      this.SendMessage('response', msg);
     });
 
-    this._common.on('message', (caller, msg) => {
-      this._SendMessage('response', msg);
+    this.common.on('message', (caller, msg) => {
+      this.SendMessage('response', msg);
     });
 
-    this._common.on('deviceInfo', (caller, msg) => {
-      this._SendMessage('deviceInfo', msg);
+    this.common.on('deviceInfo', (caller, msg) => {
+      this.SendMessage('deviceInfo', msg);
     });
 
-    this._common.on('queueInfo', (caller, msg) => {
-      this._SendMessage('queueInfo', msg);
+    this.common.on('queueInfo', (caller, msg) => {
+      this.SendMessage('queueInfo', msg);
     });
 
-    this._common.on('changeControllerLog', (caller, msg) => {
-      this._SendMessage('controllerLog', msg);
+    this.common.on('changeControllerLog', (caller, msg) => {
+      this.SendMessage('controllerLog', msg);
     });
 
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this._common.on('changeHueBridges', (_caller) => {
-      this._SendMessage('hueBridges', this._common.hueBridges);
+    this.common.on('changeHueBridges', (_caller) => {
+      this.SendMessage('hueBridges', this.common.hueBridges);
     });
 
-    this._common.on('changeSmartMeter', (_caller) => {
-      this._SendMessage('smartMeter', this._common.smartMeter);
+    this.common.on('changeSmartMeter', (_caller) => {
+      this.SendMessage('smartMeter', this.common.smartMeter);
     });
 
-    this._common.on('statusNotify', (_caller) => {
-      this._SendMessage('status', this._common.status);
+    this.common.on('statusNotify', (_caller) => {
+      this.SendMessage('status', this.common.status);
     });
 
-    this._common.on('changeSystemConfig', (_caller) => {
-      if(this._common.initialState) return;
-
-      const initialFlag = !this._server;
-      if(!initialFlag) RED.stop();
-
-      if(initialFlag) {
-        this._app = express();
-        this._app.use(/^(?!\/node\/)/, basicAuth((user, password) => {
-          const sha256 = new jssha('SHA-256', 'TEXT');
-          sha256.update(user + password);
-          const pw = sha256.getHash('HEX');
-          if((user == this._common.systemConfig.account) && (pw == this._common.systemConfig.password)) return true;
-          return false;
-        }));
-        this._app.use('/js/*.js', (req ,res, next) => {
-          fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
-            if(err) return next();
-            res.set('Content-Type', 'application/javascript');
-            res.set('Content-Encoding', 'gzip');
-            res.send(data);
-          });
-        });
-        this._app.use(express.static(__dirname + '/../frontend/'));
-        this._app.use(bodyParser.urlencoded({ extended: true }));
-        this._app.use(bodyParser.json());
-        
-        this._app.get('/remote', (req, res) => {
-          res.redirect('http://' + req.headers.host + ':' + this._common.config.localApplicationRedirectPort);
-        });
-
-        this._app.get('/config/:filename', (req, res) => {
-          let nodeRedConfig = null;
-          try {
-            nodeRedConfig = JSON.parse(fs.readFileSync(this._common.config.basePath + '/red/.config.json'));
-          } catch(e) {/* empty */}
-
-          let nodeRedFlow = null;
-          try {
-            nodeRedFlow = JSON.parse(fs.readFileSync(this._common.config.basePath + '/red/flow.json'));
-          } catch(e) {/* empty */}
-
-          const buf = JSON.stringify({alias: this._common.alias, remocon: this._common.remocon, uiTable:this._common.uiTable, status:this._common.internalStatus, nodeRedConfig:nodeRedConfig, nodeRedFlow:nodeRedFlow}, null, 2);
-          zlib.gzip(buf, (err, data) => {
-            res.send(data);
-          });
-        });
-
-        this._app.get('/auth/:filename', (req, res) => {
-          const buf = JSON.stringify({system:this._common.systemConfig}, null, 2);
-          zlib.gzip(buf, (err, data) => {
-            res.send(data);
-          });
-        });
-
-        this._app.get('/remocon/:filename', (req, res) => {
-          const buf = JSON.stringify({remocon:this._common.remocon}, null, 2);
-          zlib.gzip(buf, (err, data) => {
-            res.send(data);
-          });
-        });
-        this._server = http.Server(this._app);
-      }
-
+    this.common.on('changeSystemConfig', (_caller) => {
       try {
-        if(this._common.systemConfig.autoUpdate == 'on') {
-          fs.writeFileSync(this._common.config.basePath + '/autoupdate', 'on');
+        if(this.common.systemConfig.autoUpdate == 'on') {
+          fs.writeFileSync(this.common.config.basePath + '/autoupdate', 'on');
         } else {
-          fs.unlinkSync(this._common.config.basePath + '/autoupdate');
+          fs.unlinkSync(this.common.config.basePath + '/autoupdate');
         }
       } catch(e) {/* empty */}
 
-      // node-red
-      const redSettings = {
-        httpAdminRoot: '/red/',
-        httpNodeRoot: '/node/',
-        flowFile: 'flow.json',
-        userDir: this._common.config.basePath + '/red',
-        nodesDir: __dirname + '/../redNodes',
-        logging: {
-          console: {
-            level: 'warning',
-            metrics: false,
-            audit: false
-          }
-        },
-        debugMaxLength: 1000,
-        paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
-        editorTheme: {
-          page: {
-            css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
-          },
-          deployButton: {
-              type: 'simple',
-          },
-          menu: {
-            'menu-item-import-library': false,
-            'menu-item-export-library': false,
-            'menu-item-keyboard-shortcuts': false,
-            'menu-item-help': false,
-            'menu-item-show-tips': true,
-          },
-          userMenu: false,
-        },
-        adminAuth: {
-          type: 'credentials',
-          users: [],
-          default: {
-            permissions: '*',
-          },
-        },
-        functionGlobalContext: {
-          homeServer: this._common,
-        },
-      };
+      if(!this.common.systemConfig.powerLED) this.common.systemConfig.powerLED = 'off';
+      this.common.emit('sendControllerCommand', this, {
+        deviceName: 'server',
+        command: 'sysled ' + this.common.systemConfig.powerLED,
+      });
 
-      RED.init(this._server, redSettings);
-      this._app.use(redSettings.httpAdminRoot, RED.httpAdmin);
-      this._app.use(redSettings.httpNodeRoot, (req, res) => { RED.httpNode(req, res); });
-      RED.start();
-
-      if(initialFlag) {
-        this._app.get('/*', function(req, res, _next) {
-
-          if(req.path.indexOf('/node/') === 0) {
-            return res.sendStatus(404);
-          }
-          res.redirect('/');
-        });
-
-        this._server.listen(this._common.config.setupWebServerPort, () => {
-          console.log('setupWebServer listing on port %d', this._common.config.setupWebServerPort);
-          if(this._common.user) {
-            if(!this._common.group) this._common.group = this._common.user;
-            process.initgroups(this._common.user, this._common.group);
-            process.setgid(this._common.group);
-            process.setuid(this._common.user);
-          }
-          initalCallback();
-        });
-
-        // socketio
-        this._socketio = socketIO(this._server);
-        if(this._common.config.setupWebServerProtocol) this._socketio.set('transports', this._common.config.setupWebServerProtocol);
-        this._socketio.on('connection', (socket) => { this._Connection(socket); });
-      } else {
-        if(!this._common.systemConfig.powerLED) this._common.systemConfig.powerLED = 'off';
-        this._common.emit('sendControllerCommand', this, {
-          deviceName: 'server',
-          command: 'sysled ' + this._common.systemConfig.powerLED,
-        });
+      if(_caller !== this) {
+        this.SendMessage('systemConfig', this.common.systemConfig);
       }
     });
+
+    const app = express();
+    app.use(cookieParser());
+
+    const session = expressSession({
+      secret: 'bt6vNbbShmOlpTL-7fPhTTmwW6TVF44rwyxk6aep9Ho',
+      resave: false,
+      saveUninitialized: false,
+      rolling: true,
+      cookie: {
+        maxAge: 31 * 24 * 60 * 60 * 1000,
+        secure: false,
+        httpOnly: false,
+      },
+      store: new nedbStore({
+        filename: this.common.config.basePath + '/session.db',
+      }),
+    });
+    app.use(session);
+    app.enable('trust proxy');
+
+    app.use('/js/*', (req, res) => {
+      const user = req.session.user || {};
+      user.pv = (user.pv || 0) + 1;
+      user.expire = user.expire || (moment().add(14, 'days').unix());
+      req.session.user = user;
+      req.session.save();
+      req.session.touch();
+
+      const hash = crypto.createHash('sha256');
+      hash.update(this.common.systemConfig.password + user.nonce);
+      const digest = hash.digest('hex');
+
+      if((user.account !== this.common.systemConfig.account) ||
+         (user.digest !== digest)) {
+        req.originalUrl = '/js/SignIn.js';
+      }
+
+      fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
+        if(err) return res.end();
+        res.set('Content-Type', 'application/javascript');
+        res.set('Content-Encoding', 'gzip');
+        res.send(data);
+      });
+    });
+
+    app.use(express.static(__dirname + '/../frontend/'));
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(bodyParser.json());
+
+    app.get('/config/:filename', (req, res) => {
+      let nodeRedConfig = null;
+      try {
+        nodeRedConfig = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/.config.json'));
+      } catch(e) {/* empty */}
+
+      let nodeRedFlow = null;
+      try {
+        nodeRedFlow = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/flow.json'));
+      } catch(e) {/* empty */}
+
+      const buf = JSON.stringify({alias: this.common.alias, remocon: this.common.remocon, uiTable:this.common.uiTable, status:this.common.internalStatus, nodeRedConfig:nodeRedConfig, nodeRedFlow:nodeRedFlow}, null, 2);
+      zlib.gzip(buf, (err, data) => {
+        res.send(data);
+      });
+    });
+
+    app.get('/auth/:filename', (req, res) => {
+      const buf = JSON.stringify({system:this.common.systemConfig}, null, 2);
+      zlib.gzip(buf, (err, data) => {
+        res.send(data);
+      });
+    });
+
+    app.get('/remocon/:filename', (req, res) => {
+      const buf = JSON.stringify({remocon:this.common.remocon}, null, 2);
+      zlib.gzip(buf, (err, data) => {
+        res.send(data);
+      });
+    });
+    this.server = http.Server(app);
+
+    // node-red
+    this.redSettings = {
+      httpAdminRoot: '/red/',
+      httpNodeRoot: '/node/',
+      flowFile: 'flow.json',
+      userDir: this.common.config.basePath + '/red',
+      nodesDir: __dirname + '/../redNodes',
+      logging: {
+        console: {
+          level: 'warning',
+          metrics: false,
+          audit: false
+        }
+      },
+      debugMaxLength: 1000,
+      paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
+      editorTheme: {
+        page: {
+          css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
+        },
+        deployButton: {
+            type: 'simple',
+        },
+        menu: {
+          'menu-item-import-library': false,
+          'menu-item-export-library': false,
+          'menu-item-keyboard-shortcuts': false,
+          'menu-item-help': false,
+          'menu-item-show-tips': true,
+        },
+        userMenu: false,
+      },
+      adminAuth: {
+        type: 'credentials',
+        users: [],
+        default: {
+          permissions: '*',
+        },
+      },
+      functionGlobalContext: {
+        homeServer: this.common,
+      },
+    };
+
+    RED.init(this.server, this.redSettings);
+    app.use(this.redSettings.httpAdminRoot, RED.httpAdmin);
+    app.use(this.redSettings.httpNodeRoot, (req, res) => { RED.httpNode(req, res); });
+    RED.start();
+
+    app.get('/*', function(req, res, _next) {
+
+      if(req.path.indexOf('/node/') === 0) {
+        return res.sendStatus(404);
+      }
+      res.redirect('/');
+    });
+
+    this.server.listen(this.common.config.setupWebServerPort, '::0', () => {
+      console.log('setupWebServer listing on port %d', this.common.config.setupWebServerPort);
+      if(this.common.user) {
+        if(!this.common.group) this.common.group = this.common.user;
+        process.initgroups(this.common.user, this.common.group);
+        process.setgid(this.common.group);
+        process.setuid(this.common.user);
+      }
+      initalCallback();
+    });
+
+    // socketio
+    this.socketio = socketIO(this.server);
+    if(this.common.config.setupWebServerProtocol) this.socketio.set('transports', this.common.config.setupWebServerProtocol);
+    this.socketio.use((socket, next) => {
+      session(socket.request, socket.request.res, next);
+    });
+
+    this.socketio.on('connection', (socket) => { this.Connection(socket); });
   }
 
-  _Connection(socket) {
+  Connection(socket) {
 
     const clientAddress = socket.handshake.address;
     console.log(`new webBrowser client ${clientAddress}`);
-    this._setupWebClientConnections.push(socket);
+    this.setupWebClientConnections.push(socket);
     
   // receive jobs
+    socket.on('requestNonce', (callback) => {
+      this.nonce = crypto.randomBytes(32).toString('hex');
+      callback(this.nonce);
+    });
+      
+    socket.on('login', (data, callback) => {
+      const session = socket.request.session;
+      const hash = crypto.createHash('sha256');
+      hash.update(this.common.systemConfig.password + this.nonce);
+      const digest = hash.digest('hex');
+      if((data.account !== this.common.systemConfig.account) ||
+         (data.digest !== digest)) {
+        return callback(false);
+      }
+      const user = session.user || {};
+      user.pv = (user.pv || 0) + 1;
+      user.expire = user.expire || (moment().add(14, 'days').unix());
+      user.account = data.account;
+      user.digest = data.digest;
+      user.nonce = this.nonce;
+      session.user = user;
+      session.save();
+      session.touch();
+      callback(true);
+    });
+
     socket.on('command', (data) => {
-      this._common.emit('sendControllerCommand', this, data);
+      this.common.emit('sendControllerCommand', this, data);
     });
 
     socket.on('alias', (data) => {
-      this._common.alias = data;
-      this._common.emit('changeAlias', this);
+      this.common.alias = data;
+      this.common.emit('changeAlias', this);
     });
 
     socket.on('remocon', (data) => {
-      this._common.remocon = data;
-      this._common.emit('changeRemocon', this);
+      this.common.remocon = data;
+      this.common.emit('changeRemocon', this);
     });
 
     socket.on('uiTable', (data) => {
-      this._common.uiTable = data;
-      this._common.emit('changeUITable', this);
+      this.common.uiTable = data;
+      this.common.emit('changeUITable', this);
     });
     
     socket.on('systemConfig', (data) => {
-      this._common.systemConfig = data;
-      this._common.emit('changeSystemConfig', this);
+      this.common.systemConfig = data;
+      if(this.common.systemConfig.requestRemoteAccessState === 1) {
+        if(this.common.systemConfig.account.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+          this.common.emit('sendControllerCommand', this, {
+            deviceName: 'server',
+            command: 'config ' + this.common.systemConfig.account + ' n 0',
+          });
+          this.common.systemConfig.requestRemoteAccessState = 2;
+          return;
+        }
+        this.common.systemConfig.requestRemoteAccessState = 0;
+      }
+      this.common.emit('changeSystemConfig', this);
     });
     
     socket.on('setConfig', (data) => {
@@ -295,28 +356,31 @@ class SetupWebServer {
           return;
         }
         
-        this._common.alias = d3.alias;
-        this._common.emit('changeAlias', this);
+        this.common.alias = d3.alias;
+        this.common.emit('changeAlias', this);
 
-        this._common.remocon = d3.remocon;
-        this._common.emit('changeRemocon', this);
+        this.common.remocon = d3.remocon;
+        this.common.emit('changeRemocon', this);
         
-        this._common.uiTable = d3.uiTable;
-        this._common.emit('changeUITable', this);
+        this.common.uiTable = d3.uiTable;
+        this.common.emit('changeUITable', this);
 
-        this._common.internalStatus = d3.status;
-        this._common.emit('changeInternalStatus', this);
+        this.common.internalStatus = d3.status;
+        this.common.emit('changeInternalStatus', this);
                 
+        RED.stop();
         if(d3.nodeRedConfig) {
-          fs.writeFileSync(this._common.config.basePath + '/red/.config.json_new', JSON.stringify(d3.nodeRedConfig, null, 2));
-          fs.renameSync(this._common.config.basePath + '/red/.config.json_new', this._common.config.basePath + '/red/.config.json');
+          fs.writeFileSync(this.common.config.basePath + '/red/.config.json_new', JSON.stringify(d3.nodeRedConfig, null, 2));
+          fs.renameSync(this.common.config.basePath + '/red/.config.json_new', this.common.config.basePath + '/red/.config.json');
         }
 
         if(d3.nodeRedFlow) {
-          fs.writeFileSync(this._common.config.basePath + '/red/flow.json_new', JSON.stringify(d3.nodeRedFlow, null, 2));
-          fs.renameSync(this._common.config.basePath + '/red/flow.json_new', this._common.config.basePath + '/red/flow.json');
+          fs.writeFileSync(this.common.config.basePath + '/red/flow.json_new', JSON.stringify(d3.nodeRedFlow, null, 2));
+          fs.renameSync(this.common.config.basePath + '/red/flow.json_new', this.common.config.basePath + '/red/flow.json');
         }
-        this._common.emit('changeSystemConfig', this);
+        RED.init(this.server, this.redSettings);
+        RED.start();
+        this.common.emit('changeSystemConfig', this);
       });
     });
 
@@ -336,67 +400,74 @@ class SetupWebServer {
           return;
         }
         
-        this._common.systemConfig = d3.system;
-        this._common.systemConfig.version = this._common.version;
-        this._common.systemConfig.hap = this._common.config.hap;
-        this._common.systemConfig.led = this._common.config.led;
-        this._common.systemConfig.motor = this._common.config.motor;
-        this._common.systemConfig.smartMeter = this._common.config.smartMeter;
-        this._common.systemConfig.initialPassword = this._common.initialPassword;
-        this._common.systemConfig.defaultPassword = this._common.defaultPassword;
+        this.common.systemConfig = d3.system;
+        this.common.systemConfig.version = this.common.version;
+        this.common.systemConfig.hap = this.common.config.hap;
+        this.common.systemConfig.led = this.common.config.led;
+        this.common.systemConfig.motor = this.common.config.motor;
+        this.common.systemConfig.smartMeter = this.common.config.smartMeter;
+        this.common.systemConfig.initialPassword = this.common.initialPassword;
+        this.common.systemConfig.defaultPassword = this.common.defaultPassword;
+        if(this.common.systemConfig.bridge) this.common.systemConfig.bridge.changeState = true;
+        this.common.systemConfig.changeAuthKey = true;
+        this.common.systemConfig.requestRemoteAccessState = 0;
+        this.common.systemConfig.remote = 'off';
         let param = '';
         for(let i = 0; i < 24; i++)
-          param += ' ' + ('0' + this._common.systemConfig.xbeeKey[i].toString(16)).slice(-2);
-        this._common.emit('sendControllerCommand', this, {deviceName:'server', command:'xbeekey' + param});
-        this._common.emit('changeSystemConfig', this);
+          param += ' ' + ('0' + this.common.systemConfig.xbeeKey[i].toString(16)).slice(-2);
+        this.common.emit('sendControllerCommand', this, {deviceName:'server', command:'xbeekey' + param});
+        this.common.emit('changeSystemConfig', this);
       });
     });
 
     socket.on('initConfig', () => {
       try {
-        fs.unlinkSync(this._common.config.basePath + '/alias.json');
+        fs.unlinkSync(this.common.config.basePath + '/alias.json');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/internalStatus.json');
+        fs.unlinkSync(this.common.config.basePath + '/internalStatus.json');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/remocon.json');
+        fs.unlinkSync(this.common.config.basePath + '/remocon.json');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/system.json');
+        fs.unlinkSync(this.common.config.basePath + '/system.json');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/uiTable.json');
+        fs.unlinkSync(this.common.config.basePath + '/uiTable.json');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/devicetable.reg');
+        fs.unlinkSync(this.common.config.basePath + '/devicetable.reg');
       } catch(e) {/* empty */}
       try {
-        execSync('rm -rf ' + this._common.config.basePath + '/log');
+        execSync('rm -rf ' + this.common.config.basePath + '/red');
       } catch(e) {/* empty */}
       try {
-        execSync('rm -rf ' + this._common.config.basePath + '/red');
+        fs.unlinkSync(this.common.config.basePath + '/xbee.key');
       } catch(e) {/* empty */}
       try {
-        fs.unlinkSync(this._common.config.basePath + '/xbee.key');
+        execSync('rm -rf ' + this.common.config.basePath + '/log');
       } catch(e) {/* empty */}
       try {
-        fs.mkdirSync(this._common.config.basePath + '/log');
+        fs.mkdirSync(this.common.config.basePath + '/log');
       } catch(e) {/* empty */}
-      this._common.emit('sendControllerCommand', this, {deviceName:'server', command:'reboot'});
-      process.exit(0);
+      console.log('reboot');
+      this.common.emit('sendControllerCommand', this, {
+        deviceName: 'server',
+        command: 'reboot',
+      });
     });
 
     socket.on('addRemocon', (data) => {
       let code = null;
       try {
         code = JSON.parse(data);
-        this._AddRemocon(code);
+        this.AddRemocon(code);
       } catch(e) {
         zlib.gunzip(data, (err, decodeData) => {
           try {
             code = JSON.parse(decodeData.toString());
-            this._AddRemocon(code);
+            this.AddRemocon(code);
           } catch(e) {
             console.log('config parse error');
             console.log(e);
@@ -407,64 +478,64 @@ class SetupWebServer {
 
     socket.on('disconnect', (reason) => {
       console.log('disconnect webbrowser : ', reason);
-      for(const i in this._setupWebClientConnections) {
-        if(this._setupWebClientConnections[i].id == socket.id) {
-          this._setupWebClientConnections.splice(i, 1);
+      for(const i in this.setupWebClientConnections) {
+        if(this.setupWebClientConnections[i].id == socket.id) {
+          this.setupWebClientConnections.splice(i, 1);
         }
       }
     });
 
     socket.on('shutdown', () => {
       console.log('shutdown');
-      this._common.emit('sendControllerCommand', this, {
+      this.common.emit('sendControllerCommand', this, {
         deviceName: 'server',
         command: 'shutdown',
       });
     });
     
-    this._SendMessage('deviceInfo', {type:'deviceInfo', data:this._common.deviceInfo});
-    this._SendMessage('status', this._common.status);    
-    this._SendMessage('alias', this._common.alias);
-    this._SendMessage('remocon', this._common.remocon);
-    this._SendMessage('uiTable', this._common.uiTable);
-    this._SendMessage('systemConfig', this._common.systemConfig);
-    this._SendMessage('controllerLog', this._common.controllerLog);
-    this._SendMessage('hueBridges', this._common.hueBridges);
-    this._SendMessage('smartMeter', this._common.smartMeter);
-    this._common.shutdownEnable = ((clientAddress != null) &&
+    this.SendMessage('deviceInfo', {type:'deviceInfo', data:this.common.deviceInfo});
+    this.SendMessage('status', this.common.status);
+    this.SendMessage('alias', this.common.alias);
+    this.SendMessage('remocon', this.common.remocon);
+    this.SendMessage('uiTable', this.common.uiTable);
+    this.SendMessage('systemConfig', this.common.systemConfig);
+    this.SendMessage('controllerLog', this.common.controllerLog);
+    this.SendMessage('hueBridges', this.common.hueBridges);
+    this.SendMessage('smartMeter', this.common.smartMeter);
+    this.common.shutdownEnable = ((clientAddress != null) &&
                                    (clientAddress !== '::ffff:127.0.0.1') &&
                                    (clientAddress !== '::1'));
-    this._SendMessage('shutdownEnable', this._common.shutdownEnable);
+    this.SendMessage('shutdownEnable', this.common.shutdownEnable);
 
-    if(!this._common.systemConfig.powerLED) this._common.systemConfig.powerLED = 'off';
-    this._common.emit('sendControllerCommand', this, {
+    if(!this.common.systemConfig.powerLED) this.common.systemConfig.powerLED = 'off';
+    this.common.emit('sendControllerCommand', this, {
       deviceName: 'server',
-      command: 'sysled ' + this._common.systemConfig.powerLED,
+      command: 'sysled ' + this.common.systemConfig.powerLED,
     });
 
-    this._common.emit('setupWebConnect', this);
+    this.common.emit('setupWebConnect', this);
   }
 
-  _AddRemocon(code) {
+  AddRemocon(code) {
     if(!code.remocon) return;
-    if(!this._common.remocon.remoconTable) this._common.remocon.remoconTable = {};
+    if(!this.common.remocon.remoconTable) this.common.remocon.remoconTable = {};
     for(const i in code.remocon.remoconTable) {
-      this._common.remocon.remoconTable[i] = code.remocon.remoconTable[i];
+      this.common.remocon.remoconTable[i] = code.remocon.remoconTable[i];
     }
-    if(!this._common.remocon.remoconGroup) this._common.remocon.remoconGroup = {};
+    if(!this.common.remocon.remoconGroup) this.common.remocon.remoconGroup = {};
     for(const i in code.remocon.remoconGroup) {
-      this._common.remocon.remoconGroup[i] = code.remocon.remoconGroup[i];
+      this.common.remocon.remoconGroup[i] = code.remocon.remoconGroup[i];
     }
-    if(!this._common.remocon.remoconMacro) this._common.remocon.remoconMacro = {};
+    if(!this.common.remocon.remoconMacro) this.common.remocon.remoconMacro = {};
     for(const i in code.remocon.remoconMacro) {
-      this._common.remocon.remoconMacro[i] = code.remocon.remoconMacro[i];
+      this.common.remocon.remoconMacro[i] = code.remocon.remoconMacro[i];
     }
-    this._common.emit('changeRemocon', this);
-    this._SendMessage('remocon', this._common.remocon);
+    this.common.emit('changeRemocon', this);
+    this.SendMessage('remocon', this.common.remocon);
   }
 
-  _SendMessage(cmd, data) {
-    this._setupWebClientConnections.forEach((con, _i) => {
+  SendMessage(cmd, data) {
+    this.setupWebClientConnections.forEach((con, _i) => {
       con.emit(cmd, data);
     });
   }

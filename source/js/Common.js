@@ -33,7 +33,6 @@ class Common extends EventEmitter {
       ],
       ItemList: [],
     };
-    this._handlers = {};
 
     /*
       this.remocon = {

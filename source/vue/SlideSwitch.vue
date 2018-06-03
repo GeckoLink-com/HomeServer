@@ -65,7 +65,7 @@
     border-color: #8c8c8c;
   }
 
-  .btn-sw:active, .btn-sw.active {
+  .btn-sw:active, .btn-sw.active, .btn-primary.active {
     color: white;
     background-color: #337ab7;
     border-color: #2e6da4;

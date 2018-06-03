@@ -209,9 +209,9 @@
       };
     },
     mounted() {
-      this._lastRemoconCode = null;
-      this._lastCode = null;
-      this._dataLength = {};
+      this.lastRemoconCode = null;
+      this.lastCode = null;
+      this.dataLength = {};
 
       Socket.on('events', (msg) => {
         if(msg.type !== 'irreceive') return;
@@ -219,26 +219,26 @@
         if(this.sequence < 1) return;
 
         const code = Common.RemoconSearch(msg.data[0].code);
-        this._lastRemoconCode = {
+        this.lastRemoconCode = {
           name: code.name,
           code: msg.data[0].code,
           format: msg.data[0].format,
           info: code.name ? (code.name + ' ' + code.comment) : code.code,
         };
 
-        this._dataLength[this._lastRemoconCode.code.length] = (this._dataLength[this._lastRemoconCode.code.length] || 0) + 1;
+        this.dataLength[this.lastRemoconCode.code.length] = (this.dataLength[this.lastRemoconCode.code.length] || 0) + 1;
         let l = 0;
         let m = -1;
-        for(const i in this._dataLength) {
-          if(this._dataLength[i] > m) {
-            m = this._dataLength[i];
+        for(const i in this.dataLength) {
+          if(this.dataLength[i] > m) {
+            m = this.dataLength[i];
             l = i;
           }
         }
         this.codeLength = l;
 
         this.ExecSequence();
-        this._lastCode = this._lastRemoconCode.info;
+        this.lastCode = this.lastRemoconCode.info;
       });
 
       this.remocon = Common.remocon;
@@ -402,7 +402,7 @@
               this.sequence++;
               break;
             case 2:
-              this.remoconTable[this.remoconNo] = this._lastRemoconCode;
+              this.remoconTable[this.remoconNo] = this.lastRemoconCode;
               this.remoconTable[this.remoconNo].label = this.remoconFunc[this.remoconNo].label;
               this.lastPtr = this.remoconNo;
               this.remoconNo++;

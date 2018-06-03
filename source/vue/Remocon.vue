@@ -177,7 +177,7 @@
       };
     },
     mounted() {
-      this._reader = new FileReader();
+      this.reader = new FileReader();
 
       Socket.on('events', (msg) => {
         if(msg.type !== 'irreceive') return;
@@ -197,33 +197,33 @@
         this.remocon = Common.remocon;
       });
 
-      this._remoconLoad = document.getElementById('remocon-load');
-      this._remoconSave = document.getElementById('remocon-save');
+      this.remoconLoad = document.getElementById('remocon-load');
+      this.remoconSave = document.getElementById('remocon-save');
     },
     methods: {
       Save() {
         const dt = new Date();
-        this._remoconSave.href = this._remoconSave.origin +
+        this.remoconSave.href = this.remoconSave.origin +
           '/remocon/gecko_remocon_' +
           dt.getFullYear() +
           ('0' + (dt.getMonth() + 1)).slice(-2) +
           ('0' + dt.getDate()).slice(-2) +
           '.json.gz';
-        this._remoconSave.click();
+        this.remoconSave.click();
       },
       Load() {
-        this._remoconLoad.value = '';
-        this._remoconLoad.click();
+        this.remoconLoad.value = '';
+        this.remoconLoad.click();
       },
       LoadFile() {
-        this._reader.onloadend = (e) => {
+        this.reader.onloadend = (e) => {
           if(e.target.readyState === FileReader.DONE) {
-            Socket.emit('addRemocon', this._reader.result);
+            Socket.emit('addRemocon', this.reader.result);
           } else {
             Common.emit('toastr_error', this, 'ファイルが読み込めません。');
           }
         };
-        this._reader.readAsArrayBuffer(this._remoconLoad.files[0]);
+        this.reader.readAsArrayBuffer(this.remoconLoad.files[0]);
       },
       Decode(code) {
         return Common.RemoconSearch(code).code;

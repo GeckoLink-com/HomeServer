@@ -13,9 +13,9 @@ class Registry {
 
   constructor(path) {
     
-    this._path = path.replace(/\/$/, '');
+    this.path = path.replace(/\/$/, '');
     try {
-      fs.mkdirSync(this._path);
+      fs.mkdirSync(this.path);
     } catch(e) {
       // already exist
     }
@@ -26,8 +26,8 @@ class Registry {
   }
   
   SetText(name, data) {
-    fs.writeFileSync(this._path + '/' + name + '_new', data);
-    fs.renameSync(this._path + '/' + name + '_new', this._path + '/' + name);
+    fs.writeFileSync(this.path + '/' + name + '_new', data);
+    fs.renameSync(this.path + '/' + name + '_new', this.path + '/' + name);
   }
   
   GetRegistry(name, callback) {
@@ -43,7 +43,7 @@ class Registry {
   }
 
   GetText(name, callback) {
-    fs.readFile(this._path + '/' + name, 'utf8', callback);
+    fs.readFile(this.path + '/' + name, 'utf8', callback);
   }
 }
 

@@ -19,14 +19,30 @@
                 </button>
               </div>
               <div v-if="bridge.state>=1" class="col-md-4">
-                <button :disabled="bridge.state==2" @click="HueTouchLink" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
+                <button :disabled="bridge.state==2" @click="HueSearch" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
                   新規ライトのサーチ
                 </button>
               </div>
+              <div v-if="bridge.state>=1" class="col-md-4">
+                <button :disabled="bridge.state==2" @click="HueTouchLink" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
+                  TouchLinkサーチ
+                </button>
+              </div>
             </div>
-            <h6>
-              {{ bridge.message }}
-            </h6>
+            <div class="row">
+              <div class="col-md-6 col-md-offset-1">
+                <div class="progress" v-if="hueProgress[bridge.id] > 0">
+                  <progressbar :now="hueProgress[bridge.id]" type="primary" :striped="HueProgressing(bridge.id)" :animated="HueProgressing(bridge.id)"/>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-md-offset-1">
+                <h6>
+                  {{ bridge.message }}
+                </h6>
+              </div>
+            </div>
             <br>
             <div v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" class="row">
               <div class="col-md-3 col-md-offset-1">
@@ -149,10 +165,12 @@
 
 <script>
   import qrcode from 'v-qrcode';
+  import { progressbar } from 'vue-strap';
 
   export default {
     components: {
       qrcode,
+      progressbar,
     },
     props: {
       display: {
@@ -164,6 +182,7 @@
       return {
         alias: {},
         hueBridges: [],
+        hueProgress: {},
         hap: false,
         hapPin: '',
         hapSetupURI: '',
@@ -182,6 +201,7 @@
     },
     mounted() {
       this.alias = Common.alias;
+      this.hueProgressTimer = {};
       /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
       this.SetSystemConfig();
       Common.on('changeSystemConfig', () => {
@@ -194,6 +214,13 @@
       this.hueBridges = Common.hueBridges;
       Common.on('changeHueBridges', () => {
         this.hueBridges = Common.hueBridges;
+        for(const bridge of this.hueBridges) {
+          if(this.hueProgress[bridge.id] &&
+             this.hueProgressTimer[bridge.id] &&
+             bridge.message === '') {
+            this.$set(this.hueProgress, bridge.id, 100);
+          }
+        }
       });
       this.alias = Common.alias;
       Common.on('changeAlias', () => {
@@ -246,13 +273,30 @@
       },
       HueSearch(e) {
         const id = e.target.dataset.id;
+        this.HueProgressStart(id, 80);
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'search' });
       },
       HueTouchLink(e) {
         const id = e.target.dataset.id;
+        this.HueProgressStart(id, 80);
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'touchlink' });
+      },
+      HueProgressStart(id, time) {
+        if(this.hueProgressTimer[id]) return;
+        this.$set(this.hueProgress, id, 1);
+        this.hueProgressTimer[id] = setInterval(() => {
+          this.$set(this.hueProgress, id, this.hueProgress[id] + 1);
+          if(this.hueProgress[id] > 100) {
+            this.$set(this.hueProgress, id, 0);
+            clearInterval(this.hueProgressTimer[id]);
+            this.hueProgressTimer[id] = null;
+          }
+        }, time * 1000 / 100);
+      },
+      HueProgressing(id) {
+        return (this.hueProgress[id] > 0) && (this.hueProgress[id] < 100);
       },
       BTPairing(e) {
         console.log(e.target);
@@ -330,7 +374,6 @@
   .hap-qr {
     display: inline-block;
     vertical-align: middle;
-
   }
 
   .well-homekit {
@@ -362,6 +405,10 @@
 
   .btn-margin {
     margin-right:0.2vw;
+  }
+
+  .progress {
+    margin: 2%;
   }
 </style>
 

@@ -16,7 +16,7 @@ const crypto = require('crypto');
 
 class Common extends eventEmitter {
 
-  constructor(config) {
+  constructor(config, callback) {
     super();
     this.setMaxListeners(100);
 
@@ -33,7 +33,7 @@ class Common extends eventEmitter {
     this.systemConfig = {};
     this.controllerLog = [];
     this.hueBridges = [];
-    this._Registry = new registry(this.config.basePath);
+    this.Registry = new registry(this.config.basePath);
     this.statusFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter'];
     this.analogFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'rainInfo', 'smartMeter'];
     this.commandFunc = ['gpio0', 'gpio1', 'ha0', 'ha1', 'hao0', 'hao1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'switch'];
@@ -64,29 +64,30 @@ class Common extends eventEmitter {
     } catch(e) {/* empty */}
 
     this.on('changeAlias', (caller) => {
-      this._MakeAliasTable();
-      if(caller != this) this._Registry.SetRegistry('alias', this.alias);
+      this.MakeAliasTable();
+      if(caller != this) this.Registry.SetRegistry('alias', this.alias);
     });
-    this._Registry.GetRegistry('alias', (err, data) => {
+    this.Registry.GetRegistry('alias', (err, data) => {
       this.alias = data || {};
       this.emit('changeAlias', this);
     });
     
     this.on('changeRemocon', (caller) => {
-      if(caller != this) this._Registry.SetRegistry('remocon', this.remocon);
+      if(caller != this) this.Registry.SetRegistry('remocon', this.remocon);
+      this.emit('changeUITable', this);
     });
 
-    this._Registry.GetRegistry('remocon', (err, data) => {
+    this.Registry.GetRegistry('remocon', (err, data) => {
       this.remocon = data || {};
       this.emit('changeRemocon', this);
     });
 
-    this._Registry.GetRegistry('hueBridges', (err, data) => {
+    this.Registry.GetRegistry('hueBridges', (err, data) => {
       this.hueBridges = data || [];
       this.emit('changeHueBridges', this);
     });
 
-    this._Registry.GetRegistry('controllerLog', (err, data) => {
+    this.Registry.GetRegistry('controllerLog', (err, data) => {
       this.controllerLog = data || [];
       this.emit('changeControllerLog', this, this.controllerLog);
     });
@@ -134,6 +135,7 @@ class Common extends eventEmitter {
         if(f < 0) {
           this.status.push({
             deviceName: deviceName,
+            device: this.aliasTable[deviceName],
             func: 'remocon',
             valueName: val,
             state: state,
@@ -192,27 +194,28 @@ class Common extends eventEmitter {
         }
       }
       this.emit('statusNotify', this);
-      if(caller != this) this._Registry.SetRegistry('internalStatus', this.internalStatus);
+      if(caller != this) this.Registry.SetRegistry('internalStatus', this.internalStatus);
     });
-    this._Registry.GetRegistry('internalStatus', (err, data) => {
+
+    this.Registry.GetRegistry('internalStatus', (err, data) => {
       this.internalStatus = data || {virtualSW:{}};
       this.emit('changeInternalStatus', this);
     });
 
     this.on('changeUITable', (caller) => {
-      if(caller != this) this._Registry.SetRegistry('uiTable', this.uiTable);
+      if(caller != this) this.Registry.SetRegistry('uiTable', this.uiTable);
     });
-    this._Registry.GetRegistry('uiTable', (err, data) => {
+    this.Registry.GetRegistry('uiTable', (err, data) => {
       this.uiTable = data || {};
       this.emit('changeUITable', this);
     });
 
     this.on('changeHueBridges', (caller) => {
-      if(caller != this) this._Registry.SetRegistry('hueBridges', this.hueBridges);
+      if(caller != this) this.Registry.SetRegistry('hueBridges', this.hueBridges);
     });
 
     this.on('changeSystemConfig', (caller) => {
-      if(caller != this) this._Registry.SetRegistry('system', this.systemConfig);
+      if(caller != this) this.Registry.SetRegistry('system', this.systemConfig);
     });
 
     fs.watchFile(this.config.wisunDevice, (stat) => {
@@ -225,7 +228,7 @@ class Common extends eventEmitter {
     } catch(e) {/* empty */}
     this.emit('changeSmartMeter', this);
 
-    this._Registry.GetRegistry('system', (err, data) => {
+    this.Registry.GetRegistry('system', (err, data) => {
       this.systemConfig = data || {};
       if(this.version) this.systemConfig.version = this.version;
       this.systemConfig.hap = this.config.hap;
@@ -235,6 +238,8 @@ class Common extends eventEmitter {
       this.systemConfig.smartMeter = this.config.smartMeter;
       this.systemConfig.initialPassword = this.initialPassword;
       this.systemConfig.defaultPassword = this.defaultPassword;
+      this.systemConfig.changeAuthKey = false;
+      this.systemConfig.requestRemoteAccess = false;
       this.systemConfig.platform = {
         name: 'GeckoLink HomeServer',
         manufacturer: 'GeckoLink',
@@ -252,7 +257,7 @@ class Common extends eventEmitter {
       if(this.systemConfig.radius == null) this.systemConfig.radius = '5000';
       if(this.systemConfig.bridge == null) this.systemConfig.bridge = {};
       if(this.systemConfig.bridge.port == null) this.systemConfig.bridge.port = 51826;
-     if(this.systemConfig.bridge.pin == null) {
+      if(this.systemConfig.bridge.pin == null) {
         const bytes = crypto.randomBytes(6);
         this.systemConfig.bridge.pin = ('00' + bytes.readUInt16BE(0)).slice(-3) + '-' +
                                        ('0' + bytes.readUInt16BE(2)).slice(-2) + '-' +
@@ -267,6 +272,7 @@ class Common extends eventEmitter {
         }
         this.systemConfig.bridge.setupID = setupID;
       }
+
       if(this.systemConfig.bridge.setupURI == null) {
         const setupCode = parseInt(this.systemConfig.bridge.pin.replace(/-/g, ''), 10);
         const category = 2; // BRIDGE
@@ -274,21 +280,19 @@ class Common extends eventEmitter {
         this.systemConfig.bridge.setupURI = "X-HM://" + encodedPayload + this.systemConfig.bridge.setupID;
       }
 
-      if((this.systemConfig.bridge.name != null) &&
-         (this.systemConfig.bridge.username != null)) {
-        this.emit('changeSystemConfig', this);
-        return;
-      }
+      this.systemConfig.bridge.changeState = true;
 
       getmac.getMac((err, macAddr) => {
         if(this.systemConfig.bridge.name == null) this.systemConfig.bridge.name = 'GeckoLink-' + macAddr.slice(-8).replace(/:/g,'');
         if(this.systemConfig.bridge.username == null) this.systemConfig.bridge.username = macAddr.toUpperCase();
         this.emit('changeSystemConfig', this);
       });
+
+      if(callback) callback();
     });
   }
 
-  _MakeAliasTable() {
+  MakeAliasTable() {
     if(!(0 in this.alias)) {
       this.alias[0] = {name:'server'};
       for(let i = 0; i < 4; i++) {
@@ -335,7 +339,7 @@ class Common extends eventEmitter {
     this.controllerLog.push(log);
     if(this.controllerLog.length > 100) this.controllerLog.splice(0, this.controllerLog.length - 100);
     this.emit('changeControllerLog', this, this.controllerLog);
-    this._Registry.SetRegistry('controllerLog', this.controllerLog);
+    this.Registry.SetRegistry('controllerLog', this.controllerLog);
   }
   
   IsAnalogFunc(deviceName, func) {

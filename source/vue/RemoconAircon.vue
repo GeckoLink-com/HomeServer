@@ -179,10 +179,10 @@
 
     },
     mounted() {
-      this._lastRemoconCode = null;
-      this._lastCode = null;
-      this._dataLength = {};
-      this._table = document.getElementById('airconTable');
+      this.lastRemoconCode = null;
+      this.lastCode = null;
+      this.dataLength = {};
+      this.table = document.getElementById('airconTable');
 
       Socket.on('events', (msg) => {
         if(msg.type !== 'irreceive') return;
@@ -190,26 +190,26 @@
         if(this.sequence < 1) return;
 
         const code = Common.RemoconSearch(msg.data[0].code);
-        this._lastRemoconCode = {
+        this.lastRemoconCode = {
           name: code.name,
           code: msg.data[0].code,
           format: msg.data[0].format,
           info: code.name ? (code.name + ' ' + code.comment) : code.code,
         };
 
-        this._dataLength[this._lastRemoconCode.code.length] = (this._dataLength[this._lastRemoconCode.code.length] || 0) + 1;
+        this.dataLength[this.lastRemoconCode.code.length] = (this.dataLength[this.lastRemoconCode.code.length] || 0) + 1;
         let l = 0;
         let m = -1;
-        for(const i in this._dataLength) {
-          if(this._dataLength[i] > m) {
-            m = this._dataLength[i];
+        for(const i in this.dataLength) {
+          if(this.dataLength[i] > m) {
+            m = this.dataLength[i];
             l = i;
           }
         }
         this.codeLength = l;
 
-        this.ExecSequence(this._lastRemoconCode.info);
-        this._lastCode = this._lastRemoconCode.info;
+        this.ExecSequence(this.lastRemoconCode.info);
+        this.lastCode = this.lastRemoconCode.info;
       });
       this.remocon = Common.remocon;
       Common.on('changeRemocon', () => {
@@ -244,7 +244,7 @@
         this.sequence = 1;
         this.remoconTable = { cooler: [], heater: [], power: [] };
         this.nameAlert = '';
-        this._lastCode = null;
+        this.lastCode = null;
         this.ExecSequence();
       },
       Stop() {
@@ -322,7 +322,7 @@
           reentry = false;
           switch (this.sequence) {
             case 1:
-              this._dataLength = {};
+              this.dataLength = {};
               // fallthrough
             case 21:
               if(this.sequence === 1) {
@@ -339,10 +339,10 @@
               break;
             case 2:
             case 22:
-              if(codeComment !== this._lastCode) {
+              if(codeComment !== this.lastCode) {
                 Common.emit('toastr_info', this, '続けて温度を<strong>下げる</strong>ボタンを押して下さい。');
                 this.lastPtr = 0;
-                this.remoconTable[this.mode].unshift(this._lastRemoconCode);
+                this.remoconTable[this.mode].unshift(this.lastRemoconCode);
                 break;
               }
               this.sequence++;
@@ -365,12 +365,12 @@
               break;
             case 5:
             case 25:
-              if(codeComment !== this._lastCode) {
+              if(codeComment !== this.lastCode) {
                 if(this.remoconTable[this.mode].length <= this.tempPtr) {
-                  this.remoconTable[this.mode].push(this._lastRemoconCode);
+                  this.remoconTable[this.mode].push(this.lastRemoconCode);
                 } else if(!this.remoconTable[this.mode][this.tempPtr] || (codeComment !== this.remoconTable[this.mode][this.tempPtr].comment)) {
-                  if(this._lastRemoconCode.code.length === parseInt(this.codeLength)) {
-                    this.remoconTable[this.mode].splice(this.tempPtr, 1, this._lastRemoconCode);
+                  if(this.lastRemoconCode.code.length === parseInt(this.codeLength)) {
+                    this.remoconTable[this.mode].splice(this.tempPtr, 1, this.lastRemoconCode);
                   }
                 }
                 this.lastPtr = this.tempPtr;
@@ -406,17 +406,17 @@
                 this.remoconTable[this.mode].splice(this.tempPtr + 1, 1, this.remoconTable[this.mode][this.lastPtr]);
                 this.lastPtr = this.tempPtr + 1;
               }
-              this._table.scrollTop = this._table.scrollHeight;
-              if(codeComment === this._lastCode) break;
+              this.table.scrollTop = this.table.scrollHeight;
+              if(codeComment === this.lastCode) break;
               this.sequence++;
               if(codeComment) reentry = true;
               break;
             case 8:
             case 28:
-              if(codeComment !== this._lastCode) {
+              if(codeComment !== this.lastCode) {
                 if(!this.remoconTable[this.mode][this.tempPtr] || (codeComment !== this.remoconTable[this.mode][this.tempPtr].comment)) {
-                  if(this._lastRemoconCode.code.length === parseInt(this.codeLength)) {
-                    this.remoconTable[this.mode].splice(this.tempPtr, 1, this._lastRemoconCode);
+                  if(this.lastRemoconCode.code.length === parseInt(this.codeLength)) {
+                    this.remoconTable[this.mode].splice(this.tempPtr, 1, this.lastRemoconCode);
                   }
                 }
                 this.lastPtr = this.tempPtr;
@@ -440,7 +440,7 @@
                 this.remoconTable[this.mode].splice(0, 1, this.remoconTable[this.mode][this.lastPtr]);
                 this.lastPtr = 0;
               }
-              if(codeComment === this._lastCode) break;
+              if(codeComment === this.lastCode) break;
               this.sequence -= 4;
               if(codeComment) reentry = true;
               break;
@@ -455,12 +455,12 @@
               break;
             case 31:
               Common.emit('toastr_info', this, 'リモコンの表示が電源off状態なのを確認して、<br><strong>電源(on)</strong>ボタンを押して下さい。');
-              this.remoconTable[this.mode].push(this._lastRemoconCode);
+              this.remoconTable[this.mode].push(this.lastRemoconCode);
               this.sequence++;
               break;
             case 32:
               Common.emit('toastr_info', this, 'リモコンの表示が電源on状態なのを確認して、<br><strong>電源(off)</strong>ボタンを押して下さい。');
-              this.remoconTable[this.mode].push(this._lastRemoconCode);
+              this.remoconTable[this.mode].push(this.lastRemoconCode);
               {
                 const l = this.remoconTable[this.mode].length;
                 if((l > 3) &&
@@ -477,17 +477,17 @@
               break;
             default:
           }
-          if(this._table.scrollHeight !== this._table.clientHeight) {
+          if(this.table.scrollHeight !== this.table.clientHeight) {
             this.$nextTick(() => {
-              const lineHeight = (this._table.scrollHeight - 23) / this.remoconTable[this.mode].length;
+              const lineHeight = (this.table.scrollHeight - 23) / this.remoconTable[this.mode].length;
               const linePos = lineHeight * this.lastPtr + 23;
-              if(linePos - this._table.scrollTop > this._table.clientHeight - lineHeight - 30) {
-                this._table.scrollTop = linePos - (this._table.clientHeight - lineHeight - 30);
+              if(linePos - this.table.scrollTop > this.table.clientHeight - lineHeight - 30) {
+                this.table.scrollTop = linePos - (this.table.clientHeight - lineHeight - 30);
               }
-              if(linePos - this._table.scrollTop < 30) {
-                this._table.scrollTop = linePos - 30;
+              if(linePos - this.table.scrollTop < 30) {
+                this.table.scrollTop = linePos - 30;
               }
-              if(this.lastPtr === 0) this._table.scrollTop = 0;
+              if(this.lastPtr === 0) this.table.scrollTop = 0;
             });
           }
         } while(reentry);

@@ -93,7 +93,7 @@
               </td>
               <td v-if="item.wait!=null">待ち時間</td>
               <td v-if="item.wait==null">
-                <select class="form-control remocon-select-menu" v-model="item.label" @change="dirty=true">
+                <select class="form-control ui-select-menu" v-model="item.label" @change="dirty=true">
                   <option v-for="(remocon,idx) of remocon.remoconTable" :key="'rm-remoconTable' + idx" :value="idx">
                     {{ idx }}
                   </option>
@@ -153,7 +153,7 @@
         const code = Common.RemoconSearch(remoconCode);
         const now = new Date();
         if(this.macro.length > 0) {
-          let wait = now - this._lastEvent;
+          let wait = now - this.lastEvent;
           wait = Math.ceil(wait / 100) / 10;
           this.macro.push({
             wait: wait,
@@ -164,7 +164,7 @@
           code: remoconCode,
           info: code.code,
         });
-        this._lastEvent = now;
+        this.lastEvent = now;
         this.dirty = true;
       });
       this.remocon = Common.remocon;

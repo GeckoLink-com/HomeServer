@@ -400,7 +400,7 @@
       },
     },
     mounted() {
-      this._select = false;
+      this.select = false;
 
       this.alias = Common.alias;
       Common.on('changeAlias', () => {
@@ -423,74 +423,74 @@
 
       document.getElementById('ui-table').addEventListener('mousedown', (e) => {
         const pos = this.GetCursorLine(e);
-        this._select = parseInt(this.selectedItem.index) === parseInt(pos.index);
-        if(pos.index === 'room') this._select = this.selectedItem.index === pos.room;
-        if(!this._select) return;
+        this.select = parseInt(this.selectedItem.index) === parseInt(pos.index);
+        if(pos.index === 'room') this.select = this.selectedItem.index === pos.room;
+        if(!this.select) return;
         e.preventDefault();
-        this._selectedPos = pos;
-        this._currentPos = pos;
+        this.selectedPos = pos;
+        this.currentPos = pos;
         if(pos.index === 'room') {
-          this._dragItem = this.uiTable.RoomList[pos.room];
+          this.dragItem = this.uiTable.RoomList[pos.room];
         } else {
-          this._dragItem = this.uiTable.ItemList[pos.index];
+          this.dragItem = this.uiTable.ItemList[pos.index];
         }
       });
       document.getElementById('ui-table').addEventListener('mouseup', (e) => {
-        if(!this._select) return;
+        if(!this.select) return;
         e.preventDefault();
         Socket.emit('uiTable', this.uiTable);
         Common.emit('toastr_success', this, '修正されました。');
-        this._select = false;
+        this.select = false;
       });
       document.getElementById('ui-table').addEventListener('mousemove', (e) => {
-        if(!this._select) return;
+        if(!this.select) return;
         e.preventDefault();
         const pos = this.GetCursorLine(e);
-        if((pos.room === this._currentPos.room) &&
-           (parseInt(pos.index) === parseInt(this._currentPos.index))) return;
-        if(this._selectedPos.index === 'room') {
+        if((pos.room === this.currentPos.room) &&
+           (parseInt(pos.index) === parseInt(this.currentPos.index))) return;
+        if(this.selectedPos.index === 'room') {
           if(pos.index !== 'room') return;
-          if(pos.room === this._currentPos.room) return;
-          this.uiTable.RoomList.splice(this._currentPos.room, 1);
-          this.uiTable.RoomList.splice(pos.room, 0, this._dragItem);
-          this._currentPos = pos;
-          this.selectedItem.index = this._currentPos.room;
+          if(pos.room === this.currentPos.room) return;
+          this.uiTable.RoomList.splice(this.currentPos.room, 1);
+          this.uiTable.RoomList.splice(pos.room, 0, this.dragItem);
+          this.currentPos = pos;
+          this.selectedItem.index = this.currentPos.room;
         } else {
           if((pos.index === 'room') && (parseInt(pos.room) === 0)) return;
-          this.uiTable.ItemList.splice(this._currentPos.index, 1);
+          this.uiTable.ItemList.splice(this.currentPos.index, 1);
           if(pos.index === 'room') {
-            if(pos.room === this._currentPos.room) {
-              this.uiTable.ItemList.push(this._dragItem);
-              this._currentPos = { room: pos.room - 1, index: this.uiTable.ItemList.length - 1 };
+            if(pos.room === this.currentPos.room) {
+              this.uiTable.ItemList.push(this.dragItem);
+              this.currentPos = { room: pos.room - 1, index: this.uiTable.ItemList.length - 1 };
             } else {
-              this.uiTable.ItemList.unshift(this._dragItem);
-              this._currentPos = { room: pos.room, index: 0 };
+              this.uiTable.ItemList.unshift(this.dragItem);
+              this.currentPos = { room: pos.room, index: 0 };
             }
           } else {
-            this.uiTable.ItemList.splice(pos.index, 0, this._dragItem);
-            this._currentPos = pos;
+            this.uiTable.ItemList.splice(pos.index, 0, this.dragItem);
+            this.currentPos = pos;
           }
-          this.uiTable.ItemList[this._currentPos.index].room = this.uiTable.RoomList[this._currentPos.room];
-          this.selectedItem.index = this._currentPos.index;
+          this.uiTable.ItemList[this.currentPos.index].room = this.uiTable.RoomList[this.currentPos.room];
+          this.selectedItem.index = this.currentPos.index;
         }
       });
       document.addEventListener('mouseup', (e) => {
-        if(!this._select) return;
+        if(!this.select) return;
         e.preventDefault();
-        this._select = false;
-        if(this._selectedPos.index === 'room') {
-          if(this._selectedPos.room === this._currentPos.room) return;
-          this.uiTable.RoomList.splice(this._currentPos.room, 1);
-          this.uiTable.RoomList.splice(this._selectedPos.room, 0, this._dragItem);
-          this._currentPos = this._selectedPos;
-          this.selectedItem.index = this._currentPos.room;
+        this.select = false;
+        if(this.selectedPos.index === 'room') {
+          if(this.selectedPos.room === this.currentPos.room) return;
+          this.uiTable.RoomList.splice(this.currentPos.room, 1);
+          this.uiTable.RoomList.splice(this.selectedPos.room, 0, this.dragItem);
+          this.currentPos = this.selectedPos;
+          this.selectedItem.index = this.currentPos.room;
         } else {
-          if(parseInt(this._selectedPos.index) === parseInt(this._currentPos.index)) return;
-          this.uiTable.ItemList.splice(this._currentPos.index, 1);
-          this.uiTable.ItemList.splice(this._selectedPos.index, 0, this._dragItem);
-          this._currentPos = this._selectedPos;
-          this.uiTable.ItemList[this._currentPos.index].room = this.uiTable.RoomList[this._currentPos.room];
-          this.selectedItem.index = this._currentPos.index;
+          if(parseInt(this.selectedPos.index) === parseInt(this.currentPos.index)) return;
+          this.uiTable.ItemList.splice(this.currentPos.index, 1);
+          this.uiTable.ItemList.splice(this.selectedPos.index, 0, this.dragItem);
+          this.currentPos = this.selectedPos;
+          this.uiTable.ItemList[this.currentPos.index].room = this.uiTable.RoomList[this.currentPos.room];
+          this.selectedItem.index = this.currentPos.index;
         }
       });
     },

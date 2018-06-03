@@ -48,32 +48,31 @@ for(let i = 2; i < process.argv.length; i++) {
   if(process.argv[i] == '-l') local = true;
 }
 if(configFile == null) configFile = __dirname + '/../config.json';
-const common = new Common(JSON.parse(fs.readFileSync(configFile, 'UTF-8')));
-common.user = user;
-common.group = group;
-if(process.env['HOME']) common.home = process.env['HOME'];
-if(user) {
-  if(process.platform == 'darwin') {
-    common.home = '/Users/' + user;
-  } else if(process.platform == 'linux') {
-    common.home = '/home/' + user;
+const common = new Common(JSON.parse(fs.readFileSync(configFile, 'UTF-8')), () => {
+  common.user = user;
+  common.group = group;
+  if(process.env['HOME']) common.home = process.env['HOME'];
+  if(user) {
+    if(process.platform == 'darwin') {
+      common.home = '/Users/' + user;
+    } else if(process.platform == 'linux') {
+      common.home = '/home/' + user;
+    }
   }
-}
-if(local) common.config.setupWebServerPort = 4080;
+  if(local) common.config.setupWebServerPort = 4080;
 
-new SetupWebServer(common, () => {
-  new ControllerConnection(common);
-  new ServerConnection(common);
-  new HomeBridgePlatform(common);
-  new SmartMeter(common);
-  new LocalAddressRegister(common);
-  new HueAPI(common);
-  common.initialState = true;
-  common.emit('changeSystemConfig', common);
-  common.emit('changeHueBridges', common);
-  common.emit('changeUITable', common);
-  common.emit('changeControllerLog', common, common.controllerLog);
-  common.emit('statusNotify', common);
-  common.initialState = false;
+  new SetupWebServer(common, () => {
+    new ControllerConnection(common);
+    new ServerConnection(common);
+    new HomeBridgePlatform(common);
+    new SmartMeter(common);
+    new LocalAddressRegister(common);
+    new HueAPI(common);
+    common.emit('changeSystemConfig', common);
+    common.emit('changeHueBridges', common);
+    common.emit('changeUITable', common);
+    common.emit('changeControllerLog', common, common.controllerLog);
+    common.emit('statusNotify', common);
+  });
 });
 

@@ -1,14 +1,19 @@
 const webpack = require('webpack');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
+const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
+const VueLoadewrPlugin = require('vue-loader/lib/plugin');
 
 process.noDeprecation = true;
 
 module.exports = {
-  entry: __dirname + '/source/js/HomeServer.js',
+  entry: {
+    'bundle': __dirname + '/source/js/HomeServer.js',
+    'SignIn': __dirname + '/source/js/SignIn.js',
+  },
   output: {
     path: __dirname + '/frontend',
-    filename: 'js/bundle.js'
+    filename: 'js/[name].js'
   },
   module: {
     rules: [
@@ -69,7 +74,7 @@ module.exports = {
         ],
       },
       {
-        test: /vue\/.*\.vue$/,
+        test: /\.vue$/,
         use: 'vue-loader',
       },
       {
@@ -85,7 +90,7 @@ module.exports = {
         ],
       },
       {
-        test: /css\/.*\.css$/,
+        test: /\.css$/,
         exclude: /nodeRed\.css/,
         use: [
           {
@@ -97,7 +102,7 @@ module.exports = {
         ]
       },
       {
-        test: /fonts\/.*\.(otf|woff|woff2)(\?.+)?$/,
+        test: /\.(ttf|otf|woff|woff2)(\?.+)?$/,
         use: [
           {
             loader: 'file-loader',
@@ -139,6 +144,8 @@ module.exports = {
       minRatio: 0.8,
       deleteOriginalAssets: true
     }),
+    new HardSourceWebpackPlugin(),
+    new VueLoadewrPlugin(),
   ],
 };
 

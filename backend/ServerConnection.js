@@ -16,55 +16,47 @@ class ServerConnection {
 
   constructor(common) {
 
-    this._common = common;
-    this._connectState = -1;
-    this._connectServer = false;
-    this._connectMessage = true;
-    this._intervalId = null;
-    this._wssClient = null;
-    this._lastSendTime = new Date();
+    this.common = common;
+    this.connectState = -1;
+    this.connectMessage = true;
+    this.intervalId = null;
+    this.wssClient = null;
+    this.lastSendTime = new Date();
 
     //ApplicationServer
-    this._common.on('changeUITable', this._SendClientUi.bind(this));
+    this.common.on('changeUITable', this.SendClientUi.bind(this));
 
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this._common.on('statusNotify', (_caller) => {
-      this._SendData(this, {type:'interval', data:this._common.status});
+    this.common.on('statusNotify', (_caller) => {
+      this.SendData(this, {type:'interval', data:this.common.status});
     });
 
-    this._common.on('changeStatus', this._SendData.bind(this));
+    this.common.on('changeStatus', this.SendData.bind(this));
 
-    this._common.on('irReceive', this._SendData.bind(this));
+    this.common.on('irReceive', this.SendData.bind(this));
 
-    this._common.on('response', this._SendData.bind(this));
+    this.common.on('response', this.SendData.bind(this));
     
-    this._common.on('message', this._SendData.bind(this));
+    this.common.on('message', this.SendData.bind(this));
     
-    this._common.on('deviceInfo', this._SendData.bind(this));
+    this.common.on('deviceInfo', this.SendData.bind(this));
 
-    this._common.on('sendMail', this._SendData.bind(this));
+    this.common.on('sendMail', this.SendData.bind(this));
     
-    this._common.on('changeSystemConfig', (_caller) => {
-      if(this._connectState > 0) this._wssClient.terminate();
-      if(this._intervalId) {
-        clearInterval(this._intervalId);
-        this._intervalId = null;
+    this.common.on('changeSystemConfig', (_caller) => {
+      if(this.connectState > 0) this.wssClient.terminate();
+      this.connectState = -1;
+      if(this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
       }
-      this._connectState = 0;
 
-      if(!this._common.systemConfig.serverKeys || (this._common.systemConfig.remote != 'on')) {
-        this._connectServer = false;
-        this._serverHost = 'localhost';
-        this._serverPort = this._common.config.localApplicationPort;
-        this._scheme = 'ws://';
-        this._options = null;
-        this._SetAuthorizedKeys();
-        this._IntervalConnectWS();
+      if(!this.common.systemConfig.serverKeys && !this.common.systemConfig.freeKeys) {
+        this.SetAuthorizedKeys();
         return;
       }
-      
-      this._connectServer = true;
-      this._options = {
+
+      this.options = {
         agent: false,
         ca: null,
         cert : null,
@@ -75,16 +67,16 @@ class ServerConnection {
         requestCert: true,
         rejectUnauthorized: true
       };
-      if(this._common.systemConfig.proxy && this._common.systemConfig.proxy.match(/^.+\..+:[0-9]+$/) && this._common.systemConfig.proxy.match(/^.+\..+:[0-9]+$/).length) {
-        this._options.proxy = {
-          host: this._common.systemConfig.proxy.replace(/^.*\//, '').replace(/:.*$/,''),
-          port: this._common.systemConfig.proxy.replace(/^.*:/, ''),
+      if(this.common.systemConfig.proxy && this.common.systemConfig.proxy.match(/^.+\..+:[0-9]+$/) && this.common.systemConfig.proxy.match(/^.+\..+:[0-9]+$/).length) {
+        this.options.proxy = {
+          host: this.common.systemConfig.proxy.replace(/^.*\//, '').replace(/:.*$/,''),
+          port: this.common.systemConfig.proxy.replace(/^.*:/, ''),
         }
-        this._options.agent = tunnel.httpsOverHttp(this._options);
+        this.options.agent = tunnel.httpsOverHttp(this.options);
       }
-      this._scheme = 'wss://';
+      this.scheme = 'wss://';
       
-      const buf = Buffer.from(this._common.systemConfig.serverKeys);
+      const buf = Buffer.from(this.common.systemConfig.serverKeys || this.common.systemConfig.freeKeys);
       zlib.gunzip(buf, (err, data) => {
         let serverKeys = null;
         try {
@@ -94,56 +86,71 @@ class ServerConnection {
           console.log(e);
           return;
         }
-        this._serverHost = serverKeys.serverHost;
-        this._serverPort = serverKeys.serverPort;
-        this._serverAllowClient = serverKeys.allowClient;
-        if(serverKeys.authorizedKeysBody) this._authorizedKeys = Buffer.from(serverKeys.authorizedKeysBody);
-        if(serverKeys.caFileBody) this._options.ca = Buffer.from(serverKeys.caFileBody);
-        if(serverKeys.certFileBody) this._options.cert = Buffer.from(serverKeys.certFileBody);
-        if(serverKeys.keyFileBody) this._options.key = Buffer.from(serverKeys.keyFileBody);
-        this._SetAuthorizedKeys();
-        this._IntervalConnectWS();
+        this.serverHost = serverKeys.serverHost;
+        this.serverPort = serverKeys.serverPort;
+        this.serverAllowClient = serverKeys.allowClient || [];
+
+        if(serverKeys.authorizedKeysBody) this.authorizedKeys = Buffer.from(serverKeys.authorizedKeysBody);
+        if(serverKeys.caFileBody) this.options.ca = Buffer.from(serverKeys.caFileBody);
+        if(serverKeys.certFileBody) this.options.cert = Buffer.from(serverKeys.certFileBody);
+        if(serverKeys.keyFileBody) this.options.key = Buffer.from(serverKeys.keyFileBody);
+
+        if(this.options.cert.toString().match(/Subject:.*OU=([^ ,]*)/)[1] !== 'free_account') {
+          if(this.common.systemConfig.remote === 'on') this.connectState = 0;
+        }
+        if(this.common.systemConfig.account.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+          if((this.common.systemConfig.remote === 'on') || (this.common.systemConfig.requestRemoteAccessState > 0)) {
+            this.connectState = 0;
+          }
+        }
+        this.SetAuthorizedKeys();
+        this.IntervalConnectWS();
       });
     });
   }
   
-  _SetAuthorizedKeys() {
+  SetAuthorizedKeys() {
     
     if(process.getuid() == 0) return;
-    if(!this._common.systemConfig.sshKeys && !this._authorizedKeys) return;
+    if(!this.common.systemConfig.changeAuthKey) return;
+    if(!this.common.systemConfig.sshKeys && !this.authorizedKeys) return;
 
     try {
-      fs.mkdirSync(this._common.home + '/.ssh', 0o700);
+      fs.mkdirSync(this.common.home + '/.ssh', 0o700);
     } catch(e) {/* empty */}
     try {
-      fs.unlinkSync(this._common.home + '/.ssh/authorized_keys');
+      fs.unlinkSync(this.common.home + '/.ssh/authorized_keys');
     } catch(e) {/* empty */}
     
-    if(this._authorizedKeys) {
+    if(this.authorizedKeys) {
       try {
-        fs.appendFileSync(this._common.home + '/.ssh/authorized_keys', this._authorizedKeys, {mode:0o600, encoding:null});
+        fs.appendFileSync(this.common.home + '/.ssh/authorized_keys', this.authorizedKeys, {mode:0o600, encoding:null});
       } catch(e) {console.log(e)}
     }
 
-    if(this._common.systemConfig.sshKeys) {
+    if(this.common.systemConfig.sshKeys) {
       try {
-        fs.appendFileSync(this._common.home + '/.ssh/authorized_keys', this._common.systemConfig.sshKeys, {mode:0o600, encoding:null});
+        fs.appendFileSync(this.common.home + '/.ssh/authorized_keys', this.common.systemConfig.sshKeys, {mode:0o600, encoding:null});
       } catch(e) {console.log(e)}
     }
+    this.common.systemConfig.changeAuthKey = false;
   }
   
-  _IntervalConnectWS() {
-    if(this._connectState == 0) {
-      this._wssClient = new ws(this._scheme + this._serverHost + ':' + this._serverPort, null, this._options);
+  IntervalConnectWS() {
+    if(this.connectState < 0) return;
 
-      this._wssClient.on('open', () => {
-        console.log('ServerConnection : connected ', this._scheme + this._serverHost + ':' + this._serverPort);
-        this._connectMessage = true;
-        this._WSSConnect();
+    if(this.connectState == 0) {
+      const account = Buffer.from(this.common.systemConfig.account).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+      this.wssClient = new ws(this.scheme + this.serverHost + ':' + this.serverPort + '/connect/' + account, null, this.options);
+
+      this.wssClient.on('open', () => {
+        console.log('ServerConnection : connected ', this.scheme + this.serverHost + ':' + this.serverPort);
+        this.connectMessage = true;
+        this.WSSConnect();
       });
 
-      this._wssClient.on('message', (data) => {
-        if(this._connectState == 1) {
+      this.wssClient.on('message', (data) => {
+        if(this.connectState == 1) {
           const strs = data.split('\0');
           for(const str of strs) {
             if(str.length) {
@@ -153,31 +160,31 @@ class ServerConnection {
               } catch(e) {
                 console.log('ServerConnection : json parse error : ', str);
               }
-              this._Receive(jsonStr);
+              this.Receive(jsonStr);
             }
           }
         }
       });
 
-      this._wssClient.on('close', () => {
-        this._connectMessage = false;
-        if(this._connectState > 0) {
-          console.log('ServerConnection : disconnect ' + this._serverHost);
-          this._connectState = 0;
+      this.wssClient.on('close', () => {
+        this.connectMessage = false;
+        if(this.connectState > 0) {
+          console.log('ServerConnection : disconnect ' + this.serverHost);
+          this.connectState = 0;
         }
       });
 
-      this._wssClient.on('error', (e) => {
-        this._connectState = 0;
-        this._wssClient.terminate();
+      this.wssClient.on('error', (e) => {
+        this.connectState = 0;
+        this.wssClient.terminate();
         if((e.syscall == 'getaddrinfo') && (e.errno == 'ENOTFOUND')) {
-          if(this._connectMessage) console.log('ApplicationServer connect error %s:%d', e.host, e.port);
-          this._connectMessage = false;
+          if(this.connectMessage) console.log('ApplicationServer connect error %s:%d', e.host, e.port);
+          this.connectMessage = false;
           return;
         }
         if((e.syscall == 'connect') && (e.errno == 'ECONNREFUSED')) {
-          if(this._connectMessage) console.log('ApplicationServer connect error %s:%d', e.host, e.port);
-          this._connectMessage = false;
+          if(this.connectMessage) console.log('ApplicationServer connect error %s:%d', e.host, e.port);
+          this.connectMessage = false;
           return;
         }
         console.log('----');
@@ -187,92 +194,109 @@ class ServerConnection {
         console.log('----');
       });
 
-      this._wssClient.on('unexpected-response', () => {
-        console.log('ServerConnection : unexpected-response ' + this._serverHost);
-        this._connectState = 0;
-        this._wssClient.terminate();
+      this.wssClient.on('unexpected-response', () => {
+        console.log('ServerConnection : unexpected-response ' + this.serverHost);
+        this.connectState = 0;
+        this.wssClient.terminate();
       });
 
     } else {
       const now = new Date();
-      if(now - this._lastSendTime >= 30 * 1000) {
-        this._SendData(this, {type:'interval', data:this._common.status});
+      if(now - this.lastSendTime >= 30 * 1000) {
+        this.SendData(this, {type:'interval', data:this.common.status});
       }
     }
-    if(this._intervalId == null) {
-      this._intervalId = setInterval(() => { this._IntervalConnectWS(); }, 5 * 1000);
+    if(this.intervalId == null) {
+      this.intervalId = setInterval(() => { this.IntervalConnectWS(); }, 5 * 1000);
     }
   }
 
-  _WSSConnect() {
+  WSSConnect() {
 
-    if(this._wssClient.readyState == 0) {
-      console.log('ServerConnection : ---152 _WSSConnect no ready');  // DEBUG
-      this._connectState = 0;
-      return this._wssClient.terminate();
+    if(this.wssClient.readyState == 0) {
+      console.log('ServerConnection : ---152 WSSConnect no ready');  // DEBUG
+      this.connectState = 0;
+      return this.wssClient.terminate();
     }
-    if(this._connectState == 1) return;
+    if(this.connectState == 1) return;
 
-    this._connectState = 1;
-    this._connectMessage = true;
-    this._wssSendRetry = 0;
-    console.log('ServerConnection : connect ' + this._serverHost); // DEBUG
-    this._SendClientUi();
-    this._SendData(this, {type:'interval', data:this._common.status});
-    this._SendData(this, {type:'deviceInfo', data:this._common.deviceInfo});
-    if(this._serverAllowClient) this._SendData(this, {type:'allowClient', data:this._serverAllowClient});
+    this.connectState = 1;
+    this.connectMessage = true;
+    this.wssSendRetry = 0;
+    console.log('ServerConnection : connect ' + this.serverHost); // DEBUG
+    if(this.common.systemConfig.accessKey) this.SendData(this, {type:'accessKey', data:this.common.systemConfig.accessKey});
+    this.SendClientUi();
+    this.SendData(this, {type:'interval', data:this.common.status});
+    this.SendData(this, {type:'deviceInfo', data:this.common.deviceInfo});
+    if(this.serverAllowClient) this.SendData(this, {type:'allowClient', data:this.serverAllowClient});
   }
 
-  _SendClientUi() {
+  SendClientUi() {
     const system = {
-      mailto: this._common.systemConfig.mailto,
+      mailto: this.common.systemConfig.mailto,
     };
-    if(!this._common.systemConfig.radius ||
-       (this._common.systemConfig.radius == '')) {
-      this._common.systemConfig.radius = '5000';
+    if(!this.common.systemConfig.radius ||
+       (this.common.systemConfig.radius == '')) {
+      this.common.systemConfig.radius = '5000';
     }
-    if(this._common.systemConfig.latitude &&
-       (this._common.systemConfig.latitude != '') &&
-       this._common.systemConfig.longitude &&
-       (this._common.systemConfig.longitude != '')) {
+    if(this.common.systemConfig.latitude &&
+       (this.common.systemConfig.latitude != '') &&
+       this.common.systemConfig.longitude &&
+       (this.common.systemConfig.longitude != '')) {
       system.amesh = {
-        latitude: 'N' + this._common.systemConfig.latitude,
-        longitude: 'E' + this._common.systemConfig.longitude,
-        radius: this._common.systemConfig.radius + 'm',
+        latitude: 'N' + this.common.systemConfig.latitude,
+        longitude: 'E' + this.common.systemConfig.longitude,
+        radius: this.common.systemConfig.radius + 'm',
       };
     }
-    this._SendData(this, {type:'client_ui', data:{ RoomList:this._common.uiTable.RoomList, ItemList:this._common.uiTable.ItemList, TableList:this._common.remocon.remoconGroup, System:system}});
+    this.SendData(this, {type:'client_ui', data:{ RoomList:this.common.uiTable.RoomList, ItemList:this.common.uiTable.ItemList, TableList:this.common.remocon.remoconGroup, System:system}});
   }
 
-  _Receive(msg) {
-    if(msg.type == 'command') {
+  Receive(msg) {
+    if(msg.type === 'error') {
+      console.log('error : ', msg.error);
+      if((msg.error === 'invalid access') && this.common.systemConfig.remote === 'on') {
+        this.common.systemConfig.remote = 'off';
+        this.common.emit('changeSystemConfig', this);
+      }
+    } else if(msg.type === 'command') {
+      if(this.common.systemConfig.remote !== 'on') return;
       let cmd = msg.command;
       if(msg.func) cmd = msg.func + ' ' + msg.mode;
-      this._common.emit('sendControllerCommand', this, {deviceName: msg.deviceName, command: cmd});
-    } else if(msg.type == 'rainInfo') {
-      this._common.internalStatus.rainInfo = msg.data;
-      this._common.emit('changeInternalStatus', this);
+      this.common.emit('sendControllerCommand', this, {deviceName: msg.deviceName, command: cmd});
+    } else if(msg.type === 'rainInfo') {
+      if(this.common.systemConfig.remote !== 'on') return;
+      this.common.internalStatus.rainInfo = msg.data;
+      this.common.emit('changeInternalStatus', this);
+    } else if(msg.type === 'accountValid') {
+      this.common.systemConfig.remote = 'on';
+      this.common.systemConfig.requestRemoteAccessState = 0;
+      this.common.emit('changeSystemConfig', this);
     }
   }
 
-  _SendData(caller, msg) {
-    if(this._connectState != 1) return;
-    if(this._wssClient.readyState == 0) return;
-    if(this._wssClient._closeReceived)  console.log('ServerConnection : closeReceived'); // DEBUG
-    if(this._wssClient._socket) { // DEBUG
-      if(this._wssClient._socket.connecting) console.log('ServerConnection : connecting = false'); // DEBUG
+  SendData(caller, msg) {
+    if(this.connectState != 1) return;
+    if(this.wssClient.readyState == 0) return;
+    if(this.wssClient._closeReceived)  console.log('ServerConnection : closeReceived'); // DEBUG
+    if(this.wssClient._socket) { // DEBUG
+      if(this.wssClient._socket.connecting) console.log('ServerConnection : connecting false'); // DEBUG
     } // DEBUG
+    if((this.common.systemConfig.remote !== 'on') && (msg.type !== 'accessKey')) {
+      console.log('ServerConnection : remote off');
+      return;
+    }
     try {
-      this._wssClient.send(JSON.stringify(msg));
-      this._lastSendTime = new Date();
-      this._wssSendRetry = 0;
+      this.wssClient.send(JSON.stringify(msg));
+      this.lastSendTime = new Date();
+      this.wssSendRetry = 0;
     } catch(e) {
       console.log('ServerConnection : wssClient send error'); // DEBUG
-      console.dir(this._wssClient); // DEBUG
-      this._wssSendRetry++;
-      if(this._wssSendRetry > 3) {
-        this._connectState = 0;
-        this._wssClient.terminate();
+      console.dir(this.wssClient); // DEBUG
+      this.wssSendRetry++;
+      if(this.wssSendRetry > 3) {
+        this.connectState = 0;
+        this.wssClient.terminate();
       }
     }
   }

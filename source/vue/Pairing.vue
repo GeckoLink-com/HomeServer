@@ -78,15 +78,6 @@
         }
 
         const message = msg.data[0].message;
-        if(message.search(/Start module firmware update/) >= 0) {
-          Common.emit('toastr_info', this, 'ファームウェア更新開始');
-          this.progress = 20;
-          setTimeout(() => {
-            Common.emit('toastr_info', this, 'ファームウェア更新中');
-            this.progress = 30;
-          }, 5000);
-          return;
-        }
 
         if(message.search(/HA module XBee Info/) >= 0) {
           const str = message.match(/SerialNumber :.*/);
@@ -114,8 +105,18 @@
               }
             }
           }
-          Common.emit('toastr_info', this, 'ファームウェア更新完了');
-          this.progress = 35;
+          Common.emit('toastr_info', this, 'デバイス確認完了');
+          this.progress = 10;
+          return;
+        }
+
+        if(message.search(/Start module firmware update/) >= 0) {
+          Common.emit('toastr_info', this, 'ファームウェア更新開始');
+          this.progress = 20;
+          setTimeout(() => {
+            Common.emit('toastr_info', this, 'ファームウェア更新中');
+            this.progress = 30;
+          }, 5000);
           return;
         }
 
@@ -178,7 +179,7 @@
         Common.emit('toastr_clear', this);
         this.error = '';
         Common.emit('toastr_info', this, 'モジュール接続開始');
-        this.progress = 10;
+        this.progress = 5;
 
         this.configCommand = ('config ' + this.option.toString(16) + ' F ' + this.param).trim();
         Socket.emit('command',
@@ -193,8 +194,8 @@
     margin-top: 10vh;
   }
 
-.progress {
-  margin: 2%;
-}
+  .progress {
+    margin: 2%;
+  }
 </style>
 

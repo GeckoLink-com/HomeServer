@@ -12,10 +12,10 @@ const EchonetLite = require('node-echonet-lite');
 class SmartMeter {
 
   constructor(common) {
-    this._common = common;
-    this._deviceInfo = {};
+    this.common = common;
+    this.deviceInfo = {};
     
-    this._common.on('changeSystemConfig', this.Reset.bind(this));
+    this.common.on('changeSystemConfig', this.Reset.bind(this));
 
     global.showErrorExit = (msg) => {
       console.log('SmartMeter:', msg);
@@ -29,7 +29,7 @@ class SmartMeter {
   }
   
  Reset() {
-    if(!this._common.systemConfig) return;
+    if(!this.common.systemConfig) return;
     
     if(this.el) {
       if(this.intervalId) {
@@ -43,19 +43,19 @@ class SmartMeter {
   }
 
   Start() {
-    if(!this._common.config.smartMeter) return;
-    if(!this._common.config.wisunDevice) return;
-    if(!this._common.systemConfig.smartMeterAdapter) return;
-    if(!this._common.systemConfig.smartMeterID) return;
-    if(!this._common.systemConfig.smartMeterPassword) return;
+    if(!this.common.config.smartMeter) return;
+    if(!this.common.config.wisunDevice) return;
+    if(!this.common.systemConfig.smartMeterAdapter) return;
+    if(!this.common.systemConfig.smartMeterID) return;
+    if(!this.common.systemConfig.smartMeterPassword) return;
 
     this.el = new EchonetLite({
       lang: 'en',
       type: 'wisunb',
-      adapter: this._common.systemConfig.smartMeterAdapter, // bp35c2/bp35a1/rl7023
-      path: this._common.config.wisunDevice,
-      id: this._common.systemConfig.smartMeterID,
-      pass: this._common.systemConfig.smartMeterPassword,
+      adapter: this.common.systemConfig.smartMeterAdapter, // bp35c2/bp35a1/rl7023
+      path: this.common.config.wisunDevice,
+      id: this.common.systemConfig.smartMeterID,
+      pass: this.common.systemConfig.smartMeterPassword,
       baud: 115200,
     });
     this.retryInitialize = 5;
@@ -134,9 +134,9 @@ class SmartMeter {
           console.log('SmartMeter: GetValue 0xe8 error');
           console.log(err);
         }
-        this._common.internalStatus.smartMeter = this._deviceInfo.energy;
-        this._common.emit('changeInternalStatus', this);
-        console.log('SmartMeter: ', this._deviceInfo.energy);
+        this.common.internalStatus.smartMeter = this.deviceInfo.energy;
+        this.common.emit('changeInternalStatus', this);
+        console.log('SmartMeter: ', this.deviceInfo.energy);
         this.intervalDropCount = 0;
       });
     });
@@ -150,7 +150,7 @@ class SmartMeter {
     this.el.getPropertyValue(this.device.address, this.device.eoj[0], epc, (err, res) => {
       if(err) console.log('SmartMeter:', err);
       for(const i in res.message.data) {
-        this._deviceInfo[i] = res.message.data[i];
+        this.deviceInfo[i] = res.message.data[i];
       }
       if(callback) callback(err, res);
     });

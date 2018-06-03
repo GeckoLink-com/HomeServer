@@ -19,19 +19,19 @@ class HomeBridgeAccessory extends Accessory {
     console.log('Initializing platform accessory %s...', name);
     super(name, uuid.generate(config.platform.name + ':' + room + name));
 
-    this._uuid = uuid.generate(config.platform.name + ':' + room + name);
-    this._Name = name;
-    this._Item = item;
-    this._SendCommand = api.SendCommand;
-    this._GetStatus = api.GetStatus;
-    this._GetUITable = api.GetUITable;
-    this._AddStatusChangeEvent = api.AddStatusChangeEvent;
-    this._RemoveStatusChangeEvent = api.RemoveStatusChangeEvent;
-    this._SetLastCommand = api.SetLastCommand;
-    this._GetLastCommand = api.GetLastCommand;
+    this.uuid = uuid.generate(config.platform.name + ':' + room + name);
+    this.Name = name;
+    this.Item = item;
+    this.SendCommand = api.SendCommand;
+    this.GetStatus = api.GetStatus;
+    this.GetUITable = api.GetUITable;
+    this.AddStatusChangeEvent = api.AddStatusChangeEvent;
+    this.RemoveStatusChangeEvent = api.RemoveStatusChangeEvent;
+    this.SetLastCommand = api.SetLastCommand;
+    this.GetLastCommand = api.GetLastCommand;
 
     this.on('identify', (paired, callback) => {
-      console.log('%s : Identify requested!', this._Name);
+      console.log('%s : Identify requested!', this.Name);
       callback();
     });
     
@@ -41,7 +41,7 @@ class HomeBridgeAccessory extends Accessory {
       .setCharacteristic(Characteristic.SerialNumber, config.platform.serial);
     
     let service = null;
-    switch(this._Item.type) {
+    switch(this.Item.type) {
 // control
       case 'onOff':
       case 'openClose':
@@ -50,31 +50,31 @@ class HomeBridgeAccessory extends Accessory {
       case 'tv':
       case 'hue':
       case 'light':
-        service = this._ServiceSwitch();
+        service = this.ServiceSwitch();
         break;
       case 'lock':
-        service = this._ServiceLockMechanism();
+        service = this.ServiceLockMechanism();
         break;
       case 'window':
       case 'shutter':
       case 'brind':
-        service = this._ServiceWindow();
+        service = this.ServiceWindow();
         break;
       case 'aircon':
-        service = this._ServiceThermostat();
+        service = this.ServiceThermostat();
         break;
 // sensor
       case 'battery':
-        service = this._ServiceBatteryService();
+        service = this.ServiceBatteryService();
         break;
       case 'temp':
-        service = this._ServiceTemperatureSensor();
+        service = this.ServiceTemperatureSensor();
         break;
       case 'humidity':
-        service = this._ServiceHumiditySensor();
+        service = this.ServiceHumiditySensor();
         break;
       default:
-        console.log('error : %s', this._Item.type);
+        console.log('error : %s', this.Item.type);
         return;
     }
     this.addService(service);
@@ -82,81 +82,81 @@ class HomeBridgeAccessory extends Accessory {
 
   removeAllListeners() {
     super.removeAllListeners();
-    this._RemoveStatusChangeEvent(this._uuid);
+    this.RemoveStatusChangeEvent(this.uuid);
   }
   
-  _SearchStatus(typeOrFunc) {
+  SearchStatus(typeOrFunc) {
     if(!Array.isArray(typeOrFunc)) typeOrFunc = [typeOrFunc];
     for(const t of typeOrFunc) {
-      for(const s in this._Item.status) {
-        if(this._Item.status[s].type == t) return this._GetStatus(this._Item.status[s].deviceName, this._Item.status[s].func);
-        if(this._Item.status[s].func == t) return this._GetStatus(this._Item.status[s].deviceName, this._Item.status[s].func);
+      for(const s in this.Item.status) {
+        if(this.Item.status[s].type == t) return this.GetStatus(this.Item.status[s].deviceName, this.Item.status[s].func);
+        if(this.Item.status[s].func == t) return this.GetStatus(this.Item.status[s].deviceName, this.Item.status[s].func);
       }
     }
   }
 
-  _AddStatusChange(service, callback, typeOrFunc) {
-    if(this._Item.status == undefined) return;
+  AddStatusChange(service, callback, typeOrFunc) {
+    if(this.Item.status == undefined) return;
     if(!Array.isArray(typeOrFunc)) typeOrFunc = [typeOrFunc];
     for(const t of typeOrFunc) {
-      for(const s in this._Item.status) {
-        if((this._Item.status[s].type == t) || (this._Item.status[s].func == t))
-          this._AddStatusChangeEvent(this._Item.status[s].deviceName, this._Item.status[s].func, this._uuid, service, callback);
+      for(const s in this.Item.status) {
+        if((this.Item.status[s].type == t) || (this.Item.status[s].func == t))
+          this.AddStatusChangeEvent(this.Item.status[s].deviceName, this.Item.status[s].func, this.uuid, service, callback);
       }
     }
   }
   
-  _ServiceSwitch() {
-    const service = new Service.Switch(this._Name);
+  ServiceSwitch() {
+    const service = new Service.Switch(this.Name);
 
     service.getCharacteristic(Characteristic.On).on('get', (callback) => {
-      const value = this._SearchStatus(['ha0', 'ha1', 'sw', 'gpio0', 'gpio1', 'gpio', 'gpio3']);
+      const value = this.SearchStatus(['ha0', 'ha1', 'sw', 'gpio0', 'gpio1', 'gpio', 'gpio3']);
       if(value == "on") {
         callback(null, true);
       } else if(value == "off"){
         callback(null, false);
-      } else if(this._state) {
-        callback(null, this._state);
+      } else if(this.state) {
+        callback(null, this.state);
       } else {
         callback(null, false);
       }
     });
 
     service.getCharacteristic(Characteristic.On).on('set', (value, callback) => {
-      if((this._Item.buttons != undefined) && (this._state != value)) {
+      if((this.Item.buttons != undefined) && (this.state != value)) {
         if(value) {
-          if(this._Item.buttons[0] && this._Item.buttons[0].command) {
-            this._SendCommand(this._Item.buttons[0].deviceName, this._Item.buttons[0].command);
+          if(this.Item.buttons[0] && this.Item.buttons[0].command) {
+            this.SendCommand(this.Item.buttons[0].deviceName, this.Item.buttons[0].command);
           }
-          this._state = true;
+          this.state = true;
         } else {
-          if(this._Item.buttons[1] && this._Item.buttons[1].command) {
-            this._SendCommand(this._Item.buttons[1].deviceName, this._Item.buttons[1].command);
-          } else if(this._Item.buttons[0] && this._Item.buttons[0].command) {
-            this._SendCommand(this._Item.buttons[0].deviceName, this._Item.buttons[0].command);
+          if(this.Item.buttons[1] && this.Item.buttons[1].command) {
+            this.SendCommand(this.Item.buttons[1].deviceName, this.Item.buttons[1].command);
+          } else if(this.Item.buttons[0] && this.Item.buttons[0].command) {
+            this.SendCommand(this.Item.buttons[0].deviceName, this.Item.buttons[0].command);
           }
-          this._state = false;
+          this.state = false;
         }
       }
       callback();
     });
     
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       if(stat.valueName == "on") {
-        this._state = true;
+        this.state = true;
         service.setCharacteristic(Characteristic.On, true);
       } else {
-        this._state = false;
+        this.state = false;
         service.setCharacteristic(Characteristic.On, false);
       }
     });
     return service;
   }
   
-  _ServiceLockMechanism() {
-    const service = new Service.LockMechanism(this._Name);
+  ServiceLockMechanism() {
+    const service = new Service.LockMechanism(this.Name);
     service.getCharacteristic(Characteristic.LockCurrentState).on('get', (callback) => {
-      const value = this._SearchStatus(['ha0', 'ha1']);
+      const value = this.SearchStatus(['ha0', 'ha1']);
       if(value == "close") {
         callback(null, Characteristic.LockCurrentState.SECURED);
       } else {
@@ -164,7 +164,7 @@ class HomeBridgeAccessory extends Accessory {
       }
     });
     service.getCharacteristic(Characteristic.LockTargetState).on('get', (callback) => {
-      const value = this._SearchStatus(['ha0', 'ha1']);
+      const value = this.SearchStatus(['ha0', 'ha1']);
       if(value == "close") {
         callback(null, Characteristic.LockTargetState.SECURED);
       } else {
@@ -172,24 +172,24 @@ class HomeBridgeAccessory extends Accessory {
       }
     });
     service.getCharacteristic(Characteristic.LockTargetState).on('set', (value, callback) => {
-      if(this._Item.buttons != undefined) {
+      if(this.Item.buttons != undefined) {
         if(value == Characteristic.LockTargetState.UNSECURED) {
-          if(this._Item.buttons[0] && this._Item.buttons[0].func) {
-            this._SendCommand(this._Item.buttons[0].deviceName, this._Item.buttons[0].func + ' ' + this._Item.buttons[0].mode);
-          } else if(this._Item.buttons[0] && this._Item.buttons[0].command) {
-            this._SendCommand(this._Item.buttons[0].deviceName, this._Item.buttons[0].command);
+          if(this.Item.buttons[0] && this.Item.buttons[0].func) {
+            this.SendCommand(this.Item.buttons[0].deviceName, this.Item.buttons[0].func + ' ' + this.Item.buttons[0].mode);
+          } else if(this.Item.buttons[0] && this.Item.buttons[0].command) {
+            this.SendCommand(this.Item.buttons[0].deviceName, this.Item.buttons[0].command);
           }
         } else {
-          if(this._Item.buttons[1] && this._Item.buttons[1].func) {
-            this._SendCommand(this._Item.buttons[1].deviceName, this._Item.buttons[1].func + ' ' + this._Item.buttons[1].mode);
-          } else if(this._Item.buttons[1] && this._Item.buttons[1].command) {
-            this._SendCommand(this._Item.buttons[1].deviceName, this._Item.buttons[1].command);
+          if(this.Item.buttons[1] && this.Item.buttons[1].func) {
+            this.SendCommand(this.Item.buttons[1].deviceName, this.Item.buttons[1].func + ' ' + this.Item.buttons[1].mode);
+          } else if(this.Item.buttons[1] && this.Item.buttons[1].command) {
+            this.SendCommand(this.Item.buttons[1].deviceName, this.Item.buttons[1].command);
           }
         }
       }
       callback();
     });
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       if(stat.valueName == "close") {
         service.setCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.SECURED);
       } else {
@@ -199,13 +199,13 @@ class HomeBridgeAccessory extends Accessory {
     return service;
   }
 
-  _ServiceWindow() {
+  ServiceWindow() {
     let service;
-    if(this._Item.type == 'window') service = new Service.Window(this._Name);
-    if(this._Item.type == 'brind') service = new Service.WindowCovering(this._Name);
-    if(this._Item.type == 'shutter') service = new Service.WindowCovering(this._Name);
+    if(this.Item.type == 'window') service = new Service.Window(this.Name);
+    if(this.Item.type == 'brind') service = new Service.WindowCovering(this.Name);
+    if(this.Item.type == 'shutter') service = new Service.WindowCovering(this.Name);
     service.getCharacteristic(Characteristic.CurrentPosition).on('get', (callback) => {
-      const value = this._SearchStatus(['sw']);
+      const value = this.SearchStatus(['sw']);
       if((value == 'open') || (value == 'opening')) {
         callback(null, 100);
       } else {
@@ -214,7 +214,7 @@ class HomeBridgeAccessory extends Accessory {
     })
     .setProps({minStep:100});
     service.getCharacteristic(Characteristic.TargetPosition).on('get', (callback) => {
-      const value = this._SearchStatus(['sw']);
+      const value = this.SearchStatus(['sw']);
       if(value == 'open') {
         callback(null, 100);
       } else if((value == 'opening') || (value == 'closing')) {
@@ -225,22 +225,22 @@ class HomeBridgeAccessory extends Accessory {
     })
     .setProps({minStep:100});
     service.getCharacteristic(Characteristic.TargetPosition).on('set', (value, callback) => {
-      if(this._Item.buttons != undefined) {
-        const stat = this._SearchStatus(['sw']);
+      if(this.Item.buttons != undefined) {
+        const stat = this.SearchStatus(['sw']);
         if((value == 100) && (stat != 'open') && (stat != 'opening')) {
-          if(this._Item.buttons[0] && this._Item.buttons[0].command) {
-            this._SendCommand(this._Item.buttons[0].deviceName, this._Item.buttons[0].command);
+          if(this.Item.buttons[0] && this.Item.buttons[0].command) {
+            this.SendCommand(this.Item.buttons[0].deviceName, this.Item.buttons[0].command);
           }
         } else if((value == 0) && (stat != 'close') && (stat != 'closing')) {
-          if((this._Item.buttons[1] != undefined) && (this._Item.buttons[1].command)) {
-            this._SendCommand(this._Item.buttons[1].deviceName, this._Item.buttons[1].command);
+          if((this.Item.buttons[1] != undefined) && (this.Item.buttons[1].command)) {
+            this.SendCommand(this.Item.buttons[1].deviceName, this.Item.buttons[1].command);
           }
         }
       }
       callback();
     });
     service.getCharacteristic(Characteristic.PositionState).on('get', (callback) => {
-      const value = this._SearchStatus();
+      const value = this.SearchStatus();
       if(value == 'opening') {
         callback(null, Characteristic.PositionState.INCREASING);
       } else if(value == 'closing') {
@@ -249,7 +249,7 @@ class HomeBridgeAccessory extends Accessory {
         callback(null, Characteristic.PositionState.STOPPED);
       }
     });
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       if(stat.valueName == 'open') {
         service.setCharacteristic(Characteristic.CurrentPosition, 100);
         service.setCharacteristic(Characteristic.PositionState, Characteristic.PositionState.STOPPED);
@@ -267,10 +267,10 @@ class HomeBridgeAccessory extends Accessory {
     return service;
   }
 
-  _ServiceThermostat() {
-    const service = new Service.Thermostat(this._Name);
+  ServiceThermostat() {
+    const service = new Service.Thermostat(this.Name);
     service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).on('get', (callback) => {
-      const value = this._GetStatus(this._Item.table.deviceName, this._Item.table.prefix);
+      const value = this.GetStatus(this.Item.table.deviceName, this.Item.table.prefix);
       const mode = value?value.replace(/[0-9]*$/, ''):null;
       let v = Characteristic.CurrentHeatingCoolingState.OFF;
       if(mode == 'heater') {
@@ -278,11 +278,11 @@ class HomeBridgeAccessory extends Accessory {
       } else if(mode == 'cooler') {
         v = Characteristic.CurrentHeatingCoolingState.COOL;
       }
-      const value2 = this._SearchStatus(['ha0', 'ha1', 'gpio0', 'gpio1', 'gpio2', 'gpio3']);
+      const value2 = this.SearchStatus(['ha0', 'ha1', 'gpio0', 'gpio1', 'gpio2', 'gpio3']);
       if(!value2 || (value2 == 'off')) {
         v = Characteristic.CurrentHeatingCoolingState.OFF;
       } else if(!mode) {
-        const currentTemp = parseFloat(this._SearchStatus('temp'));
+        const currentTemp = parseFloat(this.SearchStatus('temp'));
         if(currentTemp < 25) {
           v = Characteristic.CurrentHeatingCoolingState.HEAT;
         } else {
@@ -293,7 +293,7 @@ class HomeBridgeAccessory extends Accessory {
     });
     
     service.getCharacteristic(Characteristic.TargetHeatingCoolingState).on('get', (callback) => {
-      const val = this._GetStatus(this._Item.table.deviceName, this._Item.table.prefix);
+      const val = this.GetStatus(this.Item.table.deviceName, this.Item.table.prefix);
       const mode = val?val.replace(/[0-9]*$/, ''):null;
       let v = Characteristic.TargetHeatingCoolingState.OFF;
       if(mode == 'heater') {
@@ -301,43 +301,43 @@ class HomeBridgeAccessory extends Accessory {
       } else if(mode == 'cooler') {
         v = Characteristic.TargetHeatingCoolingState.COOL;
       }
-      const value2 = this._SearchStatus(['ha0', 'ha1', 'gpio0', 'gpio1', 'gpio2', 'gpio3']);
+      const value2 = this.SearchStatus(['ha0', 'ha1', 'gpio0', 'gpio1', 'gpio2', 'gpio3']);
       if(!value2 || (value2 == 'off')) v = Characteristic.TargetHeatingCoolingState.OFF;
       callback(null, v);
     });
     
     service.getCharacteristic(Characteristic.TargetHeatingCoolingState).on('set', (value, callback) => {
       if(value == Characteristic.CurrentHeatingCoolingState.OFF) {
-        this._SendCommand(this._Item.table.deviceName, this._Item.table.prefix + '_off');
+        this.SendCommand(this.Item.table.deviceName, this.Item.table.prefix + '_off');
       } else {
-        const val = this._GetStatus(this._Item.table.deviceName, this._Item.table.prefix);
+        const val = this.GetStatus(this.Item.table.deviceName, this.Item.table.prefix);
         let temp = val?val.replace(/^[^0-9]*/, ''):20;
         if(!parseInt(temp)) temp = 20;
         let mode = 'off';
         if(value == Characteristic.CurrentHeatingCoolingState.HEAT) mode = 'heater';
         if(value == Characteristic.CurrentHeatingCoolingState.COOL) mode = 'cooler';
-        this._SendCommand(this._Item.table.deviceName, this._Item.table.prefix + '_' + mode + temp);
-        if(mode != 'off') this._SetLastCommand(this._Item.table.deviceName, this._Item.table.prefix, mode+temp);
+        this.SendCommand(this.Item.table.deviceName, this.Item.table.prefix + '_' + mode + temp);
+        if(mode != 'off') this.SetLastCommand(this.Item.table.deviceName, this.Item.table.prefix, mode+temp);
       }
       callback();
     });
     service.getCharacteristic(Characteristic.CurrentTemperature).on('get', (callback) => {
-      const temp = parseFloat(this._SearchStatus('temp'));
+      const temp = parseFloat(this.SearchStatus('temp'));
       callback(null, temp);
     })
     .setProps({minValue:-40});
     service.getCharacteristic(Characteristic.TargetTemperature).on('get', (callback) => {
-      const val = this._GetLastCommand(this._Item.table.deviceName, this._Item.table.prefix);
+      const val = this.GetLastCommand(this.Item.table.deviceName, this.Item.table.prefix);
       let temp = parseFloat(val?val.replace(/^[^0-9]*/, ''):'20');
       if(!parseInt(temp)) temp = 20;
       callback(null, temp);
     })
     .setProps({minStep:1.0});
     service.getCharacteristic(Characteristic.TargetTemperature).on('set', (value, callback) => {
-      const val = this._GetStatus(this._Item.table.deviceName, this._Item.table.prefix);
+      const val = this.GetStatus(this.Item.table.deviceName, this.Item.table.prefix);
       let mode = val?val.replace(/[0-9]*$/, ''):null;
       if(!mode) {
-        const currentTemp = parseFloat(this._SearchStatus('temp'));
+        const currentTemp = parseFloat(this.SearchStatus('temp'));
         if(currentTemp < 25) {
           mode = 'heater';
         } else {
@@ -345,8 +345,8 @@ class HomeBridgeAccessory extends Accessory {
         }
       }
       const temp = ('0' + Math.floor(value).toString()).slice(-2);
-      this._SendCommand(this._Item.table.deviceName, this._Item.table.prefix + '_' + mode + temp);
-      this._SetLastCommand(this._Item.table.deviceName, this._Item.table.prefix, mode+temp);
+      this.SendCommand(this.Item.table.deviceName, this.Item.table.prefix + '_' + mode + temp);
+      this.SetLastCommand(this.Item.table.deviceName, this.Item.table.prefix, mode+temp);
       callback();
     });
     service.getCharacteristic(Characteristic.TemperatureDisplayUnits).on('get', (callback) => {
@@ -355,16 +355,16 @@ class HomeBridgeAccessory extends Accessory {
     service.getCharacteristic(Characteristic.TemperatureDisplayUnits).on('set', (value, callback) => {
       callback();
     });
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       service.setCharacteristic(Characteristic.CurrentTemperature, parseFloat(stat.value));
     }, 'temp');
     return service;
   }
 
-  _ServiceBatteryService() {
-    const service = new Service.BatteryService(this._Name);
+  ServiceBatteryService() {
+    const service = new Service.BatteryService(this.Name);
     service.getCharacteristic(Characteristic.BatteryLevel).on('get', (callback) => {
-      const value = this._GetStatus(this._Item.deviceName, this._Item.func);
+      const value = this.GetStatus(this.Item.deviceName, this.Item.func);
       callback(null, value);
     });
     service.getCharacteristic(Characteristic.ChargingState).on('get', (callback) => {
@@ -373,32 +373,32 @@ class HomeBridgeAccessory extends Accessory {
     service.getCharacteristic(Characteristic.StatusLowBattery).on('get', (callback) => {
       callback(null, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
     });
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       service.setCharacteristic(Characteristic.BatteryLevel, (parseFloat(stat.value) - 12000) / 10);
     }, 'battery');
     return service;
   }
   
-  _ServiceTemperatureSensor() {
-    const service = new Service.TemperatureSensor(this._Name);
+  ServiceTemperatureSensor() {
+    const service = new Service.TemperatureSensor(this.Name);
     service.getCharacteristic(Characteristic.CurrentTemperature).on('get', (callback) => {
-      const value = parseFloat(this._GetStatus(this._Item.deviceName, this._Item.func));
+      const value = parseFloat(this.GetStatus(this.Item.deviceName, this.Item.func));
       callback(null, value);
     })
     .setProps({minValue:-40});
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       service.setCharacteristic(Characteristic.CurrentTemperature, parseFloat(stat.value));
     }, 'temp');
     return service;
   }
 
-  _ServiceHumiditySensor() {
-    const service = new Service.HumiditySensor(this._Name);
+  ServiceHumiditySensor() {
+    const service = new Service.HumiditySensor(this.Name);
     service.getCharacteristic(Characteristic.CurrentRelativeHumidity).on('get', (callback) => {
-      const value = parseFloat(this._GetStatus(this._Item.deviceName, this._Item.func));
+      const value = parseFloat(this.GetStatus(this.Item.deviceName, this.Item.func));
       callback(null, value);
     });
-    this._AddStatusChange(service, (service, stat) => {
+    this.AddStatusChange(service, (service, stat) => {
       service.setCharacteristic(Characteristic.CurrentRelativeHumidity, parseFloat(stat.value));
     }, 'temp');
     return service;
