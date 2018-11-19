@@ -1,152 +1,156 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-5 col-md-5 scrollable">
-      <div class="row">
-        <h4>ControlServer Command</h4>
-        <textarea cols="40" rows="3" v-model="command"/>
-      </div>
-      <div class="row">
-        <dropdown class="moduleLabel" text="Send">
-          <li v-for="dev of moduleList" :key="'debug-moduleList' + dev.device" class="module-list" :class="{disabled:!dev.enable}">
-            <a href="#" @click="SelectModule" :data-device="dev.device" :data-enable="dev.enable" :disabled="!dev.enable">
-              {{ dev.label }}
-            </a>
-          </li>
-        </dropdown>
-        <h4>ControlServer Response</h4>
-        <textarea id="response" cols="40" rows="8" readonly :value="response" />
-        <h4>Sensor Event</h4>
-        <textarea id="events" cols="40" rows="8" readonly :value="events"/>
-      </div>
-    </div>
-    <div class="col-sm-7 col-md-7 scrollable">
-      <div class="row">
-        <div v-show="devices && (devices.length > 0)">
-          <h4>Modules</h4>
-          <table class="device-table">
-            <thead>
-              <tr>
-                <th>name</th>
-                <th>module</th>
-                <th>type</th>
-                <th>net</th>
-                <th>option</th>
-                <th>param</th>
-                <th>version</th>
-                <th>power</th>
-                <th>state</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="dev of actualDevices" :key="'debug-actualDevices' + dev.device">
-                <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
-                <td>{{ dev.device }}</td>
-                <td>{{ dev.type?dev.type:'-' }}</td>
-                <td>{{ dev.networkAddr?dev.networkAddr:'-' }}</td>
-                <td>{{ dev.option?dev.option:'-' }}</td>
-                <td>{{ dev.param?parseInt(dev.param, 16):'-' }}</td>
-                <td>{{ dev.version?dev.version:'-' }}</td>
-                <td>{{ dev.voltage?dev.voltage:'-' }}</td>
-                <td>{{ dev.state }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-        </div>
-        <div v-show="status && (status.length > 0)">
-          <h4>Sensor Status</h4>
-          <table class="status-table">
-            <thead>
-              <tr>
-                <th>device</th>
-                <th>function</th>
-                <th>value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(stat, idx) of status" :key="'debug-status' + idx">
-                <td>{{ stat.deviceName?stat.deviceName:stat.device }}</td>
-                <td>{{ stat.funcName?stat.funcName:stat.func }}</td>
-                <td>{{ stat.valueName?stat.valueName:stat.value }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-        </div>
-        <h4 v-show="(queue.writeQueue && (queue.writeQueue.length > 0))||(queue.readQueue && (queue.readQueue.length > 0))">ControlSerever Queue</h4>
-        <div v-show="queue.writeQueue && (queue.writeQueue.length > 0)">
-          <h5>write queue</h5>
-          <table class="queue-table">
-            <thead>
-              <tr>
-                <th>module</th>
-                <th>seqID</th>
-                <th>command</th>
-                <th>dump</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q of queue.writeQueue" :key="'debug-writeQueue' + q.device">
-                <td>{{ q.device }}</td>
-                <td>{{ q.sequenceID }}</td>
-                <td>{{ q.command }}</td>
-                <td>{{ QueueDecode(q.code) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-        </div>
-        <div v-show="queue.readQueue && (queue.readQueue.length > 0)">
-          <h5>read queue</h5>
-          <table class="queue-table">
-            <thead>
-              <tr>
-                <th>dump</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q of queue.readQueue" :key="'debug-readQueue' + q.code">
-                <td>{{ QueueDecode(q.code) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-        </div>
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '35%' : '90%'">
+      <h4>debug</h4>
 
-        <div v-show="controllerLog.length > 0">
-          <h4>controller log</h4>
-          <table class="controllerLog-table">
-            <thead>
-              <tr>
-                <th class="col-sm-2">time</th>
-                <th class="col-sm-1">type</th>
-                <th class="col-sm-2">module</th>
-                <th class="col-sm-7">message</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(l,idx) of controllerLog" :key="'debug-controllerLog' + idx">
-                <td>{{ l.timeStamp.substr(5, 11) }}</td>
-                <td>{{ l.type }}</td>
-                <td>{{ l.body.deviceName||l.body.device }}</td>
-                <td>{{ LogText(l) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br>
-        </div>
-
+      <div class="well-transparent">
+        <h5>ControlServer Command</h5>
+        <el-input type="textarea" class="textarea" :rows="3" v-model="command" />
+        <el-select v-model="selectedModule" placeholder="送信するモジュール" value-key="label" @change="SelectModule">
+          <el-option v-for="module of moduleList" :key="'debug-moduleList' + module.device" :disabled="!module.enable" :label="module.label" :value="module" />
+        </el-select>
       </div>
-    </div>
-  </div>
+
+      <div class="well-transparent">
+        <h5>ControlServer Response</h5>
+        <el-input id="response" type="textarea" class="textarea" :rows="8" v-model="response"/>
+      </div>
+      <div class="well-transparent">
+        <h5>Sensor Event</h5>
+        <el-input id="events" type="textarea" class="textarea" readonly :rows="8" :value="events"/>
+      </div>
+    </el-aside>
+
+    <el-main>
+      <div v-show="devices && (devices.length > 0)" class="well-transparent scrollable-x">
+        <h5>Modules</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>name</th>
+              <th>module</th>
+              <th>type</th>
+              <th>net</th>
+              <th>option</th>
+              <th>param</th>
+              <th>version</th>
+              <th>power</th>
+              <th>state</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="dev of actualDevices" :key="'debug-actualDevices' + dev.device">
+              <td>{{ dev.deviceName?dev.deviceName:'-' }}</td>
+              <td>{{ dev.device }}</td>
+              <td>{{ dev.type?dev.type:'-' }}</td>
+              <td>{{ dev.networkAddr?dev.networkAddr:'-' }}</td>
+              <td>{{ dev.option?dev.option:'-' }}</td>
+              <td>{{ dev.param?parseInt(dev.param):'-' }}</td>
+              <td>{{ dev.version?dev.version:'-' }}</td>
+              <td>{{ dev.voltage?dev.voltage:'-' }}</td>
+              <td>{{ dev.state }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-show="status && (status.length > 0)" class="well-transparent">
+        <h5>Sensor Status</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>device</th>
+              <th>function</th>
+              <th>value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(stat, idx) of status" :key="'debug-status' + idx">
+              <td>{{ stat.deviceName?stat.deviceName:stat.device }}</td>
+              <td>{{ stat.funcName?stat.funcName:stat.func }}</td>
+              <td>{{ stat.valueName?stat.valueName:stat.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+      </div>
+
+      <div v-show="queue.writeQueue && (queue.writeQueue.length > 0)" class="well-transparent">
+        <h5>ControlSerever WriteQueue</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>module</th>
+              <th>seqID</th>
+              <th>command</th>
+              <th>dump</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="q of queue.writeQueue" :key="'debug-writeQueue' + q.device">
+              <td>{{ q.device }}</td>
+              <td>{{ q.sequenceID }}</td>
+              <td>{{ q.command }}</td>
+              <td>{{ QueueDecode(q.code) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-show="queue.readQueue && (queue.readQueue.length > 0)" class="well-transparent">
+        <h5>ControlSerever ReadQueue</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>dump</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="q of queue.readQueue" :key="'debug-readQueue' + q.code">
+              <td>{{ QueueDecode(q.code) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-show="controllerLog.length > 0" class="well-transparent">
+        <h5>controller log</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="20%">time</th>
+              <th width="10%">type</th>
+              <th width="20%">module</th>
+              <th width="50%">message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(l,idx) of controllerLog" :key="'debug-controllerLog' + idx">
+              <td>{{ l.timeStamp.substr(5, 11) }}</td>
+              <td>{{ l.type }}</td>
+              <td>{{ l.body.deviceName||l.body.device }}</td>
+              <td>{{ LogText(l) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+      </div>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { dropdown } from 'vue-strap';
+  import { Tooltip, Select, Option, Input } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/select.css';
+  import 'element-ui/lib/theme-chalk/option.css';
+  import 'element-ui/lib/theme-chalk/input.css';
 
   export default {
     components: {
-      dropdown,
+      ElTooltip: Tooltip,
+      ElSelect: Select,
+      ElOption: Option,
+      ElInput: Input,
     },
     props: {
       display: {
@@ -258,7 +262,11 @@
         this.queue = queue.data;
       });
       Socket.on('controllerLog', (log) => {
-        this.controllerLog = log;
+        this.controllerLog = log.sort((a, b) => {
+          if(a.timeStamp < b.timeStamp) return 1;
+          if(a.timeStamp > b.timeStamp) return -1;
+          return 0;
+        });
       });
       this.devices = Common.devices;
       Common.on('changeDevices', () => {
@@ -286,13 +294,13 @@
       }
     },
     methods: {
-      SelectModule(e) {
-        if(!e.target.dataset.enable) return;
+      SelectModule(module) {
         Socket.emit('command', {
           type: 'command',
-          device: e.target.dataset.device,
+          device: module.device,
           command: this.command.replace(/[\r\n]+/g, ' '),
         });
+        this.selectedModule = null;
       },
       QueueDecode(code) {
         let ret = '';
@@ -320,103 +328,31 @@
 </script>
 
 <style scoped>
-  .module-list, .moduleLabel {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-    font-size:14px;
-    text-align: left;
-  }
-
-  .module-list li a {
-    padding: 3px 10px;
-  }
-
-  .command-panel {
-    height:40vh;
-  }
-
-  .event-panel {
-    height:40vh;
-  }
-
-  .device-panel {
-    height:40vh;
-  }
-
-  .status-panel {
-    height:40vh;
-  }
-
-  .queue-panel {
-    height:40vh;
-  }
-
-  table.device-table {
+  .table {
       width: 100%;
       border-top: 1px solid #CCC;
       border-left: 1px solid #CCC;
       border-spacing:0;
+      color: #606266;
+      font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
   }
-  table.device-table tr th, table.device-table tr td {
-      font-size:12px;
-      font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+
+  .scrollable-x {
+    overflow-x: auto;
+  }
+
+  .table th, .table td {
       border-bottom: 1px solid #CCC;
       border-right: 1px solid #CCC;
       padding: 0px 5px;
   }
 
-  table.device-table tr th {
+  .table th {
       background: #E6EAFF;
   }
 
-  table.status-table {
-      width: 100%;
-      border-top: 1px solid #CCC;
-      border-left: 1px solid #CCC;
-      border-spacing:0;
-  }
-  table.status-table tr th,table.status-table tr td {
-      font-size: 12px;
-      font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-      border-bottom: 1px solid #CCC;
-      border-right: 1px solid #CCC;
-      padding: 0px 5px;
-  }
-  table.status-table tr th {
-      background: #E6EAFF;
-  }
-
-  table.queue-table {
-      width: 100%;
-      border-top: 1px solid #CCC;
-      border-left: 1px solid #CCC;
-      border-spacing:0;
-  }
-  table.queue-table tr th,table.queue-table tr td {
-      font-size: 12px;
-      font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-      border-bottom: 1px solid #CCC;
-      border-right: 1px solid #CCC;
-      padding: 0px 5px;
-  }
-  table.queue-table tr th {
-      background: #E6EAFF;
-  }
-
-  table.controllerLog-table {
-      width: 100%;
-      border-top: 1px solid #CCC;
-      border-left: 1px solid #CCC;
-      border-spacing:0;
-  }
-  table.controllerLog-table tr th,table.controllerLog-table tr td {
-      font-size: 12px;
-      font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-      border-bottom: 1px solid #CCC;
-      border-right: 1px solid #CCC;
-      padding: 0px 5px;
-  }
-  table.controllerLog-table tr th {
-      background: #E6EAFF;
+  .textarea {
+    font-size: 1em;
   }
 </style>
 

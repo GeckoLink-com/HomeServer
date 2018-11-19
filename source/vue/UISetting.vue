@@ -1,324 +1,264 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-4 col-md-4 scrollable">
-      <div class="well well-uisel">
-        <div class="row well well-transparent">
-          <div class="col-md-4">
-            <h5>項目の種類</h5>
-          </div>
-          <div class="col-md-8">
-            <select class="form-control ui-select-menu" v-model="itemType">
-              <option v-for="type of validTypeTable" :key="'ui-validTypeTable' + type.label" :value="type.value" :disabled="type.value=='disabled'">
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '65%' : '90%'">
+      <h4>UI設定</h4>
+      <div id="ui-table" class="scrollable">
+        <div class="well well-uisel">
+          <table class="table ui-table" v-for="(room, roomIdx) of uiTable.RoomList" :key="'ui-itemRoomList' + roomIdx">
+            <thead>
+              <tr class="gray" @click="SelectItem('room', roomIdx)" :class="{success:('room'==selectedItem.type)&&(roomIdx==selectedItem.index)}" data-item-index="room" :data-room-index="roomIdx">
+                <th width="25%">{{ room }}</th>
+                <th width="20%"/>
+                <th width="20%"/>
+                <th width="30%"/>
+                <th width="5%">
+                  <el-button v-show="RoomDeleteEnable(room)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem('room', room)" />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, itemIdx) of uiTable.ItemList" :key="'ui-itemItemList' + itemIdx" v-if="item.room==room" @click="SelectItem(item.type, itemIdx)" :data-item-index="itemIdx" :data-room-index="roomIdx" :class="{success:('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)}">
+                <td>{{ item.label }}</td>
+                <td>{{ StatusItem(item, 0) }}</td>
+                <td>{{ StatusItem(item, 1) }}</td>
+                <td>
+                  <div class="btn-inline">
+                    <el-button v-if="item.type=='aircon'" type="default">
+                      aircon mode
+                    </el-button>
+                    <el-button v-if="item.type=='hue'" type="default">
+                      ctemp
+                    </el-button>
+                    <el-button v-if="item.type=='hue'" type="default">
+                      bright
+                    </el-button>
+                    <el-button v-if="item.type=='colorLight'" type="default">
+                      red
+                    </el-button>
+                    <el-button v-if="item.type=='colorLight'" type="default">
+                      green
+                    </el-button>
+                    <el-button v-if="item.type=='colorLight'" type="default">
+                      blue
+                    </el-button>
+                    <el-button v-for="(btn, idx) of item.buttons" :key="'ui-itemButtons' + idx" type="primary">
+                      {{ ButtonItem(item, idx) }}
+                    </el-button>
+                    <el-button v-if="item.type=='tv'" type="default">
+                      ch
+                    </el-button>
+                  </div>
+                </td>
+                <td>
+                  <el-button v-show="('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem(item.type, itemIdx)" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="table ui-table">
+            <thead>
+              <tr class="blue" :class="{success:selectedItem.index==-1}" data-item-index="new" data-room-index="-1" @click="SelectItem('new', -1)">
+                <th width="35%">新規項目追加</th>
+                <th width="15%"/>
+                <th width="15%"/>
+                <th width="35%"/>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </el-aside>
+
+    <el-main class="ui-selector">
+      <div class="well">
+        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <el-form-item label="項目の種類" prop="itemType">
+            <el-select v-model="itemType">
+              <el-option v-for="type of validTypeTable" :key="'ui-validTypeTable' + type.label" :label="type.label" :value="type.value" :disabled="type.value=='disabled'">
                 {{ type.label }}
-              </option>
-            </select>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="項目名" prop="itemName">
+            <el-input type="text" v-model="ruleForm.itemName" />
+          </el-form-item>
+          <el-form-item label="他の呼び方" prop="itemAlias">
+            <el-input type="text" v-model="itemAlias" />
+          </el-form-item>
+          <div v-if="itemType!='room'">
+            <el-form-item label="ルーム" prop="itemRoom">
+              <el-select v-model="itemRoom">
+                <el-option v-for="room of uiTable.RoomList" :key="'ui-RoomList' + room" :label="room" :value="room">
+                  {{ room }}
+                </el-option>
+              </el-select>
+            </el-form-item>
           </div>
-        </div>
-        <div class="row well well-transparent">
-          <div class="col-md-4">
-            <h5>項目名</h5>
-          </div>
-          <div class="col-md-8">
-            <input class="ui-func-name" type="text" :class="{error:nameAlert.length}" v-model="itemName" @input="NameCheck">
-          </div>
-        </div>
-        <div class="row well well-transparent">
-          <div class="col-md-4">
-            <h5>他の呼び方</h5>
-          </div>
-          <div class="col-md-8">
-            <input class="ui-func-name" type="text" v-model="itemAlias">
-          </div>
-        </div>
-        <div class="row well well-transparent" v-if="nameAlert.length">
-          <div class="col-md-offset-2">
-            <h6 class="error">{{ nameAlert }}</h6>
-          </div>
-        </div>
-
-        <div v-show="itemType!='room'" class="row well well-transparent">
-          <div class="col-md-4">
-            <h5>ルーム</h5>
-          </div>
-          <div class="col-md-8">
-            <select class="form-control ui-select-menu" v-model="itemRoom">
-              <option v-for="room of uiTable.RoomList" :key="'ui-RoomList' + room" :value="room">
-                {{ room }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <br>
-
-        <div v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-transparent" v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
-          <div class="col-md-4">
-            <h5>ステータス{{ statIdx }}</h5>
-          </div>
-          <div class="col-md-8">
-            <select class="form-control ui-select-menu" v-model="status[statIdx]">
-              <option v-for="(sensor, idx) of sensorList" :key="'ui-sensorList' + idx" :value="sensor">
-                {{ sensor.label }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <br v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
-
-        <div v-show="itemType=='aircon'" class="row well well-func">
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>リモコンGp</h5>
+          <div v-if="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
+            <div v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
+              <el-form-item :label="'ステータス' + statIdx" :prop="'status' + statusIdx">
+                <el-select v-model="status[statIdx]" value-key="label">
+                  <el-option v-for="(sensor, idx) of sensorList" :key="'ui-sensorList' + idx" :label="sensor.label" :value="sensor">
+                    {{ sensor.label }}
+                  </el-option>
+                </el-select>
+              </el-form-item>
             </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="airconGroup">
-                <option v-for="(group, idx) of remocon.remoconGroup" :key="'ui-airconRemoconGp' + idx" v-if="group.type=='aircon'" :value="idx">
+            <br>
+          </div>
+
+          <div v-if="itemType=='aircon'" class="well">
+            <el-form-item label="リモコンGp" prop="airconGroup">
+              <el-select v-model="airconGroup">
+                <el-option v-for="(group, idx) of remocon.remoconGroup" :key="'ui-airconRemoconGp' + idx" v-if="group.type=='aircon'" :label="group.comment" :value="idx">
                   {{ group.comment }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>モジュール</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="airconModule">
-                <option v-for="module of remoconTxList" :key="'ui-airconRemoconTx' + module.deviceName" :value="module.deviceName">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="モジュール" prop="itemRoom">
+              <el-select v-model="airconModule">
+                <el-option v-for="module of remoconTxList" :key="'ui-airconRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
                   {{ module.label }}
-                </option>
-              </select>
-            </div>
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <br>
           </div>
-        </div>
-        <br v-show="itemType=='aircon'">
 
-        <div v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')" class="row well well-func" v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx" v-if="btnIdx<buttonNum">
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>ボタン{{ btnIdx }}</h5>
+          <div v-if="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
+            <div v-for="(btn,btnIdx) of button" class="well" :key="'ui-button' + btnIdx" v-if="btnIdx < buttonNum">
+              <el-form-item :label="'ボタン' + btnIdx" :prop="'btn' + btnIndex + 'command'">
+                <el-select v-model="btn.command" value-key="label">
+                  <el-option v-for="cmd of commandList" :key="'ui-commandList' + cmd.label" :label="cmd.label" :value="cmd">
+                    {{ cmd.label }}
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <div v-show="btn.command.type=='mode'">
+                <el-form-item label="モード" :prop="'btn' + btnIndex + 'mode'">
+                  <el-select v-model="btn.mode">
+                    <el-option v-for="mode of btn.command.mode" :key="'ui-commandMode' + mode" :label="mode" :value="mode">
+                      {{ mode }}
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              <div v-show="btn.command.type=='remocon'">
+                <el-form-item label="リモコン" :prop="'btn' + btnIndex + 'remocon'">
+                  <el-select v-model="btn.remocon">
+                    <el-option v-for="(item,idx) of remocon.remoconTable" :key="'ui-remoconTable' + idx" :label="item.comment" :value="idx">
+                      {{ item.comment }}
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              <div v-show="btn.command.type=='macro'">
+                <el-form-item label="リモコンマクロ" :prop="'btn' + btnIndex + 'macro'">
+                  <el-select class="form-control" v-model="btn.macro">
+                    <el-option v-for="(item,idx) of remocon.remoconMacro" :key="'ui-remoconMacro' + idx" :label="item.comment" :value="idx">
+                      {{ item.comment }}
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              <div v-show="(btn.command.type=='remocon')||(btn.command.type=='macro')" >
+                <el-form-item label="モジュール" :prop="'btn' + btnIndex + 'module'">
+                  <el-select v-model="btn.module">
+                    <el-option v-for="(item,idx) of remoconTxList" :key="'ui-remoconTx' + idx" :label="item.label" :value="item.deviceName">
+                      {{ item.label }}
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&(itemType!='light')&&(itemType!='onOff')">
+                <el-form-item label="ラベル" :prop="'btn' + btnIndex + 'label'">
+                  <el-input type="text" v-model="btn.label" />
+                </el-form-item>
+              </div>
+              <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&((itemType==='light')||(itemType==='onOff'))">
+                <el-form-item label="モード" :prop="'btn' + btnIndex + 'mode'">
+                  <el-select v-model="btn.mode">
+                    <el-option v-for="mode of remoconMode" :key="'ui-remoconMode' + mode" :label="mode" :value="mode">
+                      {{ mode }}
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
             </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.command">
-                <option v-for="cmd of commandList" :key="'ui-commandList' + cmd.label" :value="cmd">
-                  {{ cmd.label }}
-                </option>
-              </select>
-            </div>
+            <br>
           </div>
-          <div v-show="btn.command.type=='mode'" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>モード</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.mode">
-                <option v-for="mode of btn.command.mode" :key="'ui-commandMode' + mode" :value="mode">
-                  {{ mode }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div v-show="btn.command.type=='remocon'" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>リモコン</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.remocon">
-                <option v-for="(item,idx) of remocon.remoconTable" :key="'ui-remoconTable' + idx" :value="idx">
-                  {{ item.comment }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div v-show="btn.command.type=='macro'" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>リモコンマクロ</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.macro">
-                <option v-for="(item,idx) of remocon.remoconMacro" :key="'ui-remoconMacro' + idx" :value="idx">
-                  {{ item.comment }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div v-show="(btn.command.type=='remocon')||(btn.command.type=='macro')" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>モジュール</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.module">
-                <option v-for="(item,idx) of remoconTxList" :key="'ui-remoconTx' + idx" :value="item.deviceName">
-                  {{ item.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&(itemType!='light')&&(itemType!='onOff')" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>ラベル</h5>
-            </div>
-            <div class="col-md-8">
-              <input class="ui-func-name" type="text" v-model="btn.label">
-            </div>
-          </div>
-          <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&((itemType==='light')||(itemType==='onOff'))" class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>モード</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="btn.mode">
-                <option v-for="mode of remoconMode" :key="'ui-remoconMode' + mode" :value="mode">
-                  {{ mode }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <br v-show="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
 
-        <div v-show="itemType=='tv'" class="row well well-func">
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>リモコンGp</h5>
+          <div v-show="itemType=='tv'">
+            <div class="well">
+              <el-form-item label="リモコンGp" prop="tvGroup">
+                <el-select v-model="tvGroup">
+                  <el-option v-for="(group,idx) of remocon.remoconGroup" :key="'ui-tvRemoconGp' + idx" v-if="group.type=='tv'" :label="group.comment" :value="idx">
+                    {{ group.comment }}
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="モジュール" prop="tvGroup">
+                <el-select v-model="tvModule">
+                  <el-option v-for="module of remoconTxList" :key="'ui-tvRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
+                    {{ module.label }}
+                  </el-option>
+                </el-select>
+              </el-form-item>
             </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="tvGroup">
-                <option v-for="(group,idx) of remocon.remoconGroup" :key="'ui-tvRemoconGp' + idx" v-if="group.type=='tv'" :value="idx">
-                  {{ group.comment }}
-                </option>
-              </select>
-            </div>
+            <br>
           </div>
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>モジュール</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="tvModule">
-                <option v-for="module of remoconTxList" :key="'ui-tvRemoconTx' + module.deviceName" :value="module.deviceName">
-                  {{ module.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <br v-show="itemType=='tv'">
 
-        <div v-show="itemType=='hue'" class="row well well-func">
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>ライト</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="hueLight">
-                <option v-for="light of hueLights" :key="'ui-hueLights' + light.name" :value="light">
+          <div v-show="itemType=='hue'">
+            <el-form-item label="ライト" prop="hueLight">
+              <el-select v-model="hueLight" value-key="name">
+                <el-option v-for="light of hueLights" :key="'ui-hueLights' + light.name" :label="light.name" :value="light">
                   {{ light.name }}
-                </option>
-              </select>
-            </div>
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <br>
           </div>
-        </div>
-        <br v-show="itemType=='hue'">
 
-        <div v-show="itemType=='colorLight'" class="row well well-func">
-          <div class="row well well-transparent">
-            <div class="col-md-4">
-              <h5>ライト</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control ui-select-menu" v-model="colorLight">
-                <option v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :value="light">
+          <div v-show="itemType=='colorLight'">
+            <el-form-item label="ライト" prop="colorLight">
+              <el-select v-model="colorLight" value-key="deviceName">
+                <el-option v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :label="light.deviceName" :value="light">
                   {{ light.deviceName }}
-                </option>
-              </select>
-            </div>
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <br>
           </div>
-        </div>
-        <br v-show="itemType=='colorLight'">
-
+        </el-form>
       </div>
       <br>
 
-      <div class="row ui-submit-btn">
-        <button class="btn btn-primary btn-sm pull-right" @click="Submit">
+      <el-row class="pull-right">
+        <el-button type="primary" @click="Submit">
           {{ (selectedItem.index==-1)?'追加':'修正' }}
-        </button>
-      </div>
-    </div>
-
-    <div class="col-sm-7 col-md-7 scrollable">
-      <div class="well well-uisel" id="ui-table">
-        <table class="table ui-table" v-for="(room, roomIdx) of uiTable.RoomList" :key="'ui-itemRoomList' + roomIdx">
-          <thead>
-            <tr class="gray" @click="SelectItem('room', roomIdx)" data-id="room" :class="{success:('room'==selectedItem.type)&&(roomIdx==selectedItem.index)}">
-              <th class="col-md-4">{{ room }}</th>
-              <th class="col-md-2"/>
-              <th class="col-md-2"/>
-              <th class="col-md-4">
-                <button v-show="RoomDeleteEnable(room)" class="btn btn-xs btn-danger delete-btn pull-right" @click="DeleteItem('room', room)">
-                  -
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, itemIdx) of uiTable.ItemList" :key="'ui-itemItemList' + itemIdx" v-if="item.room==room" @click="SelectItem(item.type, itemIdx)" :data-id="itemIdx" :class="{success:('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)}">
-              <td>{{ item.label }}</td>
-              <td>{{ StatusItem(item, 0) }}</td>
-              <td>{{ StatusItem(item, 1) }}</td>
-              <td>
-                <button v-if="item.type=='aircon'" class="btn btn-default btn-xs btn-margin">
-                  aircon mode
-                </button>
-                <div v-if="item.type=='hue'" class="btn-inline">
-                  <button class="btn btn-default btn-xs btn-margin">
-                    ctemp
-                  </button>
-                  <button class="btn btn-default btn-xs btn-margin">
-                    bright
-                  </button>
-                </div>
-                <div v-if="item.type=='colorLight'" class="btn-inline">
-                  <button class="btn btn-default btn-xs btn-margin">
-                    red
-                  </button>
-                  <button class="btn btn-default btn-xs btn-margin">
-                    green
-                  </button>
-                  <button class="btn btn-default btn-xs btn-margin">
-                    blue
-                  </button>
-                </div>
-                <button v-for="(btn, idx) of item.buttons" :key="'ui-itemButtons' + idx" class="btn btn-primary btn-xs btn-margin">
-                  {{ ButtonItem(item, idx) }}
-                </button>
-                <button v-if="item.type=='tv'" class="btn btn-default btn-xs btn-margin">
-                  ch
-                </button>
-                <button v-show="('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)" class="btn btn-xs btn-danger delete-btn pull-right" @click="DeleteItem(item.type, itemIdx)">
-                  -
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <table class="table ui-table">
-          <thead>
-            <tr class="blue" :class="{success:selectedItem.index==-1}" @click="SelectItem('new', -1)">
-              <th class="col-md-4">新規項目追加</th>
-              <th class="col-md-2"/>
-              <th class="col-md-2"/>
-              <th class="col-md-4"/>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    </div>
-  </div>
+        </el-button>
+      </el-row>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
+  import { Tooltip, Select, Option, Form, FormItem, Input } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/select.css';
+  import 'element-ui/lib/theme-chalk/option.css';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
+
   export default {
+    components: {
+      ElTooltip: Tooltip,
+      ElSelect: Select,
+      ElOption: Option,
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
+    },
     props: {
       display: {
         type: Boolean,
@@ -363,7 +303,6 @@
 
         selectedItem: { type: 'new', index: -1 },
         itemType: '',
-        itemName: '',
         itemAlias: '',
         nameAlert: '',
         itemRoom: '',
@@ -378,6 +317,18 @@
         sensorList: [{ }],
         commandList: [{ type: 'none' }],
         remoconTxList: [{ deviceName: 'server', label: '親機' }],
+        ruleForm: {
+          itemName: '',
+        },
+        rules: {
+          itemName: [
+            { required: true, message: '項目名を入れてください。', trigger: 'blur' },
+            { validator: this.ValidateName.bind(this), trigger: 'blur' },
+         ],
+        },
+        ruleValid: {
+          itemName: true,
+        },
       };
     },
     computed: {
@@ -397,6 +348,12 @@
         for(const type of this.typeTable) {
           if(this.itemType === type.value) return type.buttons;
         }
+      },
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
+        }
+        return true;
       },
     },
     mounted() {
@@ -421,10 +378,21 @@
       });
       this.SelectItem('new', -1);
 
-      document.getElementById('ui-table').addEventListener('mousedown', (e) => {
+      this.uiTableElement = document.getElementById('ui-table');
+      this.uiTableElement.addEventListener('mousedown', this.TouchStart.bind(this));
+      this.uiTableElement.addEventListener('mousemove', this.TouchMove.bind(this));
+      this.uiTableElement.addEventListener('mouseup', this.TouchEnd.bind(this));
+      document.addEventListener('mouseup', this.TouchCancel.bind(this));
+    },
+    methods: {
+      TouchStart(e) {
         const pos = this.GetCursorLine(e);
+        if(pos == null) {
+          this.select = false;
+          return;
+        }
         this.select = parseInt(this.selectedItem.index) === parseInt(pos.index);
-        if(pos.index === 'room') this.select = this.selectedItem.index === pos.room;
+        if(pos.index === 'room') this.select = parseInt(this.selectedItem.index) === parseInt(pos.room);
         if(!this.select) return;
         e.preventDefault();
         this.selectedPos = pos;
@@ -434,19 +402,37 @@
         } else {
           this.dragItem = this.uiTable.ItemList[pos.index];
         }
-      });
-      document.getElementById('ui-table').addEventListener('mouseup', (e) => {
+      },
+      TouchMove(e) {
         if(!this.select) return;
-        e.preventDefault();
-        Socket.emit('uiTable', this.uiTable);
-        Common.emit('toastr_success', this, '修正されました。');
-        this.select = false;
-      });
-      document.getElementById('ui-table').addEventListener('mousemove', (e) => {
-        if(!this.select) return;
-        e.preventDefault();
+        if(this.scrollTimer) clearTimeout(this.scrollTimer);
+        this.scrollTimer = null;
+        if(e.preventDefault) e.preventDefault();
+        const offsetY = e.y - this.uiTableElement.offsetTop;
+        if((offsetY < 0) || (offsetY > this.uiTableElement.clientHeight)) return;
+        let scrollTop = this.uiTableElement.scrollTop;
+        const topOffset = this.uiTableElement.clientHeight * 0.1 - offsetY;
+        const bottomOffset = offsetY - this.uiTableElement.clientHeight * 0.9;
+        if(topOffset > 0) {
+          scrollTop -= topOffset;
+          if(scrollTop < 0) scrollTop = 0;
+        } else if(bottomOffset > 0) {
+          scrollTop += bottomOffset;
+          const scrollLimit = this.uiTableElement.scrollHeight - this.uiTableElement.cliemtHeight;
+          if(scrollTop > scrollLimit) scrollTop = scrollLimit;
+        }
+        const scrollOffset = this.uiTableElement.scrollTop - scrollTop;
+        if(scrollOffset) {
+          this.uiTableElement.scrollTop = scrollTop;
+          this.scrollTimer = setTimeout(() => {
+            const el = document.elementFromPoint(e.x, e.y);
+            this.TouchMove({x: e.x, y: e.y, target: el });
+          }, 100);
+        }
+
         const pos = this.GetCursorLine(e);
-        if((pos.room === this.currentPos.room) &&
+        if((pos == null) || (pos.index === 'new')) return;
+        if((parseInt(pos.room) === parseInt(this.currentPos.room)) &&
            (parseInt(pos.index) === parseInt(this.currentPos.index))) return;
         if(this.selectedPos.index === 'room') {
           if(pos.index !== 'room') return;
@@ -456,10 +442,9 @@
           this.currentPos = pos;
           this.selectedItem.index = this.currentPos.room;
         } else {
-          if((pos.index === 'room') && (parseInt(pos.room) === 0)) return;
           this.uiTable.ItemList.splice(this.currentPos.index, 1);
           if(pos.index === 'room') {
-            if(pos.room === this.currentPos.room) {
+            if((parseInt(pos.room) === parseInt(this.currentPos.room)) && (parseInt(pos.room) !== 0))  {
               this.uiTable.ItemList.push(this.dragItem);
               this.currentPos = { room: pos.room - 1, index: this.uiTable.ItemList.length - 1 };
             } else {
@@ -473,13 +458,25 @@
           this.uiTable.ItemList[this.currentPos.index].room = this.uiTable.RoomList[this.currentPos.room];
           this.selectedItem.index = this.currentPos.index;
         }
-      });
-      document.addEventListener('mouseup', (e) => {
+      },
+      TouchEnd(e) {
+        if(!this.select) return;
+        e.preventDefault();
+        if(this.selectedPos.index === 'room') {
+          if(parseInt(this.selectedPos.room) === parseInt(this.currentPos.room)) return;
+        } else {
+          if(parseInt(this.selectedPos.index) === parseInt(this.currentPos.index)) return;
+        }
+        Socket.emit('uiTable', this.uiTable);
+        Common.emit('toastr_success', this, '修正されました。');
+        this.select = false;
+      },
+      TouchCancel(e) {
         if(!this.select) return;
         e.preventDefault();
         this.select = false;
         if(this.selectedPos.index === 'room') {
-          if(this.selectedPos.room === this.currentPos.room) return;
+          if(parseInt(this.selectedPos.room) === parseInt(this.currentPos.room)) return;
           this.uiTable.RoomList.splice(this.currentPos.room, 1);
           this.uiTable.RoomList.splice(this.selectedPos.room, 0, this.dragItem);
           this.currentPos = this.selectedPos;
@@ -492,15 +489,6 @@
           this.uiTable.ItemList[this.currentPos.index].room = this.uiTable.RoomList[this.currentPos.room];
           this.selectedItem.index = this.currentPos.index;
         }
-      });
-    },
-    methods: {
-      NameCheck() {
-        if(this.itemName.length === 0) {
-          this.nameAlert = '項目名を入れてください。';
-          return;
-        }
-        this.nameAlert = '';
       },
       StatusItem(item, idx) {
         let stat = '';
@@ -597,16 +585,14 @@
         if(type === 'room') {
           this.selectedItem = { type: 'room', index: idx };
           this.itemType = 'room';
-          this.itemName = this.uiTable.RoomList[idx];
-          this.NameCheck();
+          this.ruleForm.itemName = this.uiTable.RoomList[idx];
           return;
         }
         if(type === 'new') {
           this.selectedItem = { type: 'new', index: -1 };
           this.itemType = 'other';
-          this.itemName = '新しい項目';
+          this.ruleForm.itemName = '新しい項目';
           this.itemAlias = '';
-          this.NameCheck();
           this.itemRoom = 'ホーム';
           this.status = [];
           for(let i = 0; i < 2; i++) {
@@ -634,9 +620,8 @@
         const item = this.uiTable.ItemList[idx];
         this.selectedItem = { type: item.type, index: idx };
         this.itemType = item.type;
-        this.itemName = item.label;
+        this.ruleForm.itemName = item.label;
         this.itemAlias = item.alias;
-        this.NameCheck();
         this.itemRoom = item.room;
 
         this.status = [];
@@ -746,22 +731,29 @@
         Socket.emit('uiTable', this.uiTable);
         Common.emit('toastr_warning', this, '削除されました。');
       },
-      Submit() {
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
+      ValidateName(rule, value, callback) {
         if(this.itemType === 'room') {
           for(const room of this.uiTable.RoomList) {
-            if(room === this.itemName) {
-              this.nameAlert = '存在するルーム名と同じ名前は付けられません。';
-              return;
+            if(room === value) {
+              return callback(new Error('存在するルーム名と同じ名前は付けられません。'));
             }
           }
+        }
+        callback();
+      },
+      Submit() {
+        if(this.itemType === 'room') {
           if(this.selectedItem.type === 'new') {
-            this.uiTable.RoomList.push(this.itemName);
+            this.uiTable.RoomList.push(this.ruleForm.itemName);
           } else {
             const oldName = this.uiTable.RoomList[this.selectedItem.index];
             for(const item of this.uiTable.ItemList) {
-              if(item.room === oldName) this.$set(item, 'room', this.itemName);
+              if(item.room === oldName) this.$set(item, 'room', this.ruleForm.itemName);
             }
-            this.$set(this.uiTable.RoomList, this.selectedItem.index, this.itemName);
+            this.$set(this.uiTable.RoomList, this.selectedItem.index, this.ruleForm.itemName);
           }
           Socket.emit('uiTable', this.uiTable);
           this.selectedItem = { type: 'new', index: -1 };
@@ -771,7 +763,7 @@
 
         const item = {
           type: this.itemType,
-          label: this.itemName,
+          label: this.ruleForm.itemName,
           alias: this.itemAlias,
           room: this.itemRoom,
         };
@@ -919,33 +911,35 @@
         Common.emit('toastr_success', this, '登録されました。');
       },
       GetCursorLine(e) {
-        const offsetY = e.layerY;
-        const scrollTop = document.getElementById('ui-table').parentElement.scrollTop;
-        const posY = offsetY + scrollTop;
-        const uiTables = document.getElementById('ui-table').getElementsByTagName('table');
-        for(let i = 0; i < uiTables.length; i++) {
-          if((uiTables[i].offsetTop <= posY) &&
-             (uiTables[i].offsetTop + uiTables[i].offsetHeight > posY)) {
-            const tableOffset = posY - uiTables[i].offsetTop;
-            const lines = uiTables[i].getElementsByTagName('tr');
-            for(let j = 0; j < lines.length; j++) {
-              if((lines[j].offsetTop <= tableOffset) &&
-                 (lines[j].offsetTop + lines[j].offsetHeight > tableOffset)) {
-                const id = lines[j].dataset.id;
-                return { room: i, index: id };
-              }
-            }
-          }
+        let el = e.target;
+        while(el.nodeName !== 'TR') {
+          if(el === document.body) return null;
+          el = el.parentElement;
         }
+        return { room: el.dataset.roomIndex, index: el.dataset.itemIndex };
       },
     },
   };
 </script>
 
 <style scoped>
+  #ui-table {
+    height: calc(100vh - 90px - 80px);
+    width: 64vw;
+    position: fixed;
+  }
+
+  .well-uisel {
+    margin-right: 1vw;
+  }
+
+  .ui-selector {
+    padding-top:70px;
+  }
+
   table.ui-table {
     table-layout: fixed;
-    margin-bottom: 0px;
+    margin: 0px;
   }
 
   table.ui-table tr {
@@ -960,59 +954,28 @@
     height: 25px;
   }
 
-  .ui-submit-btn {
-    vertical-align: middle;
-    padding: 0 15px;
-    margin:0 0;
-  }
-
-  .well-func {
-    height:85%;
-    width:100%;
-    padding:0.7% 0 0.3% 0;
-    margin: 0.5% 0;
-    background-color: rgba(255,255,255,0);
-  }
-
-  .well-uisel {
-    width: 100%;
-    padding:1vh 0.5vw 1vh 0.5vw;
-    margin: 0.5vh 0.2vw;
-  }
-
-  .ui-func-name {
-    width:100%;
+  table.ui-table tr .el-button+.el-button {
+    margin-left: 8px;
   }
 
   .btn-inline {
-    display:inline-block;
-    margin-left: 0.2vw;
+    display: flex;
+    justify-content: flex-end;
   }
 
-  .btn-margin {
-    margin-right:0.2vw;
+  .btn-inline .el-button {
+    pointer-events: none;
   }
 
   .gray {
-    background-color: #ccc;
+    background-color: #ddd;
   }
 
   .blue {
-    background-color: #337ab7;
+    background-color: #409eff;
     color: white;
   }
 
-  .ui-select-menu {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-    font-size:12px;
-    margin: 0px;
-    padding:0px;
-    text-align: center;
-    width: 100%;
-    height:20px;
-    line-height:20px;
-    background-color: rgba(255,255, 255, 0);
-  }
 </style>
 
 

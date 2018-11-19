@@ -9,13 +9,22 @@
 'use strict';
 
 import Vue from 'vue';
+import { Row, Col, Button } from 'element-ui';
+import lang from 'element-ui/lib/locale/lang/ja';
+import locale from 'element-ui/lib/locale';
+locale.use(lang);
+Vue.prototype.$ELEMENT = { size: 'mini' };
+Vue.use(Row);
+Vue.use(Col);
+Vue.use(Button);
+
 import SocketClient from 'Socket.io-client';
 
 import Common from './Common.js';
 import SignIn from '../vue/SignIn.vue';
 
 // css
-import '../css/bootstrap.css';
+import 'element-ui/lib/theme-chalk/base.css';
 import '../css/localStyle.css';
 
 class SignInWrapper {

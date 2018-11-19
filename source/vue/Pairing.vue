@@ -1,46 +1,59 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-3 col-md-3">
-      <br>
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>ペアリング</h4>
       <br>
-      <div class="module-image">
-        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
+      <div class="module-image no-mobile">
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
       </div>
-    </div>
-    <div class="col-sm-7 col-md-7">
+    </el-aside>
+    <el-main>
+      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="20%" label-position="left" @validate="Validated">
+        <el-form-item label="モジュール名" prop="moduleName">
+          <el-tooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
+            <el-input type="text" v-model="ruleForm.moduleName" />
+          </el-tooltip>
+        </el-form-item>
+      </el-form>
+      <div class="vertical-space" />
+      <el-row>
+        <el-col span="14" offset="5">
+          <el-progress :show-text="false" :stroke-width="18" :percentage="progress" :class="{'progress-striped':progressing}" />
+        </el-col>
+        <el-col span="4" offset="1" >
+          <el-button type="primary" :disabled="progressing || !rulesValid" @click="ExecutePairing">ペアリング</el-button>
+        </el-col>
+      </el-row>
       <br>
-      <div class="row vertical-space2">
-        <div class="col-md-8">
-          <div class="progress">
-            <progressbar :now="progress" type="primary" :striped="progressing" :animated="progressing"/>
-          </div>
-        </div>
-        <div class="pull-right">
-          <button class="btn btn-primary" type="button" :disabled="progressing" @click="ExecutePairing">モジュール書き込み</button>
-        </div>
-      </div>
-      <p/><h5 class="error" v-if="error!=''">
-        子機のエラーが発生しています。<br>
-        {{ error }}
-      </h5>
-      <h4>{{ moduleLabel }}</h4>
-    </div>
-  </div>
+      <el-row>
+        <el-col span="19" offset="5">
+          <h5 class="error" v-if="error.length > 0">
+            子機のエラーが発生しています。<br>
+            {{ error }}
+          </h5>
+          <h5 v-else>
+            {{ moduleLabel }}
+          </h5>
+        </el-col>
+      </el-row>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { progressbar } from 'vue-strap';
+  import { Tooltip, Form, FormItem, Input, Progress } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/progress.css';
 
   export default {
     components: {
-      progressbar,
-    },
-    props: {
-      display: {
-        type: Boolean,
-        default: false,
-      },
+      ElTooltip: Tooltip,
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
+      ElProgress: Progress,
     },
     data() {
       return {
@@ -51,11 +64,29 @@
         param: 0,
         configCommand: '',
         newDevice: { name: '', device: '' },
+        ruleForm: {
+          moduleName: '',
+        },
+        rules: {
+          moduleName: [
+            { required: true, min: 4, message: 'モジュール名を4文字以上で入れてください。', trigger: [ 'blur', 'change' ] },
+            { validator: this.ValidateModuleName.bind(this), trigger: [ 'blur', 'change' ] },
+          ],
+        },
+        ruleValid: {
+          moduleName: false,
+        },
       };
     },
     computed: {
       progressing() {
         return (this.progress !== 0) && (this.progress !== 100);
+      },
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
+        }
+        return true;
       },
     },
     mounted() {
@@ -84,25 +115,9 @@
           if(str) {
             const dev = str[0].replace(/^.*-/, '');
             if(dev) {
-              let c = 0;
-              /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-              while(true) {
-                const name = 'new_device' + c;
-                let f = false;
-                for(const id in Common.alias) {
-                  if(Common.alias[id].name === name) {
-                    f = true;
-                    break;
-                  }
-                }
-                if(!f) {
-                  Common.alias[dev] = { name: name };
-                  this.newDevice = { name: name, device: dev };
-                  Common.emit('changeAlias', this);
-                  break;
-                }
-                c++;
-              }
+              Common.alias[dev] = { name: this.ruleForm.moduleName };
+              this.newDevice = { name: this.ruleForm.moduleName, device: dev };
+              Common.emit('changeAlias', this);
             }
           }
           Common.emit('toastr_info', this, 'デバイス確認完了');
@@ -175,6 +190,17 @@
       });
     },
     methods: {
+      ValidateModuleName(rule, value, callback) {
+        for(const i in Common.alias) {
+          if(Common.alias[i].name === value) {
+            return callback(new Error('同じモジュール名があります。他の名前にしてください。'));
+          }
+        }
+        return callback();
+      },
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
       ExecutePairing() {
         Common.emit('toastr_clear', this);
         this.error = '';
@@ -190,12 +216,8 @@
 </script>
 
 <style scoped>
-  .vertical-space2 {
+  .vertical-space {
     margin-top: 10vh;
-  }
-
-  .progress {
-    margin: 2%;
   }
 </style>
 

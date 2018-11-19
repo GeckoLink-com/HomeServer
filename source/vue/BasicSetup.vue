@@ -1,82 +1,87 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-3 col-md-3 scrollable">
-      <br>
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>基本設定</h4>
       <br>
-      <div class="module-image">
-        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
+      <div class="module-image no-mobile">
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
       </div>
       <br>
+      <el-select v-model="selectedModule" placeholder="設定するモジュール" @change="Select">
+        <el-option v-for="module of moduleList" :key="'bs-moduleList' + module.name" :disabled="!module.enable" :label="module.label" :value="module.device" />
+      </el-select>
+    </el-aside>
+    <el-main v-show="selectedModule!=''">
+      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
 
-      <dropdown class="moduleLabel" :text="selectedModuleLabel">
-        <li v-for="module of moduleList" :key="'bs-moduleList' + module.name" class="module-list" :class="{disabled:!module.enable}" >
-          <a href="#" :data-device="module.device" :data-name="module.name" :data-enable="module.enable" @click="Click" :disabled="!module.enable">
-            {{ module.label }}
-          </a>
-        </li>
-      </dropdown>
-    </div>
+        <el-form-item label="モジュール名" prop="moduleName">
+          <el-tooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
+            <el-input type="text" v-model="ruleForm.moduleName" />
+          </el-tooltip>
+        </el-form-item>
 
-    <div v-show="selectedModule!=''" class="col-sm-9 col-md-9 scrollable">
-      <br>
-      <div class="well">
-        <div>
-          <label>モジュール名</label>
-          <input :class="{error:moduleNameAlert.length}" type="text" v-model="moduleName" @input="ModuleNameCheck">
-          <h6>設置場所等、識別しやすい名前を付けてください。</h6>
-          <h6 v-if="moduleNameAlert.length" class="error">{{ moduleNameAlert }}</h6>
-        </div>
+        <el-form-item label="機能設定" prop="selectedType">
+          <el-radio-group v-model="ruleForm.selectedType" >
+            <el-row v-for="(item, idx) of typeTable" :key="'bs-typeTable' + idx">
+              <el-tooltip placement="right" content="子機のタイプを選択してください" effect="light" open-delay="500">
+                <el-radio :label="idx" class="item-label" border>
+                  {{ item.name }}
+                </el-radio>
+              </el-tooltip>
+            </el-row>
+          </el-radio-group>
+        </el-form-item>
 
-        <br>
-        <h5>機能設定</h5>
-        <div class="form-group" id="basicFuncSel">
-          <div class="row" v-for="(item, idx) of typeTable" :key="'bs-typeTable' + idx" v-show="item.name != ''">
-            <div class="col-sm-offset-1 col-sm-10">
-              <radio :selected-value="idx" v-model="selectedType" type="primary">
-                {{ item.name }}
-              </radio>
-            </div>
+        <el-row v-for="(item, idx) of funcTable" :key="'bs-funcTable' + idx" v-show="ItemCheck(idx)">
+          <el-col :span="(item.option == null) ? 20 : 12">
+            <el-form-item :label="item.name">
+              <el-tooltip placement="top" content="子機の機能に名前をつけることができます(option)" effect="light" open-delay="500">
+                <el-input type="text" v-model="item.value" />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+          <div v-if="(item.option != null)">
+            <el-col span="8" offset="1">
+              <el-form-item v-show="item.option != null" :label="item.option">
+                <el-tooltip placement="top" :content="item.optionTooltip" effect="light" open-delay="500">
+                  <el-input type="text" v-model="item.optionValue" />
+                </el-tooltip>
+              </el-form-item>
+            </el-col>
+            <el-col span="3">
+              <label class="option-unit">{{ item.optionUnit }}</label>
+            </el-col>
           </div>
-        </div>
+        </el-row>
 
-        <div v-for="(item, idx) of funcTable" :key="'bs-funcTable' + idx" v-show="ItemCheck(idx)">
-          <div class="row well well-transparent">
-            <div class="col-md-3">
-              <h5>{{ item.name }}</h5>
-            </div>
-            <div class="col-md-4">
-              <input class="func-name" type="text" v-model="item.value">
-            </div>
-            <div v-show="item.option != null">
-              <div class="item-label">
-                {{ item.option }}
-              </div>
-              <input class="option-param" type="text" v-model="item.optionValue">
-              <div class="item-label">
-                {{ item.optionUnit }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="row">
-        <div class="pull-right">
-          <button class="btn btn-primary" type="button" @click="Submit">モジュール書き込み</button>
-        </div>
-      </div>
-    </div>
-  </div>
+      </el-form>
+      <el-row type="flex" justify="end">
+        <el-button type="primary" :disabled="!rulesValid" @click="Submit">モジュール書き込み</el-button>
+      </el-row>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { radio, dropdown } from 'vue-strap';
+  import { Tooltip, Select, Option, Form, FormItem, Input, Radio, RadioGroup } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/select.css';
+  import 'element-ui/lib/theme-chalk/option.css';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/radio.css';
+  import 'element-ui/lib/theme-chalk/radio-group.css';
 
   export default {
     components: {
-      radio,
-      dropdown,
+      ElTooltip: Tooltip,
+      ElSelect: Select,
+      ElOption: Option,
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
+      ElRadio: Radio,
+      ElRadioGroup: RadioGroup,
     },
     props: {
       display: {
@@ -88,14 +93,10 @@
       return {
         selectedModule: '',
         selectedModuleLabel: '設定するモジュール',
-        moduleName: '',
-        moduleNameAlert: '',
-        selectedType: -1,
         devices: [],
         alias: {},
         configCommand: '',
         typeTable: [
-          { funcId: '00000000', funcSel: [], name: '' },
           { funcId: 'c0040000', funcSel: ['haOpenClose'], name: 'GL-1210 HA端子制御（電気錠等 open/close）' },
           { funcId: 'c0040000', funcSel: ['haOnOff'], name: 'GL-1210 HA端子制御（給湯、床暖房等 on/off）' },
           { funcId: 'c0100000', funcSel: ['sw'], name: 'GL-1220 弱電スイッチ制御（電動シャッター、電動窓、電動カーテン等）' },
@@ -105,6 +106,23 @@
           { funcId: 'c0638300', funcSel: ['temp', 'alarm', 'motion', 'noise'], name: 'GL-1260 火災警報器、人感、温度、騒音センサー、赤外線リモコン送受信' },
         ],
         funcTable: [],
+        ruleForm: {
+          moduleName: '',
+          selectedType: -1,
+        },
+        rules: {
+          moduleName: [
+            { required: true, min: 4, message: 'モジュール名を4文字以上で入れてください。', trigger: [ 'blur', 'change' ] },
+            { validator: this.ValidateModuleName.bind(this), trigger: [ 'blur', 'change' ] },
+          ],
+          selectedType: [
+            { type: 'number', min: 0, message: '選択してください', trigger: 'change' },
+          ],
+        },
+        ruleValid: {
+          moduleName: true,
+          selectedType: true,
+        },
       };
     },
     computed: {
@@ -123,6 +141,12 @@
           });
         }
         return moduleList;
+      },
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
+        }
+        return true;
       },
     },
     mounted() {
@@ -148,11 +172,13 @@
       });
     },
     methods: {
-      Click(e) {
-        if(!e.target.dataset.enable) return;
-        this.SelectModule(e.target.dataset.device, e.target.dataset.name);
+      Select(device) {
+        for(const module of this.moduleList) {
+          if(device === module.device) return this.SelectModule(module.device, module.name);
+        }
       },
       SelectModule(device, name) {
+        console.log('Select ', device, name);
         Common.emit('toastr_clear', this);
         this.selectedModuleLabel = device + ((name.length > 0) ? ':' : '') + name;
 
@@ -166,14 +192,15 @@
           { name: 'フラップセンサー', type: 'flap', label0: 'off', label1: 'on', func: 'gpio0' },
           { name: 'HA端子', type: 'haOnOff', label0: 'off', label1: 'on', func: 'ha0' },
           { name: 'HA端子', type: 'haOpenClose', label0: 'open', label1: 'close', func: 'ha0' },
-          { name: '弱電スイッチ', type: 'sw', label0: 'open', label1: 'stop', label2: 'close', func: 'sw', option: '動作時間', optionUnit: '秒' },
+          { name: '弱電スイッチ', type: 'sw', label0: 'open', label1: 'stop', label2: 'close', func: 'sw', option: '動作時間', optionUnit: '秒', optionTooltip: '窓やシャッターの動作時間を設定します' },
         ];
 
         this.selectedModule = device;
-        this.moduleName = name;
-        this.ModuleNameCheck();
-        if(this.alias[device] && this.alias[device].basicSelect) this.selectedType = parseInt(this.alias[device].basicSelect);
-        const type = this.typeTable[this.selectedType];
+        this.ruleForm.moduleName = name;
+        if(this.alias[device] && this.alias[device].basicSelect) this.ruleForm.selectedType = parseInt(this.alias[device].basicSelect);
+        if((this.ruleForm.selectedType < 0) || (this.typeTable.length <= this.ruleForm.selectedType)) this.ruleForm.selectedType = -1;
+        let type = '';
+        if(this.ruleForm.selectedType >= 0) type = this.typeTable[this.ruleForm.selectedType];
         if(type) {
           for(const j in type.funcSel) {
             const item = type.funcSel[j];
@@ -189,118 +216,99 @@
             }
           }
         }
+        this.$refs.ruleForm.validate(() => {});
       },
-      ModuleNameCheck() {
-        if(this.moduleName.length === 0) {
-          this.moduleNameAlert = 'モジュール名をいれて下さい。';
-          return;
-        }
-        if(this.moduleName.length < 4) {
-          this.moduleNameAlert = 'モジュール名が短かすぎます。4文字以上にして下さい。';
-          return;
-        }
+      ValidateModuleName(rule, value, callback) {
         for(const i in this.alias) {
           if(i === this.selectedModule) continue;
-          if(this.alias[i].name === this.moduleName) {
-            this.moduleNameAlert = '同じモジュール名があります。他の名前にしてください。';
-            return;
+          if(this.alias[i].name === value) {
+            return callback(new Error('同じモジュール名があります。他の名前にしてください。'));
           }
         }
-        this.moduleNameAlert = '';
+        return callback();
       },
       ItemCheck(idx) {
-        if(!this.selectedType || (this.selectedType < 0)) return false;
-        for(const t in this.typeTable[this.selectedType].funcSel) {
-          if(this.typeTable[this.selectedType].funcSel[t] === this.funcTable[idx].type) return true;
+        if(!this.ruleForm.selectedType || (this.ruleForm.selectedType < 0)) return false;
+        for(const t in this.typeTable[this.ruleForm.selectedType].funcSel) {
+          if(this.typeTable[this.ruleForm.selectedType].funcSel[t] === this.funcTable[idx].type) return true;
         }
         return false;
       },
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
       Submit() {
-        if(this.moduleNameAlert.length) return;
+        this.$refs.ruleForm.validate((valid) => {
+          if(!valid) return;
+          if(this.selerctedType < 0) return;
+          const type = this.typeTable[this.ruleForm.selectedType];
+          if(!type) return;
 
-        const type = this.typeTable[this.selectedType];
-        if(!type) return;
-
-        const moduleAlias = {
-          name: this.moduleName,
-          basicSelect: this.selectedType,
-          option: type.funcId,
-        };
-        let param = '';
-        for(const j in type.funcSel) {
-          const item = type.funcSel[j];
-          for(const i in this.funcTable) {
-            if(this.funcTable[i].type === item) {
-              const f = this.funcTable[i];
-              moduleAlias[f.func] = {
-                name: f.value,
-                valueLabel: {},
-                type: f.type,
-              };
-              if((f.func === 'ad0') || (f.func === 'ad1')) {
-                moduleAlias[f.func].offset = f.offset;
-                moduleAlias[f.func].gain = f.gain;
-                moduleAlias[f.func].unit = f.unit;
-              } else {
-                moduleAlias[f.func].valueLabel = {};
-                if(f.label0) moduleAlias[f.func].valueLabel['0'] = f.label0;
-                if(f.label1) moduleAlias[f.func].valueLabel['1'] = f.label1;
-                if(f.label2) moduleAlias[f.func].valueLabel['2'] = f.label2;
+          const moduleAlias = {
+            name: this.ruleForm.moduleName,
+            basicSelect: this.ruleForm.selectedType,
+            option: type.funcId,
+          };
+          let param = '';
+          for(const j in type.funcSel) {
+            const item = type.funcSel[j];
+            for(const i in this.funcTable) {
+              if(this.funcTable[i].type === item) {
+                const f = this.funcTable[i];
+                moduleAlias[f.func] = {
+                  name: f.value,
+                  valueLabel: {},
+                  type: f.type,
+                };
+                if((f.func === 'ad0') || (f.func === 'ad1')) {
+                  moduleAlias[f.func].offset = f.offset;
+                  moduleAlias[f.func].gain = f.gain;
+                  moduleAlias[f.func].unit = f.unit;
+                } else {
+                  moduleAlias[f.func].valueLabel = {};
+                  if(f.label0) moduleAlias[f.func].valueLabel['0'] = f.label0;
+                  if(f.label1) moduleAlias[f.func].valueLabel['1'] = f.label1;
+                  if(f.label2) moduleAlias[f.func].valueLabel['2'] = f.label2;
+                }
+                if(f.type === 'motion') {
+                  let p = 300;
+                  if(f.func === 'gpio0') p |= (1 << 0);
+                  if(f.func === 'gpio1') p |= (1 << 1);
+                  param = ' ' + p.toString();
+                }
+                if(f.optionValue) {
+                  moduleAlias[f.func].optionValue = f.optionValue;
+                  param = ' ' + f.optionValue;
+                }
+                break;
               }
-              if(f.type === 'motion') {
-                let p = 300;
-                if(f.func === 'gpio0') p |= (1 << 0);
-                if(f.func === 'gpio1') p |= (1 << 1);
-                param = ' ' + p.toString();
-              }
-              if(f.optionValue) {
-                moduleAlias[f.func].optionValue = f.optionValue;
-                param = ' ' + f.optionValue;
-              }
+            }
+          }
+          this.$set(this.alias, this.selectedModule, moduleAlias);
+          Common.emit('changeAlias', this);
+          this.configCommand = ('config ' + type.funcId + ' F' + param).trim();
+          Socket.emit('command',
+            { type: 'command', device: this.selectedModule, command: this.configCommand });
+          let moduleType = null;
+          for(const dev of this.devices) {
+            if(dev.device === this.selectedModule) {
+              moduleType = dev.type;
               break;
             }
           }
-        }
-        this.$set(this.alias, this.selectedModule, moduleAlias);
-        Common.emit('changeAlias', this);
-        this.configCommand = ('config ' + type.funcId + ' F' + param).trim();
-        Socket.emit('command',
-          { type: 'command', device: this.selectedModule, command: this.configCommand });
-        let moduleType = null;
-        for(const dev of this.devices) {
-          if(dev.device === this.selectedModule) {
-            moduleType = dev.type;
-            break;
-          }
-        }
-        Common.emit('changeModule', this, this.selectedModule, this.moduleName, parseInt(type.funcId, 16), param, moduleType);
+          Common.emit('changeModule', this, this.selectedModule, this.ruleForm.moduleName, parseInt(type.funcId, 16), param, moduleType);
+        });
       },
     },
   };
 </script>
 
 <style scoped>
-  .module-list, .moduleLabel {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-    font-size:14px;
-    text-align: left;
-  }
-
-  .module-list li a {
-    padding: 3px 10px;
-  }
-
-  .option-param {
-    width:5vw;
-  }
-
-  .func-name {
-    width:12vw;
-  }
-
   .item-label {
-    display:inline;
-    margin: 0vh 0.2vw 0vh 0.5vw;
+    margin: 0.5vh 0;
+  }
+  .option-unit {
+    line-height: 28px;
   }
 </style>
 

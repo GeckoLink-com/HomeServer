@@ -42,6 +42,7 @@ class HomeBridgePlatform {
       if(!this.common.systemConfig) return;
       if(!this.common.systemConfig.platform) return;
       if(!this.common.systemConfig.bridge) return;
+      if(!this.common.systemConfig.bridge.name) return;
       if(!this.common.systemConfig.bridge.changeState) return;
 
       console.log("%s HomeBridge initialize", this.common.systemConfig.platform.name);

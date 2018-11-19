@@ -165,6 +165,10 @@ class Common extends EventEmitter {
       this.emit('shutdownEnable', this);
     });
 
+    Socket.on('requestAuth', (data) => {
+      this.emit('requestAuth', this, data);
+    });
+
     // common event handler from frontend other view
     this.on('changeAlias', (caller) => {
       if(caller !== this) Socket.emit('alias', this.alias);

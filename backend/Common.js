@@ -170,7 +170,7 @@ class Common extends eventEmitter {
           }
         }
       }
-      if(this.internalStatus.smartMeter != null) {
+      if((this.internalStatus.smartMeter != null) && this.alias[0]) {
         let f = -1;
         for(const j in this.status) {
           if((this.status[j].device == 'server') && (this.status[j].func == 'smartMeter')) {
@@ -181,7 +181,7 @@ class Common extends eventEmitter {
         const stat = {
           device: 'server',
           deviceName: 'server',
-          func:'smartMeter',
+          func: 'smartMeter',
           funcName: this.alias[0].smartMeter.name,
           type: this.alias[0].smartMeter.type,
           value: this.internalStatus.smartMeter,
@@ -240,6 +240,8 @@ class Common extends eventEmitter {
       this.systemConfig.defaultPassword = this.defaultPassword;
       this.systemConfig.changeAuthKey = false;
       this.systemConfig.requestRemoteAccess = false;
+      this.systemConfig.remote = (this.systemConfig.remote === 'on') || (this.systemConfig.remote === true);
+      this.systemConfig.autoUpdate = (this.systemConfig.autoUpdate == null) || (this.systemConfig.autoUpdate === 'on') || (this.systemConfig.autoUpdate === true);
       this.systemConfig.platform = {
         name: 'GeckoLink HomeServer',
         manufacturer: 'GeckoLink',
@@ -249,8 +251,6 @@ class Common extends eventEmitter {
 
       if(this.systemConfig.account == null) this.systemConfig.account = 'admin';
       if(this.systemConfig.password == null) this.systemConfig.password = this.initialPassword;
-      if(this.systemConfig.autoUpdate == null) this.systemConfig.autoUpdate = 'on';
-      if(this.systemConfig.remote == null) this.systemConfig.remote = 'off';
       if(this.systemConfig.mailto == null) this.systemConfig.mailto = '';
       if(this.systemConfig.longitude == null) this.systemConfig.longitude = '';
       if(this.systemConfig.latitude == null) this.systemConfig.latitude = '';

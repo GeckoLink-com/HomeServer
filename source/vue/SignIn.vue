@@ -3,61 +3,64 @@
     <div class="brand">
       <img src="../images/GeckoLogo.png" class="logo">
     </div>
-    <p class="vertical-space1"/>
-    <div class="col-md-8 col-md-offset-3">
-      <div class="row">
-        <div class="col-md-4">
-          <H5>アカウント</h5>
+    <div class="sign-in">
+      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left">
+        <el-form-item label="アカウント" prop="account">
+          <el-input type="text" name="account" v-model="ruleForm.account" />
+        </el-form-item>
+        <el-form-item label="パスワード" prop="password">
+          <el-input type="password" name="password" v-model="ruleForm.password" />
+        </el-form-item>
+        <div v-if="alert" class="form_item_error">
+          アカウントもしくはパスワードが正しくありません。
         </div>
-        <div class="col-md-6">
-          <input type="text" name="account" v-model="account">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-4">
-          <H5>パスワード</h5>
-        </div>
-        <div class="col-md-6">
-          <input type="password" name="password" v-model="password">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-          <H5>{{ message }}</h5>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-10">
-          <div class="pull-right">
-            <button class="btn btn-sm btn-primary" @click="Submit">認証</button>
-          </div>
-        </div>
-      </div>
+        <el-button type="primary" class="pull-right" @click="Submit">認証</el-button>
+      </el-form>
     </div>
   </article>
 </template>
 
 <script>
+  import { Form, FormItem, Input, Button } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/button.css';
   import JsSHA from 'jssha';
 
   export default {
+    components: {
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
+      ElButton: Button,
+    },
     data() {
       return {
-        account: '',
-        password: '',
-        message: '',
+        alert: false,
+        ruleForm: {
+          account: '',
+          password: '',
+        },
+        rules: {
+          account: [
+            { required: true, message: 'アカウントを入力してください', trigger: [ 'blur', 'change' ] },
+          ],
+          password: [
+            { required: true, message: 'パスワードを入力してください', trigger: [ 'blur', 'change' ] },
+          ],
+        },
       };
     },
     methods: {
       Submit() {
         Socket.emit('requestNonce', (nonce) => {
-          const password = this.SHA256(this.account + this.password);
+          const password = this.SHA256(this.ruleForm.account + this.ruleForm.password);
           const digest = this.SHA256(password + nonce);
-          Socket.emit('login', { account: this.account, digest: digest }, (res) => {
+          Socket.emit('login', { account: this.ruleForm.account, digest: digest }, (res) => {
             if(!res) {
-              this.message = 'アカウントもしくはパスワードが正しくありません。';
+              this.alert = true;
             } else {
-              this.message = '';
+              this.alert = false;
               setTimeout(window.location.reload.bind(window.location), 200);
             }
           });
@@ -81,8 +84,8 @@
     display: inline-block;
   }
 
-  input {
-    width: 80%;
+  .sign-in {
+    margin: 30vh 20vw;
   }
 </style>
 

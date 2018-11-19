@@ -1,72 +1,51 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-4 col-md-4 scrollable">
-      <br>
-      <h4>ＴＶ設定</h4>
+  <el-container>
+    <el-aside width="30%">
+      <h4>ＴＶ設定・編集</h4>
       <div class="well well-transparent">
-        <br>
-        <div class="row">
-          <div class="col-md-4">
-            <h5>登録名</h5>
-          </div>
-          <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!nameValid}" type="text" v-model="name" @input="NameCheck">
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-offset-2">
-            <h6>識別しやすい名前を付けてください。</h6>
-            <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
-            <h5>コメント</h5>
-          </div>
-          <div class="col-md-8">
-            <input class="ui-func-name" :class="{error:!commentValid}" type="text" v-model="comment" @input="CommentCheck">
-          </div>
-        </div>
-        <div class="row" v-if="commentAlert.length">
-          <div class="col-md-offset-2">
-            <h6 class="error">{{ commentAlert }}</h6>
-          </div>
-        </div>
-        <br>
-        <div class="row">
-          <div class="col-md-offset-1">
-            <alert :type="(sequence>0)&&(sequence<4)?'success':'default'">
-              1.TVのリモコンを学習します。
-            </alert>
-            <alert :type="(sequence==4)?'success':'default'">
-              2.選局番号と放送局名の対応表を設定し登録します。
-            </alert>
-          </div>
-        </div>
-        <br>
-        <div class="row">
-          <div class="col-md-offset-3">
-            <button v-show="sequence==0" :disabled="!nameValid||!commentValid" class="btn btn-primary btn-sm btn-margin" @click="Start">開始</button>
-            <button v-show="sequence>0" class="btn btn-danger btn-sm btn-margin" @click="Stop">中止</button>
-            <button v-show="existName && (sequence==0)" class="btn btn-primary btn-sm btn-margin" @click="Modify">チャンネル修正</button>
-            <button :disabled="sequence!=4" class="btn btn-primary btn-sm btn-margin" @click="Submit">保存</button>
-          </div>
-        </div>
-
+        <el-tooltip placement="right" content="既存のTV設定を選択すると編集できます" effect="light" open-delay="500">
+          <el-select v-model="selectedRemoconGroup" @change="Select">
+            <el-option label="新規追加" value="newGroup">
+              新規追加
+            </el-option>
+            <el-option v-for="(item, index) of remoconTV" :key="'rm-remoconTV' + index" :label="item.name" :value="item.name">
+              {{ item.name }}
+            </el-option>
+          </el-select>
+        </el-tooltip>
       </div>
-    </div>
+    </el-aside>
 
-    <div class="col-sm-7 col-md-7 scrollable">
+    <el-main v-if="selectedRemoconGroup != null">
+      <div class="well well-transparent">
+        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <el-form-item label="登録名" prop="name">
+            <el-tooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
+              <el-input v-model="ruleForm.name" />
+            </el-tooltip>
+            <div v-if="nameAlert" class="form_item_error">
+              登録名が既に存在しています。上書きしますがよろしいですか？
+            </div>
+          </el-form-item>
+
+          <el-form-item label="コメント" prop="comment">
+            <el-tooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
+              <el-input v-model="ruleForm.comment" />
+            </el-tooltip>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <div v-show="(sequence>0) && (sequence < 4)" class="well well-transparent">
         <table class="table table-striped remocon-table">
           <thead>
             <tr>
-              <th class="col-md-2">ボタン</th>
-              <th class="col-md-9">コード</th>
+              <th width="20%">ボタン</th>
+              <th width="80%">コード</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, idx) of remoconTable" :key="'rt-remoconTable' + idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (lastPtr==idx)}]">
+            <tr v-for="(item, idx) of remoconTable" :key="'rt-remoconTable' + idx" :class="[{'remocon-error':!CodeValid(idx)}, {success: (remoconNo==idx)}]">
               <td>{{ item.label }}</td>
               <td>{{ item.info }}</td>
             </tr>
@@ -75,13 +54,14 @@
       </div>
 
       <div v-show="sequence==4" class="well well-transparent">
-        <table class="table table-striped">
+        <table class="table">
           <thead>
             <tr>
-              <th class="col-md-2">ボタン</th>
-              <th class="col-md-3" v-for="net of ['UHF','BS','CS']" :key="'rt-netHead' + net">
-                <input type="checkbox" v-model="channelTable[net].display" :data-net="net">
-                {{ channelTable[net].label }}
+              <th width="16%">ボタン</th>
+              <th width="28%" v-for="net of ['UHF','BS','CS']" :key="'rt-netHead' + net">
+                <el-checkbox v-model="channelTable[net].display">
+                  {{ channelTable[net].label }}
+                </el-checkbox>
               </th>
             </tr>
           </thead>
@@ -89,26 +69,45 @@
             <tr v-for="ch of 12" :key="'rt-ch' + ch">
               <td>{{ ch }}</td>
               <td v-for="net of ['UHF', 'BS', 'CS']" :key="'rt-netBody' + net">
-                <fieldset :disabled="!channelTable[net].display">
-                  <input type="checkbox" v-model="channelTable[net][ch].display">
-                  <input class="channelList" type="text" v-model="channelTable[net][ch].label">
-                </fieldset>
+                <div class="inline-flex">
+                  <el-checkbox v-model="channelTable[net][ch].display" :disabled="!channelTable[net].display"/>
+                  <el-input class="channelList" type="text" v-model="channelTable[net][ch].label" :disabled="!channelTable[net].display" />
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-    </div>
-  </div>
+      <el-row class="pull-right">
+        <el-button v-show="!existName && (sequence==0)" :disabled="!rulesValid" type="primary" @click="Start">開始</el-button>
+        <el-button v-show="sequence>0" type="danger" @click="Stop">中止</el-button>
+        <el-button v-show="existName && (sequence==0)" type="primary" @click="Modify">チャンネル修正</el-button>
+        <el-button :disabled="sequence!=4" type="primary" @click="Submit">保存</el-button>
+      </el-row>
+
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { alert } from 'vue-strap';
+  import { Tooltip, Select, Option, Form, FormItem, Input, Checkbox } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/select.css';
+  import 'element-ui/lib/theme-chalk/option.css';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/checkbox.css';
 
   export default {
     components: {
-      alert,
+      ElTooltip: Tooltip,
+      ElSelect: Select,
+      ElOption: Option,
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
+      ElCheckbox: Checkbox,
     },
     props: {
       display: {
@@ -117,18 +116,14 @@
       },
     },
     data() {
-      return {
+      const data = {
         remocon: {
           remoconTable: {},
           remoconGroup: {},
           remoconMacro: {},
         },
-        name: '',
-        nameValid: false,
-        nameAlert: '登録名を4文字以上で入れてください。',
-        comment: '',
-        commentValid: false,
-        commentAlert: 'コメントを入れてください。',
+        selectedRemoconGroup: null,
+        nameAlert: false,
         sequence: 0,
         existName: false,
         codeLength: 0,
@@ -155,7 +150,7 @@
           { name: 'vol+', label: '音量＋' },
           { name: 'vol-', label: '音量-' },
         ],
-        channelTable: {
+        channelTableDefault: {
           type: 'tv',
           UHF: {
             label: '地デジ',
@@ -206,7 +201,46 @@
             '12': { display: true, label: 'CS12' },
           },
         },
+        ruleForm: {
+          name: '',
+          comment: '',
+        },
+        rules: {
+          name: [
+            { required: true, min: 4, message: '登録名を4文字以上で入れてください。', trigger: [ 'blur', 'change' ]  },
+            { validator: this.ValidateName.bind(this), trigger: [ 'blur', 'change' ]  },
+          ],
+          comment: [
+            { required: true, message: 'コメントを入れてください。', trigger: [ 'blur', 'change' ] },
+          ],
+        },
+        ruleValid: {
+          name: false,
+          comment: false,
+        },
       };
+      data.channelTable = JSON.parse(JSON.stringify(data.channelTableDefault));
+      return data;
+    },
+    computed: {
+      remoconTV() {
+        const list = [];
+        for(const name in this.remocon.remoconGroup) {
+          if(this.remocon.remoconGroup[name].type === 'tv') {
+            list.push({
+              name: name,
+              comment: this.remocon.remoconGroup[name].comment,
+            });
+          }
+        }
+        return list;
+      },
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
+        }
+        return true;
+      },
     },
     mounted() {
       this.lastRemoconCode = null;
@@ -247,34 +281,29 @@
       });
     },
     methods: {
-      NameCheck() {
-        this.existName = false;
-        if(this.name.length < 4) {
-          this.nameValid = false;
-          this.nameAlert = '登録名を4文字以上で入れてください。';
-          return;
-        }
-        if(this.remocon.remoconGroup[this.name]) {
-          this.nameAlert = '登録名が既に存在しています。上書きしますがよろしいですか？チャンネル設定を修正する場合、チャンネル修正ボタンを押してください。';
-          if(this.remocon.remoconGroup[this.name].type === 'tv') this.existName = true;
+      Select(group) {
+        if(group === 'newGroup') {
+          this.ruleForm.name = '';
+          this.ruleForm.comment = '';
+          this.existName = false;
         } else {
-          this.nameAlert = '';
+          this.ruleForm.name = group;
+          this.ruleForm.comment = this.remocon.remoconGroup[group].comment;
+          this.existName = true;
         }
-        this.nameValid = true;
       },
-      CommentCheck() {
-        if(this.comment.length === 0) {
-          this.commentValid = false;
-          this.commentAlert = 'コメントを入れてください。';
-          return;
+      ValidateName(rule, value, callback) {
+        if(this.remocon && this.remocon.remoconGroup && this.remocon.remoconGroup[value]) {
+          this.nameAlert = true;
+        } else {
+          this.nameAlert = false;
         }
-        this.commentValid = true;
-        this.commentAlert = '';
+        callback();
       },
       Start() {
         this.sequence = 1;
         this.remoconNo = 0;
-        this.nameAlert = '';
+        this.nameAlert = false;
         this.RemoconInit();
         this.ExecSequence();
       },
@@ -285,16 +314,19 @@
       },
       Modify() {
         Common.emit('toastr_info', this, '右の表の各項目に名称を設定して保存を押して下さい。');
-        this.nameAlert = '';
+        this.nameAlert = false;
         this.sequence = 4;
         this.RemoconInit();
       },
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
       Submit() {
         for(let i = 0; i < this.remoconFunc.length; i++) {
-          this.$set(this.remocon.remoconTable, this.name + '_' + this.remoconFunc[i].name, {
-            comment: this.comment + this.remoconFunc[i].label,
+          this.$set(this.remocon.remoconTable, this.ruleForm.name + '_' + this.remoconFunc[i].name, {
+            comment: this.ruleForm.comment + this.remoconFunc[i].label,
             code: this.remoconTable[i].code,
-            group: this.name,
+            group: this.ruleForm.name,
           });
           const code = Common.RemoconSearch(this.remoconTable[i].code);
           if((parseInt(this.remoconTable[i].code[2]) === 3) && (code.code.replace(/ /g, '') === '05150100')) {
@@ -305,32 +337,32 @@
             }
             offCode[5] = 0x2f;
             onCode[5] = 0x2e;
-            this.$set(this.remocon.remoconTable, this.name + '_off', {
-              comment: this.comment + '電源オフ',
+            this.$set(this.remocon.remoconTable, this.ruleForm.name + '_off', {
+              comment: this.ruleForm.comment + '電源オフ',
               code: offCode,
-              group: this.name,
+              group: this.ruleForm.name,
             });
-            this.$set(this.remocon.remoconTable, this.name + '_on', {
-              comment: this.comment + '電源オン',
+            this.$set(this.remocon.remoconTable, this.ruleForm.name + '_on', {
+              comment: this.ruleForm.comment + '電源オン',
               code: onCode,
-              group: this.name,
+              group: this.ruleForm.name,
             });
           }
         }
 
-        this.channelTable.comment = this.comment;
+        this.channelTable.comment = this.ruleForm.comment;
 
-        this.$set(this.remocon.remoconGroup, this.name, {
+        this.$set(this.remocon.remoconGroup, this.ruleForm.name, {
           type: 'tv',
-          comment: this.comment,
+          comment: this.ruleForm.comment,
           UHF: { label: '地デジ' },
           BS: { label: 'BS' },
           CS: { label: 'CS' },
         });
         for(const net of ['UHF', 'BS', 'CS']) {
-          this.$set(this.remocon.remoconGroup[this.name][net], 'display', this.channelTable[net].display);
+          this.$set(this.remocon.remoconGroup[this.ruleForm.name][net], 'display', this.channelTable[net].display);
           for(let i = 1; i <= 12; i++) {
-            this.$set(this.remocon.remoconGroup[this.name][net], i, {
+            this.$set(this.remocon.remoconGroup[this.ruleForm.name][net], i, {
               display: this.channelTable[net][i].display,
               label: this.channelTable[net][i].label,
             });
@@ -338,8 +370,8 @@
         }
         Common.emit('changeRemocon', this);
         this.sequence = 0;
-        this.name = '';
-        this.comment = '';
+        this.selectedRemoconGroup = null;
+        Common.emit('toastr_clear', this);
       },
       CodeValid(idx) {
         if(!this.remoconTable[idx] || !this.remoconTable[idx].code) return false;
@@ -355,8 +387,8 @@
       RemoconInit() {
         this.remoconTable = [];
         for(let i = 0; i < this.remoconFunc.length; i++) {
-          if(this.name + '_' + this.remoconFunc[i].name in this.remocon.remoconTable) {
-            const data = this.remocon.remoconTable[this.name + '_' + this.remoconFunc[i].name];
+          if(this.ruleForm.name + '_' + this.remoconFunc[i].name in this.remocon.remoconTable) {
+            const data = this.remocon.remoconTable[this.ruleForm.name + '_' + this.remoconFunc[i].name];
             const code = Common.RemoconSearch(data.code);
             this.remoconTable.push({
               code: data.code,
@@ -376,9 +408,10 @@
           this.codeLength = this.remoconTable[0].code.length;
         }
 
-        if(this.remocon.remoconGroup[this.name] &&
-           (this.remocon.remoconGroup[this.name].type === 'tv')) {
-          this.channelTable = JSON.parse(JSON.stringify(this.remocon.remoconGroup[this.name]));
+        this.channelTable = JSON.parse(JSON.stringify(this.channelTableDefault));
+        if(this.remocon.remoconGroup[this.ruleForm.name] &&
+           (this.remocon.remoconGroup[this.ruleForm.name].type === 'tv')) {
+          this.channelTable = JSON.parse(JSON.stringify(this.remocon.remoconGroup[this.ruleForm.name]));
         }
       },
       CodeCheck() {
@@ -398,6 +431,12 @@
           reentry = false;
           switch (this.sequence) {
             case 1:
+              if(this.CodeValid(this.remoconNo)) {
+                this.remoconNo++;
+                if(this.remoconNo === this.remoconFunc.length) this.sequence = 3;
+                reentry = true;
+                break;
+              }
               Common.emit('toastr_info', this, 'リモコンの<strong>' + this.remoconFunc[this.remoconNo].label + '</strong>を押してください。');
               this.sequence++;
               break;
@@ -441,13 +480,6 @@
 </script>
 
 <style scoped>
-  .ui-func-name {
-    width:100%;
-  }
-
-  .btn-margin {
-    margin-right:0.2vw;
-  }
 
   input.channelList {
     width: 85%;
@@ -457,18 +489,12 @@
     color: red;
   }
 
-  .remocon-table {
-    margin: 0px;
-  }
-
-  .remocon-table th, .remocon-table td {
-    padding: 1px !important;
-    line-height: 20px !important;
-    border-top: 1px solid #ddd;
-  }
-
   fieldset:disabled  {
     color: #aaa;
+  }
+
+  .inline-flex {
+    display: flex;
   }
 </style>
 

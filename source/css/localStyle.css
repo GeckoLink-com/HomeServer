@@ -30,9 +30,39 @@
   font-display: swap;
 }
 
+html {
+  height: 100%;
+  font-size: 14px;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans CJK JP', 'NotoSansCJKjp', sans-serif;
   font-weight: 300;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+* {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+input, textarea, code, .modal-window * {
+  -moz-user-select: auto;
+  -khtml-user-select: auto;
+  -webkit-user-select: auto;
+  -webkit-touch-callout: auto;
+  user-select: auto;
 }
 
 h1, h2, h3, h4, h5, h6, h7 {
@@ -44,39 +74,97 @@ h1.error, h2.error, h3.error, h4.error, h5.error, h6.error, h7.error {
   white-space: normal;
 }
 
-.radio {
-  padding-top: 0px !important;
-  margin: 4px;
+h1,
+.h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
 }
 
-input.success {
-  background-color: #dff0d8;
+h2,
+.h2 {
+  font-size: 2rem;
+  font-weight: 700;
 }
 
-input.error {
-  background-color: #f2dede;
+h3,
+.h3 {
+  font-size: 1.7rem;
+  font-weight: 500;
 }
 
-.well {
+h4,
+.h4 {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+h5,
+.h5 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+h6,
+.h6 {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+p {
+  margin: 0 0 10px;
+}
+
+hr {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 0;
+  border-top: 1px solid #eee;
+}
+
+.well, .well-transparent {
   background-color: white;
+  padding: 0.5vh 1vw;
+  margin: 0.1vh 0;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 }
 
 .well-transparent {
-  height:85%;
-  width:100%;
-  padding:0.3% 0 0.3% 0;
-  margin:0 0;
   background-color: rgba(255,255,255,0);
   border-color: rgba(255,255,255,0);
   box-shadow: none;
 }
 
-.well .row {
-  margin: 0;
+.well {
+  margin: 0.5vh 0;
 }
 
-.well h5 {
+.well hr {
+  margin: 1vh -2vw;
+}
+
+.well .el-row, .well-transparent .el-row  {
+  margin: 1vh 0;
+}
+
+.well h4, .well-transparent h4 {
   margin: 0;
+  font-weight: 300;
+  display:inline-block;
+  vertical-align: middle;
+}
+
+.well h5, .well-transparent h5 {
+  margin: 0;
+  font-weight: 300;
+  display:inline-block;
+  vertical-align: middle;
+}
+
+.well h6, .well-transparent h6 {
+  margin: 0;
+  font-weight: 300;
   display:inline-block;
   vertical-align: middle;
 }
@@ -93,30 +181,182 @@ input.error {
   color: #ccc;
 }
 
-.alert {
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  margin: 5px 10px;
-  font-size: 0.9em;
+fieldset {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+fieldset[disabled] .form-control {
+  background-color: #eee;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+fieldset[disabled] input[type="radio"],
+fieldset[disabled] input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+fieldset[disabled] .radio label,
+fieldset[disabled] .checkbox label {
+  cursor: not-allowed;
 }
 
 .scrollable {
-  position: relative !important;
+  position: relative;
   overflow-y: scroll;
   overflow-x: hidden;
   height: 100%;
-  padding: 10px 15px;
 }
 
-.code {
+.code, textarea {
   width: 100%;
-  font-family: Courier, 'NotoSansMonoCJKjp', monospace;
-  font-size: 13px;
+  font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
 }
 
-textarea {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+.pull-right {
+  float: right !important;
 }
 
+.pull-left {
+  float: left !important;
+}
 
+table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
 
+th {
+  text-align: left;
+}
+
+.table {
+  width: 100%;
+  margin: 10px 0;
+  border-top: 0;
+  background-color: #fff;
+}
+
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td {
+  padding: 0 5px;
+  line-height: 1.4em;
+  vertical-align: top;
+}
+
+.table th {
+  vertical-align: bottom;
+  border-top: 2px solid #ddd;
+  border-bottom: 2px solid #ddd;
+  font-weight: 500;
+}
+
+.table td {
+  vertical-align: bottom;
+  border-bottom: 1px solid #ddd;
+}
+
+.table > tbody + tbody {
+  border-top: 2px solid #ddd;
+}
+
+.table > thead > tr > td.success,
+.table > tbody > tr > td.success,
+.table > tfoot > tr > td.success,
+.table > thead > tr > th.success,
+.table > tbody > tr > th.success,
+.table > tfoot > tr > th.success,
+.table > thead > tr.success > td,
+.table > tbody > tr.success > td,
+.table > tfoot > tr.success > td,
+.table > thead > tr.success > th,
+.table > tbody > tr.success > th,
+.table > tfoot > tr.success > th {
+  background-color: #dff0d8;
+  color: black;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+
+.table th .el-button--mini, .table td .el-button--mini {
+  padding: 5px;
+}
+
+.el-aside, .el-main {
+  overflow-x: hidden;
+  padding: 0 20px;
+}
+
+.el-tooltip:focus, .el-switch:focus, .el-dropdown-link:focus, .el-radio-button:focus  {
+  outline-style: none;
+}
+
+.el-radio-button:focus:not(.dummy1):not(.dummy2):not(.dummy3) {
+  -webkit-box-shadow: 0 0;
+  box-shadow: 0 0;
+}
+
+.el-alert {
+  margin: 4px;
+  padding: 4px;
+}
+
+.el-form-item--mini.el-form-item {
+  margin: 4px 0;
+}
+
+.form_item_error {
+  padding-top: 1px;
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 1;
+  padding-top: 4px;
+  top: 100%;
+  left: 0;
+}
+
+.el-form-item__error {
+  position: static;
+}
+
+.el-progress.progress-striped .el-progress-bar__inner {
+  animation: progress-stripes 2s linear infinite;
+  background-image: linear-gradient(45deg,hsla(0,0%,100%,.15) 25%,transparent 0,transparent 50%,hsla(0,0%,100%,.15) 0,hsla(0,0%,100%,.15) 75%,transparent 0,transparent);
+  background-size: 40px 40px;
+}
+
+.el-switch__core {
+  border-color: #80b8ff;
+  background-color: #d0e0ec;
+}
+
+.el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label {
+  background-color: #ddd;
+  border-color: #bbb;
+}
+
+@keyframes progress-stripes {
+  from {
+    background-position: 40px 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* for mobile */
+@media only screen
+       and (max-width: 767px) {
+  .no-mobile {
+    display: none;
+  }
+}

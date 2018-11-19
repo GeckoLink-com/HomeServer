@@ -1,155 +1,168 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel" @click="ClearSelect">
-    <div class="col-sm-3 col-md-3 scrollable">
-      <br>
-      <h4>通常設定</h4>
-      <div class="well">
-        <h5>
-          リモコンコード
-        </h5>
+  <el-container @click.native="ClearSelect">
+    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+      <h4>リモコン設定</h4>
+      <div class="well no-mobile">
+        <el-row>
+          <h5>リモコンコード</h5>
+        </el-row>
         <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json"/>
-        <button @click="Save" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
+        <el-button @click="Save" type="primary" class="system-config-btn">ファイルに保存</el-button>
+
         <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none" >
-        <button type="button" @click="Load" class="btn btn-xs btn-primary system-config-btn">ファイルから追加</button>
-        <h6 class="system-config-btn">
-          同じ登録名のコードは<br>
-          上書きされます。
-        </h6>
+        <el-tooltip placement="right" content="同じ登録名のコードは上書きされます" effect="light" open-delay="500">
+          <el-button @click="Load" type="primary" class="system-config-btn">ファイルから追加</el-button>
+        </el-tooltip>
       </div>
-      <div class="row">
-        <alert :type="(!selectedIdx&&!selectedGroup)?'success':'default'">
-          リモコンコードを追加する場合は、本機に向けてリモコンを送信してください。
-        </alert>
-        <alert :type="(selectedIdx||selectedGroup)?'success':'default'">
-          リモコンコードを削除する場合は、右の登録済みリモコン一覧から選択し赤いボタンを押してください。
-        </alert>
-        <alert :type="(selectedGroup)?'success':'default'">
-          グループ登録されているコード(エアコン設定・TV設定で登録したコード)はまとめて消去されます。
-        </alert>
-      </div>
-      <br>
-    </div>
-    <div class="col-sm-9 col-md-9 scrollable">
-      <br>
-      <fieldset v-show="(Object.keys(lastRemoconCode).length == 0)">
-        <h5>本機に向けて登録したいリモコンを送信してください。</h5>
-      </fieldset>
-      <fieldset v-show="(Object.keys(lastRemoconCode).length != 0)">
-        <h5>最後に受信したリモコンコード</h5>
-        <table class="table table-striped remocon-table">
-          <thead>
-            <tr>
-              <th class="col-md-2">モジュール</th>
-              <th class="col-md-2">フォーマット</th>
-              <th class="col-md-7">コード</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item of lastRemoconCode" :key="'r-lastRemoconCode' + item.deviceName" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
-              <td>{{ item.deviceName }}</td>
-              <td>{{ item.format }}</td>
-              <td>{{ item.info }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <h5>登録するリモコンコードを選択して下さい。</h5>
-      </fieldset>
+    </el-aside>
 
-      <fieldset v-show="selectedItem != null">
-        <div class="row">
-          <div class="col-md-5">
-            <label>登録名</label>
-            <input type="text" :class="{error:!nameValid}" v-model="name" @input="NameCheck">
-          </div>
-          <div class="col-md-5">
-            <label>コメント</label>
-            <input type="text" :class="{error:!commentValid}" v-model="comment" @input="CommentCheck">
-          </div>
-          <div class="col-md-2">
-            <div class="row">
-              <button @click="Cancel" class="btn btn-danger" type="button">中止</button>
-              <button @click="Submit" :disabled="!nameValid||!commentValid" class="btn btn-primary" type="button">保存</button>
-            </div>
-          </div>
-        </div>
-        <h6>種類＋メーカー名＋シリーズ名＋機能名など、識別しやすい名前を付けて下さい。</h6>
-        <h6 v-if="nameAlert.length" class="error">{{ nameAlert }}</h6>
-        <h6 v-if="commentAlert.length" class="error">{{ commentAlert }}</h6>
-      </fieldset>
-
-      <fieldset v-show="remocon.remoconTable && (Object.keys(remocon.remoconTable).length > 0)">
-        <p class="vertical-space2"/><h5>登録済みリモコン一覧</h5>
-        <div class="well well-transparent">
-          <table class="table remocon-table">
+    <el-main>
+      <div v-if="receivedCode" class="well-transparent">
+        <h5>受信したリモコンコード</h5>
+        <br>
+        <el-tooltip placement="top" content="clickすることで選択されます" effect="light" open-delay="500">
+          <table class="table table-striped">
             <thead>
-              <tr class="gray">
-                <th class="col-md-5">登録名<br>コメント</th>
-                <th class="col-md-7">コード</th>
+              <tr>
+                <th width="16%">モジュール</th>
+                <th width="16%">フォーマット</th>
+                <th width="60%">コード</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
-                <td class="col-md-5">
-                  <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
-                    >
-                  </button>
+              <tr v-for="item of lastRemoconCode" :key="'r-lastRemoconCode' + item.deviceName" :class="{success:(selectedItem&&(item==selectedItem))}" @click="SelectRemocon(item)">
+                <td>{{ item.deviceName }}</td>
+                <td>{{ item.format }}</td>
+                <td>{{ item.info }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </el-tooltip>
+        <div v-if="selectedItem == null">
+          <h5>登録するリモコンコードを選択して下さい。</h5>
+        </div>
+      </div>
+      <div v-else>
+        <h5>リモコンコードを追加する場合は、親機に向けてリモコンを送信してください。</h5>
+      </div>
+
+      <div v-if="selectedItem != null" class="well-transparent">
+        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <el-row>
+            <el-tooltip placement="top" content="種類＋メーカー名＋シリーズ名＋機能名など、判別しやすい名前" effect="light" open-delay="500">
+              <el-form-item label="登録名" prop="name">
+                <el-input type="text" v-model="ruleForm.name" />
+                <div v-if="nameAlert" class="form_item_error">
+                  登録名が既に存在しています。上書きしますがよろしいですか？
+                </div>
+              </el-form-item>
+            </el-tooltip>
+          </el-row>
+          <el-row>
+            <el-tooltip placement="top" content="UIなどで表示される名称" effect="light" open-delay="500">
+              <el-form-item label="コメント" prop="comment">
+                <el-input type="text" v-model="ruleForm.comment" />
+              </el-form-item>
+            </el-tooltip>
+          </el-row>
+          <el-row>
+            <el-col span="3" offset="16">
+              <el-button @click="Cancel" type="danger">中止</el-button>
+            </el-col>
+            <el-col span="3" offset="1">
+              <el-button @click="Submit" :disabled="!rulesValid" type="primary">保存</el-button>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
+
+      <div v-if="remocon.remoconTable && (Object.keys(remocon.remoconTable).length > 0)" class="well-transparent">
+        <h5>登録済みリモコン一覧</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="40%">登録名<br>コメント</th>
+              <th class="60%">コード</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
+              <el-tooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
+                <td width="40%">
+                  <el-button type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
                   <div>
                     {{ idx }}<br>
                     {{ item.comment }}
                   </div>
                 </td>
-                <td class="col-md-7">
-                  {{ Decode(item.code) }}
-                  <button v-show="(idx===selectedIdx)" class="btn btn-xs btn-danger delete-btn pull-right remocon-btn" @click="DeleteItem(item, idx)">
-                    -
-                  </button>
+              </el-tooltip>
+              <el-tooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
+                <td width="60%">
+                  <el-col span="20">
+                    {{ Decode(item.code) }}
+                  </el-col>
+                  <el-col span="4">
+                    <el-button v-show="(idx===selectedIdx)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteItem(item, idx)" />
+                  </el-col>
                 </td>
-              </tr>
-            </tbody>
-          </table>
-          <table class="table remocon-table" v-for="(group, groupName) of remocon.remoconGroup" :key="'r-remoconGroup' + groupName">
-            <tbody>
+              </el-tooltip>
+            </tr>
+          </tbody>
+        </table>
+        <table class="table" v-for="(group, groupName) of remocon.remoconGroup" :key="'r-remoconGroup' + groupName">
+          <tbody>
+            <el-tooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
               <tr @click.stop="SelectGroup(groupName)" :class="{success:(groupName==selectedGroup)}">
-                <td class="col-md-5">
+                <td width="40%">
                   <div>
                     {{ groupName }}<br>{{ group.comment }}
                   </div>
                 </td>
-                <td class="col-md-7">
-                  <button v-show="(selectedGroup==groupName)" class="btn btn-xs btn-danger delete-btn pull-right remocon-btn" @click="DeleteGroup(groupName)">
-                    -
-                  </button>
+                <td width="60%">
+                  <el-tooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)はまとめて消去されます" effect="light" open-delay="500">
+                    <el-button v-show="(selectedGroup==groupName)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteGroup(groupName)" />
+                  </el-tooltip>
                 </td>
               </tr>
-              <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
-                <td class="col-md-5">
-                  <button class="btn btn-xs btn-single pull-left remocon-btn" @click.stop="IRSend(item, idx)">
-                    >
-                  </button>
+            </el-tooltip>
+            <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
+              <el-tooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
+                <td width="40%">
+                  <el-button type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
                   <div>
                     {{ idx }}<br>
                     {{ item.comment }}
                   </div>
                 </td>
-                <td class="col-md-7">
-                  {{ Decode(item.code) }}
+              </el-tooltip>
+              <el-tooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)は個別に消去できません" effect="light" open-delay="500">
+                <td width="60%">
+                  <el-col span="22">
+                    {{ Decode(item.code) }}
+                  </el-col>
                 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </fieldset>
+              </el-tooltip>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    </div>
-  </div>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { alert } from 'vue-strap';
+  import { Tooltip, Form, FormItem, Input } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/input.css';
 
   export default {
     components: {
-      alert,
+      ElTooltip: Tooltip,
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElInput: Input,
     },
     props: {
       display: {
@@ -165,16 +178,39 @@
           remoconMacro: {},
         },
         lastRemoconCode: {},
-        name: '',
-        nameValid: false,
-        comment: '',
-        commentValid: false,
-        nameAlert: '',
-        commentAlert: '',
+        nameAlert: false,
         selectedGroup: null,
         selectedItem: null,
         selectedIdx: null,
+        ruleForm: {
+          name: '',
+          comment: '',
+        },
+        rules: {
+          name: [
+            { required: true, min: 4, message: '登録名を4文字以上で入れてください。', trigger: 'blur' },
+            { validator: this.ValidateName.bind(this), trigger: 'blur' },
+          ],
+          comment: [
+            { required: true, message: 'コメントを入れてください。', trigger: [ 'blur', 'change' ] },
+          ],
+        },
+        ruleValid: {
+          name: false,
+          comment: false,
+        },
       };
+    },
+    computed: {
+      receivedCode() {
+        return Object.keys(this.lastRemoconCode).length > 0;
+      },
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
+        }
+        return true;
+      },
     },
     mounted() {
       this.reader = new FileReader();
@@ -230,53 +266,37 @@
       },
       SelectRemocon(item) {
         this.selectedItem = item;
-        this.name = item.name;
-        this.NameCheck();
-        this.comment = item.comment;
-        this.CommentCheck();
+        this.ruleForm.name = item.name;
+        this.ruleForm.comment = item.comment;
       },
-      NameCheck() {
-        if(!this.name || (this.name.length < 4)) {
-          this.nameValid = false;
-          this.nameAlert = '登録名を4文字以上で入れてください。';
-          return;
-        }
-        if(this.remocon.remoconTable[this.name]) {
-          if(this.remocon.remoconTable[this.name].group) {
-            this.nameValid = false;
-            this.nameAlert = 'エアコン・テレビのコード名と同じ名前は登録できません。';
-            return;
+      ValidateName(rule, value, callback) {
+        this.nameAlert = false;
+        if(this.remocon.remoconTable[value]) {
+          if(this.remocon.remoconTable[value].group) {
+            return callback(new Error('エアコン・テレビのコード名と同じ名前は登録できません。'));
           }
-          this.nameAlert = '登録名が既に存在しています。上書きしますがよろしいですか？';
-        } else {
-          this.nameAlert = '';
+          this.nameAlert = true;
         }
-        this.nameValid = true;
-      },
-      CommentCheck() {
-        if(!this.comment || (this.comment.length === 0)) {
-          this.commentValid = false;
-          this.commentAlert = 'コメントを入れてください。';
-          return;
-        }
-        this.commentValid = true;
-        this.commentAlert = '';
+        return callback();
       },
       Cancel() {
         Common.emit('toastr_clear', this);
         this.selectedItem = null;
       },
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
       Submit() {
-        if(!this.nameValid || !this.commentValid) return;
-        this.nameAlert = '';
-        this.commentAlert = '';
-        const name = this.name;
-        const comment = this.comment;
-        const code = this.selectedItem.code;
-        this.remocon.remoconTable[name] = { comment: comment, code: code };
-        Common.emit('changeRemocon', this);
-        Common.emit('toastr_clear', this);
-        this.selectedItem = null;
+        this.$refs.ruleForm.validate((valid) => {
+          if(!valid) return;
+          this.nameAlert = false;
+          this.remocon.remoconTable[this.ruleForm.name] = {
+            comment: this.ruleForm.comment,
+             code: this.selectedItem.code,
+          };
+          Common.emit('changeRemocon', this);
+          this.selectedItem = null;
+        });
       },
       DeleteItem(item, idx) {
         this.selectedGroup = null;
@@ -340,42 +360,14 @@
     margin: 1vh;
   }
 
-  .vertical-space2 {
-    margin-top: 10vh;
+  .table {
+      font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
   }
 
-  .gray {
-    background-color: #ccc;
-  }
-
-  .remocon-select-menu {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-    font-size:12px;
-    margin: 0px;
-    padding:0px;
-    text-align: center;
-    width: 70%;
-    height:20px;
-    line-height:20px;
-    background-color: rgba(255,255, 255, 0);
-  }
-
-  .remocon-table {
-    margin: 0px;
-  }
-
-  .remocon-table th, .remocon-table td {
-    padding: 1px !important;
-    line-height: 20px !important;
-    border-top: 1px solid #ddd;
-  }
-
-  .remocon-btn {
-    line-height: 20px !important;
-    width: 1em;
+  .table td .remocon-btn {
+    line-height: 20px;
     vertical-align: middle;
     margin: 6px 6px;
-    padding: 4px 10px 4px 5px;
   }
 </style>
 

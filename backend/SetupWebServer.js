@@ -27,6 +27,7 @@ class SetupWebServer {
   constructor(common, initalCallback) {
     this.common = common;
     this.setupWebClientConnections = [];
+    this.requestAuth = false;
     
     this.common.on('changeStatus', (caller, msg) => {
       this.SendMessage('events', msg);
@@ -75,17 +76,16 @@ class SetupWebServer {
 
     this.common.on('changeSystemConfig', (_caller) => {
       try {
-        if(this.common.systemConfig.autoUpdate == 'on') {
+        if(this.common.systemConfig.autoUpdate) {
           fs.writeFileSync(this.common.config.basePath + '/autoupdate', 'on');
         } else {
           fs.unlinkSync(this.common.config.basePath + '/autoupdate');
         }
       } catch(e) {/* empty */}
 
-      if(!this.common.systemConfig.powerLED) this.common.systemConfig.powerLED = 'off';
       this.common.emit('sendControllerCommand', this, {
         deviceName: 'server',
-        command: 'sysled ' + this.common.systemConfig.powerLED,
+        command: `sysled ${ this.common.systemConfig.powerLED ? 'on' : 'off' }`,
       });
 
       if(_caller !== this) {
@@ -93,11 +93,21 @@ class SetupWebServer {
       }
     });
 
+    this.common.on('requestAuth', (_caller) => {
+      this.requestAuth = true;
+      this.requestAuthTimer = setTimeout(() => {
+        this.requestAuth = false;
+        this.SendMessage('requestAuth', false);
+        this.requestAuthTimer = null;
+      }, 5 * 60 * 1000);
+      this.SendMessage('requestAuth', true);
+    });
+
     const app = express();
     app.use(cookieParser());
 
     const session = expressSession({
-      secret: 'bt6vNbbShmOlpTL-7fPhTTmwW6TVF44rwyxk6aep9Ho',
+      secret: this.common.config.sessionSecret,
       resave: false,
       saveUninitialized: false,
       rolling: true,
@@ -114,6 +124,7 @@ class SetupWebServer {
     app.enable('trust proxy');
 
     app.use('/js/*', (req, res) => {
+      console.log('js/* ', req.originalUrl);
       const user = req.session.user || {};
       user.pv = (user.pv || 0) + 1;
       user.expire = user.expire || (moment().add(14, 'days').unix());
@@ -230,6 +241,9 @@ class SetupWebServer {
       }
       res.redirect('/');
     });
+
+    app.use('/:page', this.IndexResponse);
+    app.use('/', this.IndexResponse);
 
     this.server.listen(this.common.config.setupWebServerPort, '::0', () => {
       console.log('setupWebServer listing on port %d', this.common.config.setupWebServerPort);
@@ -411,7 +425,7 @@ class SetupWebServer {
         if(this.common.systemConfig.bridge) this.common.systemConfig.bridge.changeState = true;
         this.common.systemConfig.changeAuthKey = true;
         this.common.systemConfig.requestRemoteAccessState = 0;
-        this.common.systemConfig.remote = 'off';
+        this.common.systemConfig.remote = false;
         let param = '';
         for(let i = 0; i < 24; i++)
           param += ' ' + ('0' + this.common.systemConfig.xbeeKey[i].toString(16)).slice(-2);
@@ -492,6 +506,14 @@ class SetupWebServer {
         command: 'shutdown',
       });
     });
+
+    socket.on('authConfirm', (msg) => {
+      this.common.emit('authConfirm', this, msg);
+      this.requestAuth = false;
+      if(this.requestAuthTimer) clearTimeout(this.requestAuthTimer);
+      this.requestAuthTimer = null;
+      this.SendMessage('requestAuth', false);
+    });
     
     this.SendMessage('deviceInfo', {type:'deviceInfo', data:this.common.deviceInfo});
     this.SendMessage('status', this.common.status);
@@ -506,14 +528,28 @@ class SetupWebServer {
                                    (clientAddress !== '::ffff:127.0.0.1') &&
                                    (clientAddress !== '::1'));
     this.SendMessage('shutdownEnable', this.common.shutdownEnable);
+    this.SendMessage('requestAuth', this.requestAuth);
 
-    if(!this.common.systemConfig.powerLED) this.common.systemConfig.powerLED = 'off';
     this.common.emit('sendControllerCommand', this, {
       deviceName: 'server',
-      command: 'sysled ' + this.common.systemConfig.powerLED,
+      command: `sysled ${ this.common.systemConfig.powerLED ? 'on' : 'off' }`,
     });
 
     this.common.emit('setupWebConnect', this);
+  }
+
+  IndexResponse(req, res) {
+    console.log('IndexRes ', req.originalUrl);
+    fs.readFile(__dirname + '/../frontend/index.html.gz', (err, data) => {
+      if(err) {
+        res.writeHead(404, {'Content-Type': 'text/plain'});
+        res.write('xCannot GET /' + req.params.page);
+        return res.end();
+      }
+      res.set('Content-Type', 'text/html');
+      res.set('Content-Encoding', 'gzip');
+      res.send(data);
+    });
   }
 
   AddRemocon(code) {

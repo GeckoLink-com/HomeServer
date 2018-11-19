@@ -42,7 +42,9 @@ class ServerConnection {
     this.common.on('deviceInfo', this.SendData.bind(this));
 
     this.common.on('sendMail', this.SendData.bind(this));
-    
+
+    this.common.on('authConfirm', this.SendData.bind(this));
+
     this.common.on('changeSystemConfig', (_caller) => {
       if(this.connectState > 0) this.wssClient.terminate();
       this.connectState = -1;
@@ -96,10 +98,10 @@ class ServerConnection {
         if(serverKeys.keyFileBody) this.options.key = Buffer.from(serverKeys.keyFileBody);
 
         if(this.options.cert.toString().match(/Subject:.*OU=([^ ,]*)/)[1] !== 'free_account') {
-          if(this.common.systemConfig.remote === 'on') this.connectState = 0;
+          if(this.common.systemConfig.remote) this.connectState = 0;
         }
         if(this.common.systemConfig.account.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
-          if((this.common.systemConfig.remote === 'on') || (this.common.systemConfig.requestRemoteAccessState > 0)) {
+          if(this.common.systemConfig.remote || (this.common.systemConfig.requestRemoteAccessState > 0)) {
             this.connectState = 0;
           }
         }
@@ -255,23 +257,25 @@ class ServerConnection {
   Receive(msg) {
     if(msg.type === 'error') {
       console.log('error : ', msg.error);
-      if((msg.error === 'invalid access') && this.common.systemConfig.remote === 'on') {
-        this.common.systemConfig.remote = 'off';
+      if((msg.error === 'invalid access') && this.common.systemConfig.remote) {
+        this.common.systemConfig.remote = false;
         this.common.emit('changeSystemConfig', this);
       }
     } else if(msg.type === 'command') {
-      if(this.common.systemConfig.remote !== 'on') return;
+      if(!this.common.systemConfig.remote) return;
       let cmd = msg.command;
       if(msg.func) cmd = msg.func + ' ' + msg.mode;
       this.common.emit('sendControllerCommand', this, {deviceName: msg.deviceName, command: cmd});
     } else if(msg.type === 'rainInfo') {
-      if(this.common.systemConfig.remote !== 'on') return;
+      if(!this.common.systemConfig.remote) return;
       this.common.internalStatus.rainInfo = msg.data;
       this.common.emit('changeInternalStatus', this);
     } else if(msg.type === 'accountValid') {
-      this.common.systemConfig.remote = 'on';
+      this.common.systemConfig.remote = true;
       this.common.systemConfig.requestRemoteAccessState = 0;
       this.common.emit('changeSystemConfig', this);
+    } else if(msg.type === 'requestAuth') {
+      this.common.emit('requestAuth', this);
     }
   }
 
@@ -282,7 +286,7 @@ class ServerConnection {
     if(this.wssClient._socket) { // DEBUG
       if(this.wssClient._socket.connecting) console.log('ServerConnection : connecting false'); // DEBUG
     } // DEBUG
-    if((this.common.systemConfig.remote !== 'on') && (msg.type !== 'accessKey')) {
+    if(!this.common.systemConfig.remote && (msg.type !== 'accessKey')) {
       console.log('ServerConnection : remote off');
       return;
     }

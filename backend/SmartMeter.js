@@ -19,7 +19,7 @@ class SmartMeter {
 
     global.showErrorExit = (msg) => {
       console.log('SmartMeter:', msg);
-      this.retryDiscovery--;
+      if(this.retryDiscovery > 0) this.retryDiscovery--;
       if(this.retryDiscovery == 0) {
         this.Reset();
       } else {
@@ -67,7 +67,7 @@ class SmartMeter {
     this.el.init((err) => {
       if(err) {
         console.log('SmartMeter:', err.message);
-        this.retryInitialize--;
+        if(this.retryInitialize > 0) this.retryInitialize--;
         if(this.retryInitialize == 0) throw err;
         this.Initialize();
         return;
@@ -82,7 +82,7 @@ class SmartMeter {
     this.el.startDiscovery((err, res) => {
       if(err) {
         console.log('SmartMeter:', err.message);
-        this.retryDiscovery--;
+        if(this.retryDiscovery > 0) this.retryDiscovery--;
         if(this.retryDiscovery == 0) throw err;
         this.Discovery();
         return;
@@ -90,7 +90,7 @@ class SmartMeter {
       if(!res.device || !res.device.eoj || !res.device.eoj[0]) {
         console.log('SmartMeter Exception : Error not found device');
         console.log(res);
-        this.retryInitialize--;
+        if(this.retryInitialize > 0) this.retryInitialize--;
         if(this.retryInitialize == 0) throw err;
         this.Initialize();
         return;
@@ -134,9 +134,10 @@ class SmartMeter {
           console.log('SmartMeter: GetValue 0xe8 error');
           console.log(err);
         }
-        this.common.internalStatus.smartMeter = this.deviceInfo.energy;
+        const value = this.deviceInfo.energy < 0 ? -this.deviceInfo.energy : this.deviceInfo.energy;
+        this.common.internalStatus.smartMeter = value;
         this.common.emit('changeInternalStatus', this);
-        console.log('SmartMeter: ', this.deviceInfo.energy);
+        console.log('SmartMeter: ', value);
         this.intervalDropCount = 0;
       });
     });

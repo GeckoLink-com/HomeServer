@@ -361,7 +361,7 @@ class HueAPI {
 
   SearchLights(origin, bridgeNo, touchLink) {
     
-    if(this.bridges[bridgeNo].state != 1) return;
+    if((this.bridges[bridgeNo] == null) || this.bridges[bridgeNo].state != 1) return;
     this.bridges[bridgeNo].state = 2;
     this.bridges[bridgeNo].message = '新規ライトをサーチしています。数十秒かかります。';
     this.common.emit('changeHueBridges', this);

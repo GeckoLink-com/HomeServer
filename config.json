@@ -7,6 +7,7 @@
   "applicationPort": 5000,
   "basePath": "/var/gecko",
   "defaultPassword": "3b8d0b97514d2519c71664785a04e050d8090e7a616ec3c1374982d173e950ab",
+  "sessionSecret": "bt6vNbbShmOlpTL-7fPhTTmwW6TVF44rwyxk6aep9Ho",
   "hap": true,
   "motor": false,
   "led": false,

@@ -1,6 +1,6 @@
 <template>
-  <div class="container-fluid">
-    <navbar placement="top" type="default" id="top-bar" class="nav-tabs" @click="Click">
+  <div>
+    <navbar placement="top" type="default" id="top-bar" @page="Click">
       <div slot="brand">
         <img src="../images/GeckoLogo.png" class="logo" alt="GeckoLink"
              @mousedown="TouchLogoStart"
@@ -8,94 +8,112 @@
              @mouseup="TouchLogoEnd"
              @touchend="TouchLogoEnd">
       </div>
-      <ul class="nav nav-tabs">
-        <li id="defaultTab" @click="Click" data-tab="systemSetup"><a>システム設定</a></li>
-        <dropdown @click.native.capture="DropdownClick" text="子機設定" type="primary" :disabled="!moduleMenu || !passwordValid">
-          <li @click="Click" data-tab="pairing" :class="{ disabled: !module || !moduleMenu || !passwordValid }"><a>ペアリング</a></li>
-          <li @click="Click" data-tab="basicSetup" :class="{ disabled: !moduleMenu || !passwordValid }"><a>基本設定</a></li>
-          <li @click="Click" data-tab="advancedSetup" :class="{ disabled: !moduleMenu || !passwordValid}"><a>詳細設定</a></li>
-          <li @click="Click" data-tab="moduleList" :class="{ disabled: !moduleMenu || !passwordValid}"><a>子機一覧</a></li>
-        </dropdown>
-        <li @click="Click" data-tab="linkDevices" :class="{ disabled: !passwordValid }"><a>リンク機器</a></li>
-        <dropdown @click.native.capture="DropdownClick" text="リモコン登録" type="primary" :class="{ disabled: !passwordValid }">
-          <li @click="Click" data-tab="remocon" :class="{ disabled: !passwordValid }"><a>通常設定</a></li>
-          <li @click="Click" data-tab="remoconMacro" :class="{ disabled: !passwordValid }"><a>マクロ登録・編集</a></li>
-          <li @click="Click" data-tab="remoconAircon" :class="{ disabled: !passwordValid }"><a>エアコン設定</a></li>
-          <li @click="Click" data-tab="remoconTV" :class="{ disabled: !passwordValid }"><a>テレビ設定</a></li>
-        </dropdown>
-        <li @click="Click" data-tab="uiSetting" :class="{ disabled: !passwordValid }"><a>UI設定</a></li>
-        <li @click="Click" data-tab="nodeRED" :class="{ disabled: !passwordValid }"><a>プログラム</a></li>
-        <li v-if="debug" @click="Click" data-tab="debugPanel" :class="{ disabled: !passwordValid }"><a>debug</a></li>
-      </ul>
-
+      <li data-to="/system_setup">システム設定</li>
+      <dropdown text="子機設定" :disabled="!moduleMenu || !passwordValid" >
+        <li data-to="/pairing" :disabled="!module">ペアリング</li>
+        <li data-to="/basic_setup" >基本設定</li>
+        <li data-to="/advanced_setup" class="no-mobile" >詳細設定</li>
+        <li data-to="/module_list" >子機一覧</li>
+      </dropdown>
+      <li data-to="/link_devices" :disabled="!passwordValid" >リンク機器</li>
+      <dropdown text="リモコン" :disabled="!passwordValid" >
+        <li data-to="/remocon" >リモコン設定</li>
+        <li data-to="/remocon_macro" >マクロ登録・編集</li>
+        <li data-to="/remocon_aircon" class="no-mobile" >エアコン設定</li>
+        <li data-to="/remocon_tv" class="no-mobile" >テレビ設定</li>
+      </dropdown>
+      <li data-to="/ui_setting" :disabled="!passwordValid" class="no-mobile" >UI設定</li>
+      <li data-to="/node_red" :disabled="!passwordValid" class="no-mobile" >プログラム</li>
+      <li data-to="/debug_panel" v-show="debug" :disabled="!passwordValid" >debug</li>
     </navbar>
 
-    <system-setup :display="selectedTab==='systemSetup'"/>
-    <pairing :display="selectedTab==='pairing'"/>
-    <basic-setup :display="selectedTab==='basicSetup'"/>
-    <advanced-setup :display="selectedTab==='advancedSetup'"/>
-    <module-list :display="selectedTab=='moduleList'"/>
-    <link-devices :display="selectedTab==='linkDevices'"/>
-    <remocon :display="selectedTab==='remocon'"/>
-    <remocon-macro :display="selectedTab==='remoconMacro'"/>
-    <remocon-aircon :display="selectedTab==='remoconAircon'"/>
-    <remocon-tv :display="selectedTab==='remoconTV'"/>
-    <ui-setting :display="selectedTab==='uiSetting'"/>
-    <node-red :display="selectedTab==='nodeRED'"/>
-    <debug-panel :display="selectedTab==='debugPanel'"/>
+    <div class="main-container">
+      <system-setup v-show="selectedTab==='/system_setup'" />
+      <pairing v-show="selectedTab==='/pairing'" />
+      <basic-setup v-show="selectedTab==='/basic_setup'" />
+      <advanced-setup v-show="selectedTab==='/advanced_setup'" />
+      <module-list v-show="selectedTab=='/module_list'" />
+      <link-devices v-show="selectedTab==='/link_devices'" />
+      <remocon v-show="selectedTab==='/remocon'" />
+      <remocon-macro v-show="selectedTab==='/remocon_macro'" />
+      <remocon-aircon v-show="selectedTab==='/remocon_aircon'" />
+      <remocon-tv v-show="selectedTab==='/remocon_tv'" />
+      <ui-setting v-show="selectedTab==='/ui_setting'" />
+      <node-red :display="selectedTab==='/node_red'" />
+      <debug-panel v-show="selectedTab==='/debug_panel'" />
+      <toastr />
+    </div>
 
-    <toastr/>
+    <el-dialog title="モバイル端末接続確認" :visible.sync="requestAuth" :show-close="false" :close-on-click-modal="false" :close-on-press-escape="false" >
+      3分以内にモバイル端末に表示されている6桁のパスコードを入力してください。<br>
+      もしモバイル端末の登録をしようとしていない場合は拒否を選択してください。<br>
+      <el-row>
+        <el-col v-for="i in 6" :key="'passcode' + i" offset="1" span="3">
+          <el-input type="text" :ref="'passcode'+(i-1)" :autofocus="i == 1" v-model="passcode[i - 1]" maxlength="1" pattern="[0-9]" @input="Passcode(i)" />
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="RejectAuth">拒否</el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-  import { navbar, dropdown, tabs, tabGroup, tab } from 'vue-strap';
-  import toastr from './Toastr.vue';
+  import { Dialog, Input } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/dialog.css';
+  import 'element-ui/lib/theme-chalk/input.css';
 
-  import systemSetup from './SystemSetup.vue';
-  import pairing from './Pairing.vue';
-  import basicSetup from './BasicSetup.vue';
-  import advancedSetup from './AdvancedSetup.vue';
-  import moduleList from './ModuleList.vue';
-  import linkDevices from './LinkDevices.vue';
-  import remocon from './Remocon.vue';
-  import remoconMacro from './RemoconMacro.vue';
-  import remoconAircon from './RemoconAircon.vue';
-  import remoconTv from './RemoconTV.vue';
-  import uiSetting from './UISetting.vue';
-  import nodeRed from './NodeRED.vue';
-  import debugPanel from './DebugPanel.vue';
+  import Navbar from './Navbar.vue';
+  import Dropdown from './Dropdown.vue';
+  import Toastr from './Toastr.vue';
+
+  import SystemSetup from './SystemSetup.vue';
+  import Pairing from './Pairing.vue';
+  import BasicSetup from './BasicSetup.vue';
+  import AdvancedSetup from './AdvancedSetup.vue';
+  import ModuleList from './ModuleList.vue';
+  import LinkDevices from './LinkDevices.vue';
+  import Remocon from './Remocon.vue';
+  import RemoconMacro from './RemoconMacro.vue';
+  import RemoconAircon from './RemoconAircon.vue';
+  import RemoconTv from './RemoconTV.vue';
+  import UiSetting from './UISetting.vue';
+  import NodeRed from './NodeRED.vue';
+  import DebugPanel from './DebugPanel.vue';
 
   export default {
     components: {
-      navbar,
-      dropdown,
-      tabs,
-      tabGroup,
-      tab,
-      toastr,
-      systemSetup,
-      pairing,
-      basicSetup,
-      advancedSetup,
-      moduleList,
-      linkDevices,
-      remocon,
-      remoconMacro,
-      remoconAircon,
-      remoconTv,
-      uiSetting,
-      nodeRed,
-      debugPanel,
+      ElDialog: Dialog,
+      ElInput: Input,
+      Navbar,
+      Dropdown,
+      Toastr,
+      SystemSetup,
+      Pairing,
+      BasicSetup,
+      AdvancedSetup,
+      ModuleList,
+      LinkDevices,
+      Remocon,
+      RemoconMacro,
+      RemoconAircon,
+      RemoconTv,
+      UiSetting,
+      NodeRed,
+      DebugPanel,
     },
     data() {
       return {
-        activeTab: 0,
         module: false,
         moduleMenu: false,
         debug: false,
         passwordValid: false,
-        selectedTab: 'systemSetup',
+        selectedTab: '/system_setup',
+        requestAuth: false,
+        passcode: [],
+        passcodeFocus: 0,
       };
     },
     mounted() {
@@ -118,6 +136,17 @@
       Common.on('changeSystemConfig', () => {
         this.passwordValid = Common.systemConfig.password && Common.systemConfig.defaultPassword && (Common.systemConfig.password !== Common.systemConfig.defaultPassword);
       });
+      Common.on('requestAuth', (_caller, flag) => {
+        this.requestAuth = flag;
+        this.passcodeFocus = 0;
+        this.passcode = [];
+        if(this.requestAuth) {
+          this.$nextTick(() => {
+            this.$refs['passcode' + this.passcodeFocus][0].focus();
+            this.$refs['passcode' + this.passcodeFocus][0].select();
+          });
+        }
+      });
 
       // view
       document.ondragstart = () => { return false; };
@@ -133,41 +162,56 @@
 
       // key event
       window.addEventListener('keydown', (e) => {
-        if(e.altKey) this.debug = true;
+        if(e.altKey) {
+          this.logoTimer = setTimeout(() => {
+            if((this.selectedTab !== '/debug_panel') || !this.debug)
+              this.debug = !this.debug;
+          }, 1500);
+        }
       });
       window.addEventListener('keyup', (e) => {
-        if((this.selectedTab !== 'debugPanel') && (!e.altKey)) {
-          this.debug = false;
+        if(!e.altKey) {
+          if(this.logoTimer) clearTimeout(this.logoTimer);
         }
       });
       window.addEventListener('resize', () => {
         this.debug = false;
       });
-      this.lastTabElement = document.getElementById('defaultTab');
-      this.lastTabElement.classList.add('active');
     },
     methods: {
-      Click(el) {
-        const pel = el.target.parentElement;
-        if(pel.classList.contains('disabled')) return;
-
-        let targetTab = pel;
-        if(pel.parentElement.classList.contains('dropdown-menu')) {
-          do {
-            targetTab = targetTab.parentElement;
-          } while(!targetTab.classList.contains('dropdown') && (targetTab !== document.body));
+      Passcode(d) {
+        this.passcodeFocus = d - 1;
+        if((this.passcode[d-1] > '9') || (this.passcode[d-1] < '0')) {
+          this.passcode[d-1] = '';
+        } else {
+          this.passcodeFocus++;
+          if(this.passcodeFocus === 6) {
+            this.passcodeFocus = 0;
+            let code = '';
+            for(d of this.passcode) {
+              code += d;
+            }
+            Socket.emit('authConfirm', {
+              type: 'authConfirm',
+              passcode: code,
+            });
+          }
+          this.$refs['passcode' + this.passcodeFocus][0].focus();
+          this.$refs['passcode' + this.passcodeFocus][0].select();
         }
-        this.lastTabElement.classList.remove('active');
-        targetTab.classList.add('active');
-        this.lastTabElement = targetTab;
-        this.selectedTab = pel.dataset.tab;
+      },
+      RejectAuth() {
+        Socket.emit('authConfirm', {
+          type: 'authConfirm',
+          passcode: '',
+        });
+      },
+      Click(e) {
         let timeout = 8000;
-        if(this.selectedTab.indexOf('remocon') >= 0) timeout = 0;
+        this.selectedTab = e.to;
+        if(this.selectedTab.indexOf('/remocon') >= 0) timeout = 0;
         Common.emit('toastr_clear', this);
         Common.emit('toastr_timeout', this, timeout);
-      },
-      DropdownClick(el) {
-        if(el.target.parentElement.classList.contains('dropdown')) el.stopPropagation();
       },
       TouchLogoStart() {
         this.logoTimer = setTimeout(() => {
@@ -218,242 +262,38 @@
 
 <style scoped>
   /* for mobile device */
-  #top-bar {
-    float: right;
-    position: fixed;
-    z-index: 100;
-    width: 100vw;
-    top: 0px;
-    border-width: 0;
-    display: inline-block;
-    color: rgba(93,93,93,0);
-    background-color: rgba(255,255,255,0);
-    transition: 1s;
+  .main-container {
+    margin: 0 1vw;
+    margin-top: 50px;
+    overflow-y: scroll;
   }
 
-  #top-bar >>> .container {
-    width: 100vw;
-    padding: 0;
-  }
-
-  #top-bar >>> .logo {
-    margin: 0.8% 1vw 0.5% 1vw;
-    width: 18vw;
-    max-width: 200px;
-    min-width: 150px;
-    display: inline-block;
-  }
-
-  #top-bar >>> .navbar-toggle {
-    border: 0;
-  }
-
-  #top-bar >>> .navbar-toggle {
-    border: 0;
-  }
-
-  #top-bar >>> .navbar-collapse li {
-    display: list-item;
-  }
-
-  #top-bar >>> .navbar-collapse {
-    float: right;
-    background-color: rgba(255,255,255,0.8);
-    font-size: 1em;
-    padding: 0;
-    margin: 0;
-    box-shadow:1px 1px 2px rgba(0, 0, 0, .2);
-    border-style: none;
-    max-height: none;
-  }
-
-  #top-bar >>> .navbar-nav {
-    vertical-align: middle;
-    cursor: default;
-    line-height: 1.6em;
-    margin: 0 0.5em;
-  }
-
-  .tab-bar {
-    margin: 0;
-    padding: 32px 10px 5px 10px;
-    width: 70vw;
-    font-size:1.6vw;
-  }
-
-  .tab-bar li a {
-    padding: 0.1em 0.8vw;
-  }
-
-  .navbar {
-    background-color:white;
-    height: 80px;
-    max-width: 1280px;
-    width: 100%;
-  }
-
-  .navbar .container {
-    width: 100vw;
-    margin: 0;
-    padding: 0;
-  }
-
-  .tab-panel {
-    position: absolute;
-    top: 80px;
-    width: 98%;
-    height: calc(100vh - 80px);
-  }
-
-  .dropdown-menu {
-    font-size:1em;
-    font-weight: 300;
-    text-align: left;
-  }
-
-  .dropdown:hover:not(.disabled) .dropdown-menu {
+  .main-container .el-container {
+    width: 98vw;
+    height: calc(100vh - 120px);
     display: block;
   }
 
-  .dropdown:not(:hover) .dropdown-menu {
-    display: none;
+  .main-container .el-container .el-aside, .main-container .el-container .el-main {
+    position: relative;
   }
-
-  #top-bar >>> .dropdown-toggle {
-    display: none;
-    text-align: center;
-    line-height: 2.0em;
-    margin: 0;
-    padding: 0;
-  }
-
-  #top-bar >>> .dropdown-menu {
-    text-align: center;
-    line-height: 1.6em;
-    font-size: 1em;
-    margin: 0;
-    padding: 0;
-    background-color: rgba(0, 0, 0, 0);
-    display: list-item;
-    box-shadow: none;
-    border-style: none;
-    position: static;
-    top: 100%;
-    float: none;
-    z-index: auto;
-  }
-
-  #top-bar >>> a {
-    font-weight: unset;
-    line-height: 1.6em;
-    color: rgb(38, 103, 168);
-    padding: 0;
-    text-align: left;
-  }
-
-  #top-bar >>> a:hover {
-    color: black;
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-
-  #top-bar >>> .dropdown-menu a:hover {
-    color: black;
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-
-  #top-bar .disabled >>> a{
-    color: rgb(93, 93, 93);
-  }
-
-  #top-bar .display-off >>> a {
-    display: none;
-  }
-
-  #top-bar >>> .nav-tabs > li {
-    float: none;
-  }
-
+  
   /* for PC */
   @media only screen
          and (min-width: 768px) {
 
-    #top-bar:hover {
-      opacity: 1!important;
-      background-color: rgba(255, 255, 255, 0.8)!important;
+    #top-bar {
+      font-size: 1.2vw;
     }
 
-    #top-bar >>> .navbar-collapse {
-      float: none;
-      background-color: rgba(0, 0, 0, 0);
-      font-size: 1.4vw;
-      box-shadow: none;
+    .main-container {
+      margin-top: 90px;
+      overflow: hidden;
     }
 
-    #top-bar >>> .navbar-nav {
-      line-height: 2.0em;
-      margin: 20px 0 0 0.5vw;
-      width: 78vw;
-    }
-
-    #top-bar >>> a {
-      font-size: 1em;
-    }
-
-    #top-bar >>> .nav li {
-      margin-right: 0.1%;
-      width: 13.8%;
-    }
-
-    #top-bar >>> .nav li a {
-      text-align: center;
-    }
-
-    #top-bar >>> .dropdown-menu {
-      text-align: left;
-      position: absolute;
-      box-shadow: rgba(0, 0, 0, 0.2) 0px 6px 12px 0px;
-      background-color: rgba(255,255,255,0.85);
-      display: none;
-      font-size: 1em;
-    }
-
-    #top-bar >>> .dropdown-menu li {
-      padding: 0;
-      width: auto;
-    }
-
-    #top-bar >>> .dropdown-menu li a {
-      text-align: left;
-      padding: 0 0.5em;
-      font-size: 1em;
-    }
-
-    #top-bar >>> .dropdown-toggle {
-      display: block;
-      text-align: center;
-      line-height: 1.6em;
-      margin: 0;
-      padding: 0;
-    }
-
-    #top-bar >>> .dropdown:hover .dropdown-menu {
-      display: inline-block;
-    }
-
-    #top-bar >>> .dropdown:not(hover) .dropdown-menu {
-        display: none;
-    }
-
-    #top-bar >>> .nav-tabs > li {
-      float: left;
-    }
-
-    .nav .open>a {
-      border-color: inherit;
-    }
-
-    .dropdown-menu>.active>a, .dropdown-menu>.active>a:focus, .dropdown-menu>.active>a:hover {
-      background-color: inherit;
+    .main-container .el-container {
+      height: calc(100vh - 90px);
+      display: flex;
     }
   }
 </style>

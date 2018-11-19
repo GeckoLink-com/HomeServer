@@ -1,24 +1,22 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel" @click="selectedDevice=null">
-    <div class="col-sm-3 col-md-3">
-      <br>
+  <el-container @click.native="ClearSelect">
+    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>子機一覧</h4>
       <br>
-      <div class="module-image">
-        <img src="../images/HB-6.png" alt="GL-1100" width="200px" >
+      <div class="module-image no-mobile" >
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
       </div>
-    </div>
-    <div class="col-sm-7 col-md-7 scrollable">
-      <br>
+    </el-aside>
+    <el-main>
       <table class="table module-table" v-show="devices && (devices.length > 0)">
         <thead>
           <tr>
-            <th class="col-md-3">name</th>
-            <th class="col-md-2">module</th>
-            <th class="col-md-1">type</th>
-            <th class="col-md-2">version</th>
-            <th class="col-md-1">power</th>
-            <th class="col-md-3">status</th>
+            <th width="25%">name</th>
+            <th width="16%">module</th>
+            <th width="9%">type</th>
+            <th width="16%">version</th>
+            <th width="9%">power</th>
+            <th width="25%">status</th>
           </tr>
         </thead>
         <tbody>
@@ -30,29 +28,28 @@
             <td>{{ dev.voltage?dev.voltage:'-' }}</td>
             <td v-if="dev.fwupdateSeq == dev.fwupdateNum">
               {{ dev.state }}
-              <button v-show="(selectedDevice==dev.device)&&(dev.state=='dead')" class="btn btn-xs btn-danger delete-btn pull-right" @click.stop="Delete(dev.device)">
-                -
-              </button>
-              <button v-show="(selectedDevice==dev.device)&&(dev.state!='dead')&&(dev.type=='HA/FC')" class="btn btn-xs btn-danger delete-btn pull-right" @click.stop="Update(dev.device)">
+              <el-button v-if="(selectedDevice==dev.device)&&(dev.state=='dead')" type="danger" icon="el-icon-delete" class="module-button" @click.stop="Delete(dev.device)" />
+              <el-button v-if="(selectedDevice==dev.device)&&(dev.state!='dead')&&(dev.type=='HA/FC')" type="danger" class="module-button" @click.stop="Update(dev.device)">
                 update
-              </button>
+              </el-button>
             </td>
             <td v-if="dev.fwupdateSeq != dev.fwupdateNum">
-              <progressbar :now="dev.fwupdateSeq * 100 / dev.fwupdateNum" type="primary" :striped="true" :animated="true" class="module-progress"/>
+              <el-progress :show-text="false" :stroke-width="22" :percentage="dev.fwupdateSeq * 100 / dev.fwupdateNum" color="#e6a23c" class="progress-striped" />
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { progressbar } from 'vue-strap';
+  import { Progress } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/progress.css';
 
   export default {
     components: {
-      progressbar,
+      ElProgress: Progress,
     },
     props: {
       display: {
@@ -105,35 +102,22 @@
           { type: 'command', device: device, command: 'update' });
         this.selectedDevice = null;
       },
+      ClearSelect() {
+        this.selectedDevice = null;
+      },
     },
   };
 </script>
 
 <style scoped>
 
-  table.module-table {
-      width: 100%;
-      border-top: 1px solid #CCC;
-      border-left: 1px solid #CCC;
-      border-spacing:0;
-  }
-
   table.module-table tr th, table.module-table tr td {
-      font-size:14px;
-      font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-      border-bottom: 1px solid #CCC;
-      border-right: 1px solid #CCC;
-      padding: 0px 5px;
-      height: 23px;
+    height: 23px;
   }
 
-  table.module-table tr th {
-      background: #E6EAFF;
-  }
-
-  .module-progress {
-      height: 10px;
-      margin-top: 5px;
+  .module-button {
+    float: right;
+    padding: 4px 15px;
   }
 </style>
 

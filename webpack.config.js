@@ -1,5 +1,5 @@
 const webpack = require('webpack');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const VueLoadewrPlugin = require('vue-loader/lib/plugin');
@@ -13,12 +13,13 @@ module.exports = {
   },
   output: {
     path: __dirname + '/frontend',
-    filename: 'js/[name].js'
+    filename: 'js/[name].js',
+    chunkFilename: 'js/chunk_[name].js',
   },
   module: {
     rules: [
       {
-        test: /index\.html/,
+        test: /(sitemap\.xml)|(index\.html)/,
         use: [
           {
             loader: 'file-loader',
@@ -56,7 +57,7 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets: [['env', {modules: false}]],
+              presets: [['@babel/preset-env', {modules: false}]],
             },
           },
         ],
@@ -79,7 +80,7 @@ module.exports = {
       },
       {
         enforce: 'pre',
-        test: /vue\/.*\.vue$/,
+        test: /\.vue$/,
         use: [
           {
             loader: 'eslint-loader',
@@ -132,19 +133,21 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
-    new UglifyJsPlugin(),
+    new TerserPlugin(),
     new webpack.LoaderOptionsPlugin({
       minimize: true
     }),
     new CompressionPlugin({
-      asset: '[path].gz[query]',
+      filename: '[path].gz[query]',
       algorithm: 'gzip',
       test: /js\/.*\.js$/,
       threshold: 0,
       minRatio: 0.8,
       deleteOriginalAssets: true
     }),
-    new HardSourceWebpackPlugin(),
+    new HardSourceWebpackPlugin({
+      cacheDirectory: '.cache/hard-source/[confighash]',
+    }),
     new VueLoadewrPlugin(),
   ],
 };

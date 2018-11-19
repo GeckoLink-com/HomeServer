@@ -8,14 +8,11 @@
 'use strict';
 
 const net = require('net');
-const gpio = require('rpi-gpio');
+const fs = require('fs');
 
 class ControllerConnection {
-
   constructor(common) {
-  
     this.common = common;
-
     this.connectState = 0;
     this.client = null;
     this.connectMessage = true;
@@ -32,38 +29,48 @@ class ControllerConnection {
       this.IntervalConnect();
     });
 
-    gpio.on('change', (ch, value) => {
-      if(!value) {
-        console.log('start shutdown count');
-        this.shutdownTimer = setTimeout(() => {
-          console.log('shutdown');
-          this.ExecCommand(this, {
-            deviceName: 'server',
-            command: 'shutdown',
+    if(!this.common.config.local) {
+      try {
+        fs.writeFileSync('/sys/class/gpio/export', '5');
+      } catch(e) {/* empty */}
+      setTimeout(() => {
+        fs.writeFileSync('/sys/class/gpio/gpio5/direction', 'in');
+        fs.writeFileSync('/sys/class/gpio/gpio5/edge', 'both');
+        fs.watch('/sys/class/gpio/gpio5/value', () => {
+          fs.readFile('/sys/class/gpio/gpio5/value', 'utf8', (err, value) => {
+            if(parseInt(value) === 0) {
+              console.log('start shutdown count');
+              this.shutdownTimer = setTimeout(() => {
+                console.log('shutdown');
+                this.ExecCommand(this, {
+                  deviceName: 'server',
+                  command: 'shutdown',
+                });
+              }, 5000);
+            } else {
+              if(this.shutdownTimer) clearTimeout(this.shutdownTimer);
+              this.shutdownTimer = null;
+            }
           });
-        }, 5000);
-      } else {
-        if(this.shutdownTimer) clearTimeout(this.shutdownTimer);
-        this.shutdownTimer = null;
-      }
-    });
-    gpio.setMode(gpio.MODE_BCM);
-    gpio.setup(5, gpio.DIR_IN, gpio.EDGE_BOTH);
+        });
+      }, 1000);
+    }
   }
   
   IntervalConnect() {
     if(this.connectState == 0) {
+      this.connectState = 1;
       this.client = net.connect(this.controllerPort, this.controllerHost);
 
       this.client.on('connect', () => {
-        this.connectState = 1;
+        this.connectState = 2;
         this.connectMessage = true;
         console.log('connect controller : ', this.controllerHost);
         this.client.setEncoding('utf8');
       });
 
       this.client.on('data', (data) => {
-        if(this.connectState == 1) {
+        if(this.connectState == 2) {
           const strs = (this.lastStr + data).split('\0');
           for(const i in strs) {
             this.lastStr = '';
@@ -89,6 +96,12 @@ class ControllerConnection {
 
       this.client.on('end', () => {
         console.log('disconnect controller : ', this.controllerHost);
+        this.connectMessage = false;
+        this.connectState = 0;
+      });
+
+      this.client.on('close', () => {
+        console.log('disconnect by close controller : ', this.controllerHost);
         this.connectMessage = false;
         this.connectState = 0;
       });
@@ -124,6 +137,7 @@ class ControllerConnection {
     msg.type = 'command';
     if(!Array.isArray(msg.command)) msg.command = msg.command.replace("'", '');
     this.common.ControllerLog(msg);
+    if(msg.device === 0) msg.deviceName = 'server';
     if(msg.deviceName != 'server') {
       if(this.common.aliasTable && msg.deviceName && (msg.deviceName in this.common.aliasTable)) {
         device = this.common.aliasTable[msg.deviceName].device;
@@ -178,7 +192,7 @@ class ControllerConnection {
       let cmd = (func + ' ' + param).replace(/[ \t]*$/, '');
 
       // remocon
-      let f = this.SendRemoconCommand(msg, device, func);
+      let f = this.SendRemoconCommand(msg, device, command);
       if(f) {
         let type = null;
         const prefix = func.replace(/_[^_]*$/, '');
@@ -399,6 +413,10 @@ class ControllerConnection {
 
     for(const name in this.common.remocon.remoconTable) {
       const tcode = this.common.remocon.remoconTable[name].code;
+      if(!tcode) {
+        console.log('no code in remocon ', name);
+        continue;
+      }
       let f = true;
       for(let i = offset; i < offset + length; i++) {
         if(code[i] != tcode[i]) {
@@ -417,7 +435,7 @@ class ControllerConnection {
   }
 
   SendData(msg) {
-    if(!this.client) {
+    if(!this.client || (this.connectState === 0)) {
       console.log('error : no controller connection');
       return;
     }

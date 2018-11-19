@@ -1,274 +1,183 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-3 col-md-3 scrollable">
-      <p class="vertical-space1"/>
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+      <h4>システム設定</h4>
       <div class="well">
-        <div class="row">
-          <h5>
-            システム設定 [ *.sconf ]
-          </h5>
-        </div>
-        <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin"/>
-        <button @click="AuthSave" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
-        <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none" >
-        <button type="button" @click="authLoadModal=true" class="btn btn-xs btn-primary system-config-btn">ファイルから復元</button>
-        <modal v-model="authLoadModal">
-          <div slot="modal-header" class="modal-header">
-            システム設定 [*.sconf]
-          </div>
-          <div slot="modal-body" class="modal-body">
-            現在の各種設定値を上書きしますがよろしいですか？
-          </div>
-          <div slot="modal-footer" class="modal-footer">
-            <button type="button" class="btn btn-default" @click="authLoadModal = false">中止</button>
-            <button type="button" class="btn btn-primary" @click="AuthLoad" >実行</button>
-          </div>
-        </modal>
+        <div class="no-mobile">
+          <el-row>
+            <h5>アカウント設定 [ *.sconf ]</h5>
+          </el-row>
+          <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin"/>
+          <el-tooltip placement="right" content="暗号鍵が含まれるので取扱注意！" effect="light" open-delay="500">
+            <el-button @click="AuthSave" type="primary" class="system-config-btn">ファイルに保存</el-button>
+          </el-tooltip>
 
-        <h6 class="system-config-btn">
-          暗号鍵が含まれます。<br>
-          取扱には注意して下さい。
+          <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none" >
+          <el-button type="warning" @click="authLoadModal=true" class="system-config-btn" plain>ファイルから復元</el-button>
+          <el-dialog title="アカウント設定 [*.sconf]" :visible.sync="authLoadModal" :show-close="false">
+            現在の各種設定値を上書きしますがよろしいですか？
+            <div slot="footer" class="dialog-footer">
+              <el-button type="default" @click="authLoadModal = false">中止</el-button>
+              <el-button type="danger" @click="AuthLoad" plain>実行</el-button>
+            </div>
+          </el-dialog>
+          <el-row>
+            <h5>それ以外の設定 [ *.gconf ]</h5>
+          </el-row>
+          <a id="config-save" style="display:none" href="/config/gecko_system_config.bin"/>
+          <el-button @click="ConfigSave" type="primary" class="system-config-btn">ファイルに保存</el-button>
+
+          <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none" >
+          <el-button type="warning" @click="configLoadModal=true" class="system-config-btn" plain>ファイルから復元</el-button>
+          <el-dialog title="システム以外の設定[*.gconf]" :visible.sync="configLoadModal" :show-close="false">
+            現在の各種設定値を上書きしますがよろしいですか？
+            <div slot="footer" class="dialog-footer">
+              <el-button type="default" @click="configLoadModal = false">中止</el-button>
+              <el-button type="danger" @click="ConfigLoad" plain>実行</el-button>
+            </div>
+          </el-dialog>
           <br>
-        </h6>
 
-        <div class="row">
-          <h5>
-            それ以外の設定 [ *.gconf ]
-          </h5>
-        </div>
-        <a id="config-save" style="display:none" href="/config/gecko_system_config.bin"/>
-        <button @click="ConfigSave" class="btn btn-xs btn-primary system-config-btn">ファイルに保存</button>
-        <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none" >
-        <button type="button" @click="configLoadModal=true" class="btn btn-xs btn-primary system-config-btn">ファイルから復元</button>
-        <modal v-model="configLoadModal">
-          <div slot="modal-header" class="modal-header">
-            システム以外の設定[*.gconf]
-          </div>
-          <div slot="modal-body" class="modal-body">
-            現在の各種設定値を上書きしますがよろしいですか？
-          </div>
-          <div slot="modal-footer" class="modal-footer">
-            <button type="button" class="btn btn-default" @click="configLoadModal = false">中止</button>
-            <button type="button" class="btn btn-primary" @click="ConfigLoad" >実行</button>
-          </div>
-        </modal>
-        <br>
-
-        <div class="row">
-          <h5>
-            初期化
-          </h5>
-        </div>
-        <button type="button" @click="configInitModal=true" class="btn btn-xs btn-primary system-config-btn">工場出荷状態に戻す</button>
-        <modal v-model="configInitModal">
-          <div slot="modal-header" class="modal-header">
-            初期化 工場出荷状態に戻す
-          </div>
-          <div slot="modal-body" class="modal-body">
+          <el-row>
+            <h5>初期化</h5>
+          </el-row>
+          <el-button type="warning" @click="configInitModal=true" class="system-config-btn" plain>工場出荷状態に戻す</el-button>
+          <el-dialog title="初期化" :visible.sync="configInitModal" :show-close="false">
+            工場出荷状態に戻します。<br>
             現在の設定値が全て消去されますがよろしいですか？
-          </div>
-          <div slot="modal-footer" class="modal-footer">
-            <button type="button" class="btn btn-default" @click="configInitModal = false">中止</button>
-            <button type="button" class="btn btn-primary" @click="ConfigInit" >実行</button>
-          </div>
-        </modal>
-        <br>
-
-        <div class="row">
-          <h5>
-            電源
-          </h5>
+            <div slot="footer" class="dialog-footer">
+              <el-button type="default" @click="configInitModal = false">中止</el-button>
+              <el-button type="danger" @click="ConfigInit" plain>実行</el-button>
+            </div>
+          </el-dialog>
+          <br>
         </div>
-        <button type="button" :disabled="!shutdownEnable" @click="shutdownModal=true" class="btn btn-xs btn-primary system-config-btn">シャットダウン</button>
-        <modal v-model="shutdownModal">
-          <div slot="modal-header" class="modal-header">
-            電源 シャットダウン
+
+        <el-row>
+          <h5>電源</h5>
+        </el-row>
+        <el-button type="warning" :disabled="!shutdownEnable" @click="shutdownModal=true" class="system-config-btn" plain>シャットダウン</el-button>
+        <el-dialog title="電源 シャットダウン" :modal="true" :visible.sync="shutdownModal" :show-close="false">
+          シャットダウン処理を行います。<br>
+          LEDの点滅が止まり、赤色のLEDの点灯のみになれば電源を抜いて大丈夫です。<br>
+          再起動は電源を一度抜いてから、再度つないでください。
+          <div slot="footer" class="dialog-footer">
+            <el-button type="default" :disabled="!shutdownModalButton" @click="shutdownModal = false">中止</el-button>
+            <el-button type="danger" :disabled="!shutdownModalButton" @click="Shutdown" plain>実行</el-button>
           </div>
-          <div slot="modal-body" class="modal-body">
-            シャットダウン処理を行います。<br>
-            LEDの点滅が止まり、赤色のLEDの点灯のみになれば電源を抜いて大丈夫です。<br>
-            再起動は電源を一度抜いてから、再度つないでください。
-          </div>
-          <div slot="modal-footer" class="modal-footer">
-            <button type="button" class="btn btn-default" :disabled="!shutdownModalButton" @click="shutdownModal = false">中止</button>
-            <button type="button" class="btn btn-primary" :disabled="!shutdownModalButton" @click="Shutdown" >実行</button>
-          </div>
-        </modal>
+        </el-dialog>
         <br>
       </div>
-    </div>
+    </el-aside>
 
-    <div class="col-sm-9 col-md-9 scrollable">
-      <br>
-      <div class="row">
-        <div class="col-md-4">
-          <H5>システムバージョン</h5>
-        </div>
-        <div class="col-md-8">
-          <H5>{{ version }}</h5>
-        </div>
-      </div>
-      <br>
+    <el-main>
+      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+        <el-form-item label="システムバージョン" prop="version">
+          {{ version }}
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <H5>アカウント</h5>
-        </div>
-        <div class="col-md-6">
+        <el-form-item label="アカウント" prop="account">
           <el-tooltip placement="top" content="モバイル端末で受け取れるメールアドレス" effect="light" open-delay="500">
-            <input type="text" name="account" :class="accountOK" v-model="account">
+            <el-input type="text" name="account" v-model="ruleForm.account" />
           </el-tooltip>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-4">
-          <H5>パスワード</h5>
-        </div>
-        <div class="col-md-6">
-          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
-            <input type="password" name="password1" :class="password1OK" v-model="password1">
-          </el-tooltip>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-4">
-          <H5>パスワード（確認）</h5>
-        </div>
-        <div class="col-md-6">
-          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
-            <input type="password" name="password2" :class="password2OK" v-model="password2">
-          </el-tooltip>
-        </div>
-      </div>
-      <br>
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <h5>リモートアクセス</h5>
-        </div>
-        <div class="col-md-8">
+        <el-form-item label="パスワード" prop="password1">
+          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <el-input type="password" name="password1" v-model="ruleForm.password1" />
+          </el-tooltip>
+        </el-form-item>
+
+        <el-form-item label="パスワード（確認）" prop="password2">
+          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <el-input type="password" name="password2" v-model="ruleForm.password2" />
+          </el-tooltip>
+        </el-form-item>
+
+        <el-form-item label="リモートアクセス" prop="remote">
           <el-tooltip placement="right" content="モバイル端末からのアクセスを許可します" effect="light" open-delay="500">
-            <slide-switch v-model="remote" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+            <el-switch v-model="remote" />
           </el-tooltip>
-        </div>
-        <br>
-      </div>
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <h5>自動update</h5>
-        </div>
-        <div class="col-md-8">
+        <el-form-item label="自動update" prop="autoUpdate">
           <el-tooltip placement="right" content="夜間にupdateを実行します" effect="light" open-delay="500">
-            <slide-switch v-model="autoUpdate" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+            <el-switch v-model="autoUpdate" />
           </el-tooltip>
-        </div>
-        <br>
-      </div>
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <h5>Power LED</h5>
-        </div>
-        <div class="col-md-8">
+        <el-form-item label="Power LED" prop="powerLED">
           <el-tooltip placement="right" content="フロントパネルの電源LEDを設定します" effect="light" open-delay="500">
-            <slide-switch v-model="powerLED" :buttons="[{label:'on', val:'on'}, {label:'off', val:'off'}]"/>
+            <el-switch v-model="powerLED"/>
           </el-tooltip>
-        </div>
-      </div>
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <H5>通知用メールアドレス</h5>
-        </div>
-        <div class="col-md-6">
+        <el-form-item label="通知用メールアドレス" prop="mailto">
           <el-tooltip placement="top" content="プログラム等でのイベント通知のメールアドレス" effect="light" open-delay="500">
-            <input type="email" :class="mailOK" v-model="mailto">
+            <el-input type="email" v-model="ruleForm.mailto" />
           </el-tooltip>
-        </div>
-      </div>
+        </el-form-item>
 
-      <div class="row">
-        <div class="col-md-4">
-          <h5>リモートサーバー認証</h5>
-        </div>
-        <div class="col-md-6">
+        <div class="no-mobile">
+          <el-form-item label="リモートサーバー認証" prop="remoteKey">
+            <el-tooltip placement="right" content="プレミアムアカウント用" effect="light" open-delay="500">
+              <el-button type="primary" @click="RemoteKeyFile">認証鍵ファイルを設定</el-button>
+            </el-tooltip>
+          </el-form-item>
           <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none">
-          <el-tooltip placement="right" content="プレミアムアカウント用" effect="light" open-delay="500">
-            <button type="button" class="btn btn-xs btn-primary" @click="RemoteKeyFile">認証鍵ファイルを設定</button>
-          </el-tooltip>
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-4">
-          <h5>SSH</h5>
-        </div>
-        <div class="col-md-8">
+          <el-form-item label="SSH" prop="sshKey">
+            <el-tooltip placement="right" content="ssh gecko@geckolink.localでloginできます" effect="light" open-delay="500">
+              <el-button type="primary" @click="SSHKeyFile">公開鍵ファイルを設定</el-button>
+            </el-tooltip>
+          </el-form-item>
           <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
-          <el-tooltip placement="right" content="ssh gecko@geckolink.localでloginできます" effect="light" open-delay="500">
-            <button type="button" class="btn btn-xs btn-primary" @click="SSHKeyFile">公開鍵ファイルを設定</button>
-          </el-tooltip>
         </div>
-      </div>
 
-      <br>
-
-      <div class="row">
-        <div class="col-md-9">
-          <div class="pull-right">
-            <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
+        <el-form-item>
+          <el-col offset="20">
+            <el-button type="primary" :disabled="!rulesValid" @click="Submit">設定</el-button>
+          </el-col>
+        </el-form-item>
+        <el-dialog title="アカウント設定" :visible.sync="accountMailMessage" :show-close="false">
+          アカウントの確認のため、メールを送信しました。<br>
+          3分以内にメールのリンクにアクセスしてください。<br>
+          メールが届かない場合はアカウントの設定を再度確認してください。
+          <div slot="footer" class="dialog-footer">
+            <el-button type="default" @click="accountMailMessage = false">中止</el-button>
           </div>
-          <modal v-model="accountMailMessage">
-            <div slot="modal-header" class="modal-header">
-              アカウント設定
-            </div>
-            <div slot="modal-body" class="modal-body">
-              アカウントの確認のため、メールを送信しました。<br>
-              3分以内にメールのリンクにアクセスしてください。<br>
-              メールが届かない場合はアカウントの設定を再度確認してください。
-            </div>
-            <div slot="modal-footer" class="modal-footer">
-              <button type="button" class="btn btn-default" @click="accountMailMessage = false">中止</button>
-            </div>
-          </modal>
-        </div>
-      </div>
-    </div>
-  </div>
+        </el-dialog>
+
+      </el-form>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import { modal } from 'vue-strap';
-  import { Tooltip } from 'element-ui';
-  import 'element-ui/lib/theme-chalk/base.css';
+  import { Tooltip, Form, FormItem, Switch, Dialog, Input } from 'element-ui';
   import 'element-ui/lib/theme-chalk/tooltip.css';
-  import slideSwitch from './SlideSwitch.vue';
+  import 'element-ui/lib/theme-chalk/form.css';
+  import 'element-ui/lib/theme-chalk/switch.css';
+  import 'element-ui/lib/theme-chalk/dialog.css';
+  import 'element-ui/lib/theme-chalk/input.css';
   import JsSHA from 'jssha';
 
   export default {
     components: {
-      slideSwitch,
-      modal,
       ElTooltip: Tooltip,
-    },
-    props: {
-      display: {
-        type: Boolean,
-        default: false,
-      },
+      ElForm: Form,
+      ElFormItem: FormItem,
+      ElSwitch: Switch,
+      ElDialog: Dialog,
+      ElInput: Input,
     },
     data() {
       return {
         version: '',
-        account: '',
-        password1: '',
-        password2: '',
         passwordValid: false,
-        remote: 'off',
+        remote: false,
         proxy: '',
-        mailto: '',
-        autoUpdate: 'off',
+        autoUpdate: true,
         amesh: false,
         latitude: '',
         longitude: '',
@@ -277,62 +186,43 @@
         configInitModal: false,
         shutdownModal: false,
         shutdownModalButton: true,
-        powerLED: 'off',
+        powerLED: false,
         shutdownEnable: false,
         accountMailMessage: false,
+        ruleForm: {
+          account: '',
+          password1: '',
+          password2: '',
+          mailto: '',
+        },
+        rules: {
+          account: [
+            { validator: this.ValidateAccount.bind(this), trigger: [ 'blur', 'change' ] },
+          ],
+          password1: [
+            { validator: this.ValidatePassword1.bind(this), trigger: [ 'blur', 'change' ] },
+          ],
+          password2: [
+            { validator: this.ValidatePassword2.bind(this), trigger: [ 'blur', 'change' ] },
+          ],
+          mailto: [
+            { type: 'email', message: '有効なメールアドレスを設定してください。', trigger: [ 'blur', 'change' ] },
+          ],
+        },
+        ruleValid: {
+          account: true,
+          password1: true,
+          password2: true,
+          mailto: true,
+        },
       };
     },
     computed: {
-      accountOK() {
-        if(this.serverKeys && this.account === 'admin') {
-          return {
-            success: false,
-            error: false,
-          };
+      rulesValid() {
+        for(const v in this.ruleValid) {
+          if(!this.ruleValid[v]) return false;
         }
-        if(this.account.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
-          return {
-            success: true,
-            error: false,
-          };
-        }
-        return {
-          success: false,
-          error: true,
-          message: '有効なメールアドレスを設定してください。',
-        };
-      },
-      password1OK() {
-        return this.PasswordCheck(this.password1);
-      },
-      password2OK() {
-        if(this.password1 !== this.password2) {
-          return {
-            success: false,
-            error: true,
-            message: '確認パスワードが合っていません。',
-          };
-        }
-        return this.PasswordCheck(this.password2);
-      },
-      mailOK() {
-        if(this.mailto === '') {
-          return {
-            success: false,
-            error: false,
-          };
-        }
-        if(this.mailto.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
-          return {
-            success: true,
-            error: false,
-          };
-        }
-        return {
-          success: false,
-          error: true,
-          message: '有効なメールアドレスを設定してください。',
-        };
+        return true;
       },
     },
     mounted() {
@@ -345,7 +235,7 @@
         this.passwordValid = Common.systemConfig.password && Common.systemConfig.defaultPassword && (Common.systemConfig.password !== Common.systemConfig.defaultPassword);
         if(!this.passwordValid) Common.emit('toastr_error', this, '最初にアカウントとパスワードを設定してください。', 0);
         this.smartMeter = Common.systemConfig.smartMeter;
-        if(this.accountMailMessage && (Common.systemConfig.remote === 'on')) this.accountMailMessage = false;
+        if(this.accountMailMessage && Common.systemConfig.remote) this.accountMailMessage = false;
         this.SetSystemConfig();
       });
       Common.on('shutdownEnable', () => {
@@ -361,38 +251,40 @@
       this.SetSystemConfig();
     },
     methods: {
-      PasswordCheck(password) {
-        if(password === '') {
-          if(!this.passwordValid && (this.account === 'admin')) {
-            return {
-              success: false,
-              error: true,
-              message: 'パスワードを設定してください。',
-            };
-          }
-          if(!Common.systemConfig || (this.account !== Common.systemConfig.account)) {
-            return {
-              success: false,
-              error: true,
-              message: 'アカウント変更時はパスワードも再設定してください。',
-            };
-          }
-          return {
-            success: false,
-            error: false,
-          };
+      ValidateAccount(rule, value, callback) {
+        this.$nextTick(() => {
+          this.$refs.ruleForm.validateField('password1');
+        });
+        if(this.serverKeys && (value === 'admin')) return callback();
+        if(value.match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+          return callback();
         }
-        if(password.length < 8) {
-          return {
-            success: false,
-            error: true,
-            message: 'パスワードが短すぎます。',
-          };
+        callback(new Error('有効なメールアドレスを設定してください。'));
+      },
+      ValidatePassword1(rule, value, callback) {
+        this.$nextTick(() => {
+          this.$refs.ruleForm.validateField('password2');
+        });
+
+        if(value === '') {
+          if(!this.passwordValid && (this.ruleForm.account === 'admin')) {
+            return callback(new Error('パスワードを設定してください。'));
+          }
+          if(!Common.systemConfig || (this.ruleForm.account !== Common.systemConfig.account)) {
+            return callback(new Error('アカウント変更時はパスワードも再設定してください。'));
+          }
+          return callback();
         }
-        return {
-          success: true,
-          error: false,
-        };
+        if(value.length < 8) {
+          return callback(new Error('パスワードが短すぎます。'));
+        }
+        callback();
+      },
+      ValidatePassword2(rule, value, callback) {
+        if(value !== this.ruleForm.password1) {
+          return callback(new Error('確認パスワードが合っていません。'));
+        }
+        callback();
       },
       AuthSave() {
         const dt = new Date();
@@ -484,10 +376,10 @@
       SetSystemConfig() {
         if(!Common.systemConfig) return;
         this.version = Common.systemConfig.version;
-        this.account = Common.systemConfig.account;
+        this.ruleForm.account = Common.systemConfig.account;
         this.proxy = Common.systemConfig.proxy;
         this.remote = Common.systemConfig.remote;
-        this.mailto = Common.systemConfig.mailto;
+        this.ruleForm.mailto = Common.systemConfig.mailto;
         this.amesh = Common.systemConfig.amesh;
         this.latitude = Common.systemConfig.latitude;
         this.longitude = Common.systemConfig.longitude;
@@ -496,81 +388,51 @@
       Reload() {
         setTimeout(() => { location.reload(); }, 3000);
       },
+      Validated(prop, valid) {
+        this.ruleValid[prop] = valid;
+      },
       Submit() {
-        const accountCheck = this.accountOK;
-        if(accountCheck.error) {
-          Common.emit('toastr_error', this, accountCheck.message);
-          return;
-        }
+        this.$refs.ruleForm.validate((valid) => {
+          if(!valid) return;
 
-        const passwordCheck = this.PasswordCheck(this.password1);
-        if(passwordCheck.error) {
-          Common.emit('toastr_error', this, passwordCheck.message);
-          return;
-        }
-        Common.emit('toastr_clear', this);
+          const changeAccount = (this.ruleForm.password1 !== '') ||
+                                (this.ruleForm.account !== Common.systemConfig.account);
+          Common.systemConfig.account = this.ruleForm.account;
+          if(this.ruleForm.password1 !== '') {
+            const sha256 = new JsSHA('SHA-256', 'TEXT');
+            sha256.update(this.ruleForm.account + this.ruleForm.password1);
+            const digest = sha256.getHash('HEX');
+            Common.systemConfig.password = digest;
+          }
+          Common.systemConfig.proxy = this.proxy;
+          Common.systemConfig.mailto = this.ruleForm.mailto;
+          Common.systemConfig.latitude = this.latitude;
+          Common.systemConfig.longitude = this.longitude;
+          Common.systemConfig.autoUpdate = this.autoUpdate;
+          Common.systemConfig.serverKeys = this.serverKeys;
+          Common.systemConfig.sshKeys = this.sshKeys;
+          Common.systemConfig.powerLED = this.powerLED;
+          if(!this.remote || (Common.systemConfig.serverKeys != null)) {
+            Common.systemConfig.remote = this.remote;
+          }
+          this.accountMailMessage = Common.systemConfig.remote !== this.remote;
+          if(this.accountMailMessage) Common.systemConfig.requestRemoteAccessState = 1;
+          Socket.emit('systemConfig', Common.systemConfig);
+          Common.emit('toastr_success', this, '設定しました。');
 
-        const mailCheck = this.mailOK;
-        if(mailCheck.error) {
-          Common.emit('toastr_error', this, mailCheck.message);
-          return;
-        }
-        Common.emit('toastr_clear', this);
-
-        const changeAccount = (this.password1 !== '') ||
-                              (this.account !== Common.systemConfig.account);
-        Common.systemConfig.account = this.account;
-        if(this.password1 !== '') {
-          const sha256 = new JsSHA('SHA-256', 'TEXT');
-          sha256.update(this.account + this.password1);
-          const digest = sha256.getHash('HEX');
-          Common.systemConfig.password = digest;
-        }
-        Common.systemConfig.proxy = this.proxy;
-        Common.systemConfig.mailto = this.mailto;
-        Common.systemConfig.latitude = this.latitude;
-        Common.systemConfig.longitude = this.longitude;
-        Common.systemConfig.autoUpdate = this.autoUpdate;
-        Common.systemConfig.serverKeys = this.serverKeys;
-        Common.systemConfig.sshKeys = this.sshKeys;
-        Common.systemConfig.powerLED = this.powerLED;
-        if((this.remote !== 'on') || (Common.systemConfig.serverKeys != null)) {
-          Common.systemConfig.remote = this.remote;
-        }
-        this.accountMailMessage = Common.systemConfig.remote !== this.remote;
-        if(this.accountMailMessage) Common.systemConfig.requestRemoteAccessState = 1;
-        Socket.emit('systemConfig', Common.systemConfig);
-        Common.emit('toastr_success', this, '設定しました。');
-
-        if(changeAccount && !this.accountMailMessage) {
-          setTimeout(window.location.reload.bind(window.location), 600);
-        }
+          if(changeAccount && !this.accountMailMessage) {
+            setTimeout(window.location.reload.bind(window.location), 600);
+          }
+        });
       },
     },
   };
 </script>
 
 <style scoped>
-  .item-label {
-    display:inline;
-    margin: 0vh 0.2vw 0vh 0.5vw;
-  }
-
   .system-config-btn {
-    width: 70%;
-    margin: 1vh;
-  }
-
-  .vertical-space1 {
-    margin-top: 5vh;
-  }
-
-  fieldset:disabled  {
-    color: #aaa;
-  }
-
-  input {
     width: 80%;
+    margin: 1vh;
   }
 </style>
 

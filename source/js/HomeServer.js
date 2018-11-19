@@ -9,15 +9,34 @@
 'use strict';
 
 import Vue from 'vue';
+import { Container, Aside, Main, Row, Col, Button } from 'element-ui';
+import lang from 'element-ui/lib/locale/lang/ja';
+import locale from 'element-ui/lib/locale';
+
+locale.use(lang);
+Vue.prototype.$ELEMENT = { size: 'mini' };
+Vue.use(Container);
+Vue.use(Aside);
+Vue.use(Main);
+Vue.use(Row);
+Vue.use(Col);
+Vue.use(Button);
+
 import SocketClient from 'Socket.io-client';
 
 import Common from './Common.js';
 import TopMenu from '../vue/TopMenu.vue';
 
 // css
-import '../css/bootstrap.css';
-import '../css/localStyle.css';
 import '../red/theme/css/nodeRed.css';
+import 'element-ui/lib/theme-chalk/base.css';
+import 'element-ui/lib/theme-chalk/container.css';
+import 'element-ui/lib/theme-chalk/aside.css';
+import 'element-ui/lib/theme-chalk/main.css';
+import 'element-ui/lib/theme-chalk/row.css';
+import 'element-ui/lib/theme-chalk/col.css';
+import 'element-ui/lib/theme-chalk/button.css';
+import '../css/localStyle.css';
 
 // for webpack
 import '../index.html';

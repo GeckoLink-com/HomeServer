@@ -1,16 +1,14 @@
 <template>
   <div class="toast-container">
     <transition-group appear name="toast-fade" tag="div">
-      <alert class="toast-fade-item" v-for="msg of messages" :type="msg.type" :key="msg.key" width="100%">
+      <div v-for="msg of messages" :key="msg.key" class="toast-fade-item alert" :class="'alert-'+msg.type" style="width: 100%" role="alert">
         <h5 class="toast-text" v-html="msg.text"/>
-      </alert>
+      </div>
     </transition-group>
   </div>
 </template>
 
 <script>
-  import { alert } from 'vue-strap';
-
   export default {
     components: {
       alert,
@@ -74,13 +72,14 @@
   .toast-container {
     position: fixed;
     left: 0.5vw;
-    width: 33vw;
+    width: 24vw;
     bottom: 1vh;
     opacity: 0.8;
   }
 
   .toast-text {
     white-space: normal;
+    font-weight: 300;
   }
 
   .toast-fade-item {
@@ -98,6 +97,52 @@
 
   .toast-fade-leave-active {
     position: absolute;
+  }
+
+  .alert {
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 4px;
+    margin: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .alert h5 {
+    margin: 0 4px;
+  }
+
+  .alert-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+  }
+  .alert-success hr {
+    border-top-color: #c9e2b3;
+  }
+  .alert-info {
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+  }
+  .alert-info hr {
+    border-top-color: #a6e1ec;
+  }
+  .alert-warning {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+  }
+  .alert-warning hr {
+    border-top-color: #f7e1b5;
+  }
+  .alert-danger {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+  }
+  .alert-danger hr {
+    border-top-color: #e4b9c0;
   }
 </style>
 

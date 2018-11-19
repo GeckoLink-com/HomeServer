@@ -1,176 +1,143 @@
 <template>
-  <div v-show="display" class="container-fluid tab-panel">
-    <div class="col-sm-12 col-md-12 scrollable">
-      <div v-if="hueBridges && (hueBridges.length > 0)" class="row">
-        <div class="col-sm-3 col-md-3">
-          <br>
-          <h4>Hue</h4>
-        </div>
-        <div class="col-sm-7 col-md-7 scrollable">
-          <br>
-          <div v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
-            <div class="row">
-              <div class="col-md-4">
-                Bridge {{ bridge.id }}
-              </div>
-              <div v-if="bridge.state==0" class="col-md-4">
-                <button @click="HuePairing" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
-                  ペアリング
-                </button>
-              </div>
-              <div v-if="bridge.state>=1" class="col-md-4">
-                <button :disabled="bridge.state==2" @click="HueSearch" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
-                  新規ライトのサーチ
-                </button>
-              </div>
-              <div v-if="bridge.state>=1" class="col-md-4">
-                <button :disabled="bridge.state==2" @click="HueTouchLink" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id">
-                  TouchLinkサーチ
-                </button>
-              </div>
+  <el-container>
+    <el-aside :width="$root.$el.clientWidth > 768 ? '15%' : '90%'">
+      <h4>リンク機器</h4>
+      <br>
+    </el-aside>
+    <el-main>
+      <div v-if="hueBridges && (hueBridges.length > 0)" class="well">
+        <h4>Hue</h4>
+        <el-row v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
+          <el-row>
+            <label class="label">Bridge {{ bridge.id }}</label>
+            <div class="pull-right">
+              <el-button v-if="bridge.state ==0" @click="HuePairing(bridge.id)" type="primary">
+                ペアリング
+              </el-button>
+              <el-button v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueSearch(bridge.id)" type="primary">
+                新規ライトのサーチ
+              </el-button>
+              <el-button v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueTouchLink(bride.id)" type="primary">
+                TouchLinkサーチ
+              </el-button>
             </div>
-            <div class="row">
-              <div class="col-md-6 col-md-offset-1">
-                <div class="progress" v-if="hueProgress[bridge.id] > 0">
-                  <progressbar :now="hueProgress[bridge.id]" type="primary" :striped="HueProgressing(bridge.id)" :animated="HueProgressing(bridge.id)"/>
-                </div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6 col-md-offset-1">
-                <h6>
-                  {{ bridge.message }}
-                </h6>
-              </div>
-            </div>
-            <br>
-            <div v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" class="row">
-              <div class="col-md-3 col-md-offset-1">
-                <input class="func-name" type="text" v-model="light.name">
-              </div>
-              <div class="col-md-4">
-                <button @click="LightFlash" type="button" class="btn btn-primary btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
+          </el-row>
+          <el-row v-if="hueProgress[bridge.id] > 0" >
+            <el-col span="12" offset="4">
+              <el-progress :show-text="false" :stroke-width="18" :percentage="hueProgress[bridge.id]" :class="{'progress-striped':HueProgressing(bridge.id)}" />
+            </el-col>
+          </el-row>
+          <el-row v-if="bridge.message.length > 0">
+            <el-col span="12" offset="4">
+              <h6>{{ bridge.message }}</h6>
+            </el-col>
+          </el-row>
+          <el-row v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" >
+            <el-col span="12" offset="4">
+              <el-input type="text" v-model="light.name" />
+            </el-col>
+            <el-col span="8">
+              <div class="pull-right">
+                <el-button @click="LightFlash(bridge.id, idx)" type="primary">
                   フラッシュ
-                </button>
-              </div>
-              <div class="col-md-4">
-                <button @click="DeleteLight" type="button" class="btn btn-danger btn-xs btn-margin" :data-id="bridge.id" :data-light="idx">
+                </el-button>
+                <el-button @click="DeleteLight(bridge.id, idx)" type="danger">
                   削除
-                </button>
+                </el-button>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-10">
-            <div class="pull-right">
-              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
-            </div>
-          </div>
-        </div>
-        <hr class="separation">
-
+            </el-col>
+          </el-row>
+        </el-row>
+        <el-row>
+          <el-button class="pull-right" type="primary" @click="SubmitHue">
+            設定
+          </el-button>
+        </el-row>
       </div>
 
-      <div v-if="hap" class="row">
-        <div class="col-md-3">
-          <br>
-          <h4>HAP Device</h4>
-        </div>
-        <div class="col-md-7 scrollable">
-          <br>
-          <div class="row">
-            <div class="col-md-4">
-              <img src="../images/home.png" alt="home" width="40px">
+      <div v-if="hap" class="well">
+        <h4>HAP Device</h4>
+        <el-row>
+          <el-col span="6" offset="1">
+            <img src="../images/home.png" alt="home" width="60px">
+          </el-col>
+          <el-col span="15" offset="1">
+            <qrcode class="hap-qr" :value="hapSetupURI"/>
+            <div class="well well-homekit">
+              {{ hapPin }}
             </div>
-            <div class="col-md-8">
-              <qrcode class="hap-qr" :value="hapSetupURI"/>
-              <div class="well well-homekit">
-                {{ hapPin }}
-              </div>
-            </div>
-          </div>
-          <br>
-          <div class="row">
-            <div class="col-md-4">
-              <H5>HAPデバイスID</h5>
-            </div>
-            <div class="col-md-8">
-              <input type="text" v-model="hapDeviceId">
-            </div>
-            <br>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-10">
-            <div class="pull-right">
-              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
-            </div>
-          </div>
-        </div>
-        <hr class="separation">
-
+          </el-col>
+        </el-row>
+        <br>
+        <el-row>
+          <el-col span="6" offset="1">
+            <H5>HAPデバイスID</h5>
+          </el-col>
+          <el-col span="7" offset="1">
+            <el-input type="text" v-model="hapDeviceId" />
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-button class="pull-right" type="primary" @click="SubmitHAP">
+            設定
+          </el-button>
+        </el-row>
       </div>
 
-      <div v-if="smartMeterEnable && smartMeterConnect" class="row">
-        <div class="col-md-3">
-          <br>
-          <h4>SmartMeter</h4>
-        </div>
-        <div class="col-md-7 scrollable">
-          <br>
-          <div class="row">
-            <div class="col-md-4">
-              <H5>Wi-SUNドングル</h5>
-            </div>
-            <div class="col-md-8">
-              <select class="form-control wisun-select-menu btn-inline" v-model="smartMeterAdapter">
-                <option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :value="item.id">{{ item.name }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">
-              <H5>電力計ＩＤ</h5>
-            </div>
-            <div class="col-md-8">
-              <input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">
-              <H5>電力計パスワード</h5>
-            </div>
-            <div class="col-md-8">
-              <input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + id" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]">
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-10">
-            <div class="pull-right">
-              <button class="btn btn-sm btn-primary" type="button" @click="Submit">設定</button>
-            </div>
-          </div>
-        </div>
-        <hr class="separation">
-
+      <div v-if="smartMeterEnable && smartMeterConnect" class="well">
+        <h4>SmartMeter</h4>
+        <el-row>
+          <el-col span="6" offset="1">
+            <H5>Wi-SUNドングル</h5>
+          </el-col>
+          <el-col span="15" offset="1">
+            <el-select v-model="smartMeterAdapter">
+              <el-option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :label="item.name" :value="item.id">{{ item.name }}</el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col span="6" offset="1">
+            <H5>電力計ＩＤ</h5>
+          </el-col>
+          <el-col span="15" offset="1">
+            <el-input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]" />
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col span="6" offset="1">
+            <H5>電力計パスワード</h5>
+          </el-col>
+          <el-col span="15" offset="1">
+            <el-input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + idx" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]" />
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-button class="pull-right" type="primary" @click="SubmitSmartMeter">
+            設定
+          </el-button>
+        </el-row>
       </div>
-    </div>
-  </div>
+
+    </el-main>
+  </el-container>
 </template>
 
 <script>
   import qrcode from 'v-qrcode';
-  import { progressbar } from 'vue-strap';
+  import { Input, Progress, Select, Option } from 'element-ui';
+  import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/progress.css';
+  import 'element-ui/lib/theme-chalk/select.css';
+  import 'element-ui/lib/theme-chalk/option.css';
 
   export default {
     components: {
       qrcode,
-      progressbar,
+      ElInput: Input,
+      ElProgress: Progress,
+      ElSelect: Select,
+      ElOption: Option,
     },
     props: {
       display: {
@@ -254,37 +221,33 @@
           }
         }
       },
-      LightFlash(e) {
-        const id = e.target.dataset.id;
-        const light = e.target.dataset.light;
+      LightFlash(id, light) {
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id + '_' + light, command: 'flash' });
       },
-      DeleteLight(e) {
-        const id = e.target.dataset.id;
-        const light = e.target.dataset.light;
+      DeleteLight(id, light) {
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id + '_' + light, command: 'delete' });
+        this.$delete(this.alias, 'Hue_' + id + '_' + light);
+        Common.emit('changeAlias', this);
       },
-      HuePairing(e) {
-        const id = e.target.dataset.id;
+      HuePairing(id) {
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'pairing' });
       },
-      HueSearch(e) {
-        const id = e.target.dataset.id;
+      HueSearch(id) {
         this.HueProgressStart(id, 80);
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'search' });
       },
-      HueTouchLink(e) {
-        const id = e.target.dataset.id;
+      HueTouchLink(id) {
         this.HueProgressStart(id, 80);
         Socket.emit('command',
           { type: 'command', device: 'Hue_' + id, command: 'touchlink' });
       },
       HueProgressStart(id, time) {
         if(this.hueProgressTimer[id]) return;
+        console.log('HueProgress ', id);
         this.$set(this.hueProgress, id, 1);
         this.hueProgressTimer[id] = setInterval(() => {
           this.$set(this.hueProgress, id, this.hueProgress[id] + 1);
@@ -311,7 +274,7 @@
         if(this.smartMeterPassword[idx].toUpperCase() !== this.smartMeterPassword[idx]) return { error: true };
         return {};
       },
-      Submit() {
+      SubmitHue() {
         for(const bridge of this.hueBridges) {
           for(const l in bridge.lights) {
             this.$set(this.alias, 'Hue_' + bridge.id + '_' + l, {
@@ -327,7 +290,12 @@
           }
         }
         Common.emit('changeAlias', this);
+      },
+      SubmitHAP() {
         Common.systemConfig.bridge.username = this.hapDeviceId;
+        Socket.emit('systemConfig', Common.systemConfig);
+      },
+      SubmitSmartMeter() {
         Common.systemConfig.smartMeterAdapter = this.smartMeterAdapter;
         let id = '';
         for(let i = 0; i < 8; i++) {
@@ -357,18 +325,7 @@
 
 <style scoped>
   .smart-meter-id {
-    width: 50px;
-  }
-
-  .wisun-select-menu {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
-    font-size:12px;
-    margin: 0px;
-    padding:0px;
-    text-align: center;
-    width: 300px;
-    height:20px;
-    line-height:20px
+    width: 12.5%;
   }
 
   .hap-qr {
@@ -389,26 +346,9 @@
     margin: 15px;
   }
 
-  .separation {
-    width: 960px;
-    margin: 5vh 0.5vw 1vh 0.5vw;
-  }
-
-  .func-name {
-    width:12vw;
-  }
-
-  .btn-inline {
-    display:inline-block;
-    margin-left: 0.2vw;
-  }
-
-  .btn-margin {
-    margin-right:0.2vw;
-  }
-
-  .progress {
-    margin: 2%;
+  .label {
+    margin: 15px 7px;
+    display: inline-block;
   }
 </style>
 

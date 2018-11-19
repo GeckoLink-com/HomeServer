@@ -59,6 +59,7 @@ const common = new Common(JSON.parse(fs.readFileSync(configFile, 'UTF-8')), () =
       common.home = '/home/' + user;
     }
   }
+  common.config.local = local;
   if(local) common.config.setupWebServerPort = 4080;
 
   new SetupWebServer(common, () => {
