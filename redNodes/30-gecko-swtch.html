@@ -25,30 +25,43 @@
           return this.label;
         },
         oneditprepare: function() {
+          this.editValue = {
+            deviceName: this.deviceName,
+            func: this.func,
+            rules: [],
+          };
+          for(const r of this.rules) {
+            this.editValue.rules.push({
+              sel: r.sel,
+              val: r.val,
+              enable: r.enable,
+            });
+          }
+
           $.getJSON('gecko/' + this.id, (homeServer) => {
             this.homeServer = homeServer;
             for(const i in this.homeServer.alias) {
               $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
-              if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
+              if(this.editValue.deviceName == null) this.editValue.deviceName = this.homeServer.alias[i].name;
             }
-            $('#node-input-deviceName').val(this.deviceName);
+            $('#node-input-deviceName').val(this.editValue.deviceName);
             
             const RedrawFunc = () => {
               $('#node-input-func option').remove();
-              for(const i in this.homeServer.aliasTable[this.deviceName].property) {
+              for(const i in this.homeServer.aliasTable[this.editValue.deviceName].property) {
                 if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
-                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type == 'out')) continue;
-                let name = this.homeServer.aliasTable[this.deviceName].property[i].name;
+                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.editValue.deviceName].property[i].type == 'out')) continue;
+                let name = this.homeServer.aliasTable[this.editValue.deviceName].property[i].name;
                 if(!name || (name == '')) name = i;
-                if(this.func == null) this.func = i;
+                if(this.editValue.func == null) this.editValue.func = i;
                 $('#node-input-func').append($('<option></option>').val(i).text(name));
               }
-              $('#node-input-func').val(this.func);
+              $('#node-input-func').val(this.editValue.func);
               RedrawMode();
             }
 
-            if(!this.rules) {
-              this.rules = [
+            if(!this.editValue.rules) {
+              this.editValue.rules = [
                 {sel:'lt', val:'', enable:true},
                 {sel:null, val:'', enable:true},
                 {sel:'lt', val:'', enable:true},
@@ -57,18 +70,18 @@
             }
             this.checked = [];
             for(let i = 0; i < 4; i++) {
-              if(this.rules[i]) {
-                this.checked[i] = this.rules[i].enable;
+              if(this.editValue.rules[i]) {
+                this.checked[i] = this.editValue.rules[i].enable;
               } else {
                 this.checked[i] = true;
               }
             }
             const RedrawMode = () => {
               $('#node-input-container').css('min-height','250px').css('min-width','450px').empty();
-              if(!(this.deviceName in this.homeServer.aliasTable)) return;
-              if(!(this.func in this.homeServer.aliasTable[this.deviceName].property)) return;
-              const funcObj = this.homeServer.aliasTable[this.deviceName].property[this.func];
-              if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+              if(!(this.editValue.deviceName in this.homeServer.aliasTable)) return;
+              if(!(this.editValue.func in this.homeServer.aliasTable[this.editValue.deviceName].property)) return;
+              const funcObj = this.homeServer.aliasTable[this.editValue.deviceName].property[this.editValue.func];
+              if(this.homeServer.analogFunc.indexOf(this.editValue.func) >= 0) {
                 let c = 0;
                 for(let i = 0; i < 3; i++) {
                   let rowElement = $('<div></div>',{class:"form-row", style:"padding-top: 5px; padding-left: 5%; width: 90%;"});
@@ -111,13 +124,13 @@
                     );
                     break;
                   }
-                  $('#node-input-adsel' + i).val(this.rules[i].sel);
-                  $('#node-input-adval' + i).val(this.rules[i].val);
+                  $('#node-input-adsel' + i).val(this.editValue.rules[i].sel);
+                  $('#node-input-adval' + i).val(this.editValue.rules[i].val);
                 }
               } else {
                 let c = 0;
                 let vlabel = funcObj.valueLabel;
-                if(this.func == 'sw') {
+                if(this.editValue.func == 'sw') {
                   vlabel = ['open', 'opening', 'closing', 'close'];
                 }
                 for(let i in vlabel) {
@@ -139,9 +152,9 @@
               }
             }
                    
-            $('#node-input-deviceName').click((e) => {
-              this.func = null;
-              this.deviceName = e.target.value;
+            $('#node-input-deviceName').change((e) => {
+              this.editValue.func = null;
+              this.editValue.deviceName = e.target.value;
               for(let i = 0; i < 4; i++) {
                 this.checked[i] = true;
               }
@@ -149,7 +162,7 @@
             });
             RedrawFunc();
             $('#node-input-func').change((e) => {
-              this.func = e.target.value;
+              this.editValue.func = e.target.value;
               for(let i = 0; i < 4; i++) {
                 this.checked[i] = true;
               }

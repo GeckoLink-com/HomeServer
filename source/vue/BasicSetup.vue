@@ -1,65 +1,67 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>基本設定</h4>
       <br>
       <div class="module-image no-mobile">
-        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%">
       </div>
       <br>
-      <el-select v-model="selectedModule" placeholder="設定するモジュール" @change="Select">
-        <el-option v-for="module of moduleList" :key="'bs-moduleList' + module.name" :disabled="!module.enable" :label="module.label" :value="module.device" />
-      </el-select>
-    </el-aside>
-    <el-main v-show="selectedModule!=''">
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+      <ElSelect v-model="selectedModule" placeholder="設定するモジュール" @change="Select">
+        <ElOption v-for="module of moduleList" :key="'bs-moduleList' + module.name" :disabled="!module.enable" :label="module.label" :value="module.device" />
+      </ElSelect>
+    </ElAside>
+    <ElMain v-show="selectedModule!=''">
+      <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+        <ElFormItem label="モジュール名" prop="moduleName">
+          <ElTooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
+            <ElInput type="text" v-model="ruleForm.moduleName" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="モジュール名" prop="moduleName">
-          <el-tooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
-            <el-input type="text" v-model="ruleForm.moduleName" />
-          </el-tooltip>
-        </el-form-item>
-
-        <el-form-item label="機能設定" prop="selectedType">
-          <el-radio-group v-model="ruleForm.selectedType" >
-            <el-row v-for="(item, idx) of typeTable" :key="'bs-typeTable' + idx">
-              <el-tooltip placement="right" content="子機のタイプを選択してください" effect="light" open-delay="500">
-                <el-radio :label="idx" class="item-label" border>
+        <ElFormItem label="機能設定" prop="selectedType">
+          <ElRadioGroup v-model="ruleForm.selectedType">
+            <ElRow v-for="(item, idx) of typeTable" :key="'bs-typeTable' + idx">
+              <ElTooltip placement="right" content="子機のタイプを選択してください" effect="light" open-delay="500">
+                <ElRadio :label="idx" class="item-label" border>
                   {{ item.name }}
-                </el-radio>
-              </el-tooltip>
-            </el-row>
-          </el-radio-group>
-        </el-form-item>
+                </ElRadio>
+              </ElTooltip>
+            </ElRow>
+          </ElRadioGroup>
+        </ElFormItem>
 
-        <el-row v-for="(item, idx) of funcTable" :key="'bs-funcTable' + idx" v-show="ItemCheck(idx)">
-          <el-col :span="(item.option == null) ? 20 : 12">
-            <el-form-item :label="item.name">
-              <el-tooltip placement="top" content="子機の機能に名前をつけることができます(option)" effect="light" open-delay="500">
-                <el-input type="text" v-model="item.value" />
-              </el-tooltip>
-            </el-form-item>
-          </el-col>
+        <ElRow v-for="(item, idx) of funcTable" :key="'bs-funcTable' + idx" v-show="ItemCheck(idx)">
+          <ElCol :span="(item.option == null) ? 20 : 12">
+            <ElFormItem :label="item.name">
+              <ElTooltip placement="top" content="子機の機能に名前をつけることができます(option)" effect="light" open-delay="500">
+                <ElInput type="text" v-model="item.value" />
+              </ElTooltip>
+            </ElFormItem>
+          </ElCol>
           <div v-if="(item.option != null)">
-            <el-col span="8" offset="1">
-              <el-form-item v-show="item.option != null" :label="item.option">
-                <el-tooltip placement="top" :content="item.optionTooltip" effect="light" open-delay="500">
-                  <el-input type="text" v-model="item.optionValue" />
-                </el-tooltip>
-              </el-form-item>
-            </el-col>
-            <el-col span="3">
-              <label class="option-unit">{{ item.optionUnit }}</label>
-            </el-col>
+            <ElCol span="8" offset="1">
+              <ElFormItem v-show="item.option != null" :label="item.option">
+                <ElTooltip placement="top" :content="item.optionTooltip" effect="light" open-delay="500">
+                  <ElInput type="text" v-model="item.optionValue" />
+                </ElTooltip>
+              </ElFormItem>
+            </ElCol>
+            <ElCol span="3">
+              <label class="option-unit">
+                {{ item.optionUnit }}
+              </label>
+            </ElCol>
           </div>
-        </el-row>
-
-      </el-form>
-      <el-row type="flex" justify="end">
-        <el-button type="primary" :disabled="!rulesValid" @click="Submit">モジュール書き込み</el-button>
-      </el-row>
-    </el-main>
-  </el-container>
+        </ElRow>
+      </ElForm>
+      <ElRow type="flex" justify="end">
+        <ElButton type="primary" :disabled="!rulesValid" @click="Submit">
+          モジュール書き込み
+        </ElButton>
+      </ElRow>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
@@ -178,7 +180,6 @@
         }
       },
       SelectModule(device, name) {
-        console.log('Select ', device, name);
         Common.emit('toastr_clear', this);
         this.selectedModuleLabel = device + ((name.length > 0) ? ':' : '') + name;
 

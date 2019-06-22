@@ -8,7 +8,6 @@
 'use strict';
 
 const net = require('net');
-const fs = require('fs');
 
 class ControllerConnection {
   constructor(common) {
@@ -23,38 +22,7 @@ class ControllerConnection {
     this.shutdownTimder = null;
 
     this.common.on('sendControllerCommand', this.ExecCommand.bind(this));
-    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this.common.on('changeSystemConfig', (_caller) => {
-      if(!this.common.systemConfig) return;
-      this.IntervalConnect();
-    });
-
-    if(!this.common.config.local) {
-      try {
-        fs.writeFileSync('/sys/class/gpio/export', '5');
-      } catch(e) {/* empty */}
-      setTimeout(() => {
-        fs.writeFileSync('/sys/class/gpio/gpio5/direction', 'in');
-        fs.writeFileSync('/sys/class/gpio/gpio5/edge', 'both');
-        fs.watch('/sys/class/gpio/gpio5/value', () => {
-          fs.readFile('/sys/class/gpio/gpio5/value', 'utf8', (err, value) => {
-            if(parseInt(value) === 0) {
-              console.log('start shutdown count');
-              this.shutdownTimer = setTimeout(() => {
-                console.log('shutdown');
-                this.ExecCommand(this, {
-                  deviceName: 'server',
-                  command: 'shutdown',
-                });
-              }, 5000);
-            } else {
-              if(this.shutdownTimer) clearTimeout(this.shutdownTimer);
-              this.shutdownTimer = null;
-            }
-          });
-        });
-      }, 1000);
-    }
+    this.common.on('initializeAfterSetUID', this.IntervalConnect.bind(this));
   }
   
   IntervalConnect() {
@@ -151,7 +119,7 @@ class ControllerConnection {
     for(const command of commands) {
       if(!command) continue;
       let func = command.replace(/[ \t].*$/, '');
-      let param = command.replace(func, '').replace(/^[ \t]*/, '');
+      let param = command.replace(func, '').trim();
       if(func in this.common.aliasTable) {
         device = this.common.aliasTable[func].device;
         func = this.common.aliasTable[func].func;
@@ -214,13 +182,45 @@ class ControllerConnection {
         continue;
       }
 
-      // led command
-      if(func === 'led') {
+      // dimmerLight/colorLight command
+      if((func === 'led') || (func === 'dmx') || (func === 'pwm')) {
+        let options = {};
+        let type = '';
+        for(const item of this.common.uiTable.ItemList) {
+          if(item.table && (item.table.deviceName === msg.deviceName) && (item.table.type === func)) {
+            options = item.table;
+            type = item.type;
+            break;
+          }
+        }
+        let n = 3;
+        if(type === 'dimmerLight') {
+          n--;
+          if(!options.dimmer) n--;
+          if(!options.colorTemp) n--;
+        }
+
         if(param === 'on') {
           param = this.common.internalStatus.lastCommand[msg.deviceName][func];
-          if(!param) param = 'ffffff';
+          if(!param) {
+            if(func === 'led') param = '808080';
+            if(func === 'dmx') {
+              param = options.dmxAddress;
+              for(let i = 0; i < n; i++) {
+                param += ' 128';
+              }
+            }
+            if(func === 'pwm') param = '128 128';
+          }
         } else if(param === 'off') {
-          param = '000000';
+          if(func === 'led') param = '000000';
+          if(func === 'dmx') {
+            param = options.dmxAddress;
+            for(let i = 0; i < n; i++) {
+              param += ' 0';
+            }
+          }
+          if(func === 'pwm') param = '0 0';
         } else {
           this.common.internalStatus.lastCommand[msg.deviceName][func] = param;
         }
@@ -230,10 +230,20 @@ class ControllerConnection {
           deviceName: msg.deviceName,
           func: func,
           funcName: func,
-          type: 'colorLight',
+          type: func,
           value: param,
-          valueName: parseInt(param, 16) ? 'on' : 'off',
         };
+        if(type === 'dimmerLight') {
+          const params = param.split(' ');
+          if(func === 'pwm') d.valueName = parseInt(params[0]) ? 'on' : 'off';
+          if(func === 'dmx') d.valueName = parseInt(params[1]) ? 'on' : 'off';
+        }
+        if(type === 'colorLight') {
+          if(func === 'led') d.valueName = parseInt(param, 16) ? 'on' : 'off';
+          const rgb = param.split(' ');
+          if(func === 'pwm') d.valueName = (parseInt(rgb[0]) || parseInt(rgb[1]) || parseInt(rgb[2])) ? 'on' : 'off';
+        }
+
         let f = false;
         for(const i in this.common.status) {
           const st = this.common.status[i];

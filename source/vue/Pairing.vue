@@ -1,32 +1,34 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>ペアリング</h4>
       <br>
       <div class="module-image no-mobile">
-        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%">
       </div>
-    </el-aside>
-    <el-main>
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="20%" label-position="left" @validate="Validated">
-        <el-form-item label="モジュール名" prop="moduleName">
-          <el-tooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
-            <el-input type="text" v-model="ruleForm.moduleName" />
-          </el-tooltip>
-        </el-form-item>
-      </el-form>
+    </ElAside>
+    <ElMain>
+      <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="20%" label-position="left" @validate="Validated" @submit.native.prevent="ExecutePairing">
+        <ElFormItem label="モジュール名" prop="moduleName">
+          <ElTooltip placement="top" content="設置場所等、識別しやすい名前を付けてください" effect="light" open-delay="500">
+            <ElInput type="text" v-model="ruleForm.moduleName" @change="ExecutePairing" />
+          </ElTooltip>
+        </ElFormItem>
+      </ElForm>
       <div class="vertical-space" />
-      <el-row>
-        <el-col span="14" offset="5">
-          <el-progress :show-text="false" :stroke-width="18" :percentage="progress" :class="{'progress-striped':progressing}" />
-        </el-col>
-        <el-col span="4" offset="1" >
-          <el-button type="primary" :disabled="progressing || !rulesValid" @click="ExecutePairing">ペアリング</el-button>
-        </el-col>
-      </el-row>
+      <ElRow>
+        <ElCol span="14" offset="5">
+          <ElProgress :show-text="false" :stroke-width="18" :percentage="progress" :class="{'progress-striped':progressing}" />
+        </ElCol>
+        <ElCol span="4" offset="1">
+          <ElButton type="primary" :disabled="progressing || !rulesValid" @click="ExecutePairing">
+            ペアリング
+          </ElButton>
+        </ElCol>
+      </ElRow>
       <br>
-      <el-row>
-        <el-col span="19" offset="5">
+      <ElRow>
+        <ElCol span="19" offset="5">
           <h5 class="error" v-if="error.length > 0">
             子機のエラーが発生しています。<br>
             {{ error }}
@@ -34,10 +36,10 @@
           <h5 v-else>
             {{ moduleLabel }}
           </h5>
-        </el-col>
-      </el-row>
-    </el-main>
-  </el-container>
+        </ElCol>
+      </ElRow>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
@@ -106,6 +108,7 @@
           this.progress = 100;
           this.moduleLabel = this.newDevice.name + ':' + this.newDevice.device;
           Common.emit('changeModule', this, this.newDevice.device, this.newDevice.name, this.option.toString(16), this.param.toString(16), 'HA/FC');
+          this.ruleForm.moduleName = '';
         }
 
         const message = msg.data[0].message;
@@ -202,6 +205,7 @@
         this.ruleValid[prop] = valid;
       },
       ExecutePairing() {
+        if(!this.rulesValid) return;
         Common.emit('toastr_clear', this);
         this.error = '';
         Common.emit('toastr_info', this, 'モジュール接続開始');

@@ -1,47 +1,51 @@
 <template>
-  <el-container>
-    <el-aside width="30%">
+  <ElContainer>
+    <ElAside width="30%">
       <h4>ＴＶ設定・編集</h4>
       <div class="well well-transparent">
-        <el-tooltip placement="right" content="既存のTV設定を選択すると編集できます" effect="light" open-delay="500">
-          <el-select v-model="selectedRemoconGroup" @change="Select">
-            <el-option label="新規追加" value="newGroup">
+        <ElTooltip placement="right" content="既存のTV設定を選択すると編集できます" effect="light" open-delay="500">
+          <ElSelect v-model="selectedRemoconGroup" @change="Select">
+            <ElOption label="新規追加" value="newGroup">
               新規追加
-            </el-option>
-            <el-option v-for="(item, index) of remoconTV" :key="'rm-remoconTV' + index" :label="item.name" :value="item.name">
+            </ElOption>
+            <ElOption v-for="(item, index) of remoconTV" :key="'rm-remoconTV' + index" :label="item.name" :value="item.name">
               {{ item.name }}
-            </el-option>
-          </el-select>
-        </el-tooltip>
+            </ElOption>
+          </ElSelect>
+        </ElTooltip>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main v-if="selectedRemoconGroup != null">
+    <ElMain v-if="selectedRemoconGroup != null">
       <div class="well well-transparent">
-        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
-          <el-form-item label="登録名" prop="name">
-            <el-tooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.name" />
-            </el-tooltip>
+        <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <ElFormItem label="登録名" prop="name">
+            <ElTooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.name" />
+            </ElTooltip>
             <div v-if="nameAlert" class="form_item_error">
               登録名が既に存在しています。上書きしますがよろしいですか？
             </div>
-          </el-form-item>
+          </ElFormItem>
 
-          <el-form-item label="コメント" prop="comment">
-            <el-tooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.comment" />
-            </el-tooltip>
-          </el-form-item>
-        </el-form>
+          <ElFormItem label="コメント" prop="comment">
+            <ElTooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.comment" />
+            </ElTooltip>
+          </ElFormItem>
+        </ElForm>
       </div>
 
       <div v-show="(sequence>0) && (sequence < 4)" class="well well-transparent">
         <table class="table table-striped remocon-table">
           <thead>
             <tr>
-              <th width="20%">ボタン</th>
-              <th width="80%">コード</th>
+              <th width="20%">
+                ボタン
+              </th>
+              <th width="80%">
+                コード
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -57,11 +61,13 @@
         <table class="table">
           <thead>
             <tr>
-              <th width="16%">ボタン</th>
+              <th width="16%">
+                ボタン
+              </th>
               <th width="28%" v-for="net of ['UHF','BS','CS']" :key="'rt-netHead' + net">
-                <el-checkbox v-model="channelTable[net].display">
+                <ElCheckbox v-model="channelTable[net].display">
                   {{ channelTable[net].label }}
-                </el-checkbox>
+                </ElCheckbox>
               </th>
             </tr>
           </thead>
@@ -70,8 +76,8 @@
               <td>{{ ch }}</td>
               <td v-for="net of ['UHF', 'BS', 'CS']" :key="'rt-netBody' + net">
                 <div class="inline-flex">
-                  <el-checkbox v-model="channelTable[net][ch].display" :disabled="!channelTable[net].display"/>
-                  <el-input class="channelList" type="text" v-model="channelTable[net][ch].label" :disabled="!channelTable[net].display" />
+                  <ElCheckbox v-model="channelTable[net][ch].display" :disabled="!channelTable[net].display" />
+                  <ElInput class="channelList" type="text" v-model="channelTable[net][ch].label" :disabled="!channelTable[net].display" />
                 </div>
               </td>
             </tr>
@@ -79,15 +85,22 @@
         </table>
       </div>
 
-      <el-row class="pull-right">
-        <el-button v-show="!existName && (sequence==0)" :disabled="!rulesValid" type="primary" @click="Start">開始</el-button>
-        <el-button v-show="sequence>0" type="danger" @click="Stop">中止</el-button>
-        <el-button v-show="existName && (sequence==0)" type="primary" @click="Modify">チャンネル修正</el-button>
-        <el-button :disabled="sequence!=4" type="primary" @click="Submit">保存</el-button>
-      </el-row>
-
-    </el-main>
-  </el-container>
+      <ElRow class="pull-right">
+        <ElButton v-show="!existName && (sequence==0)" :disabled="!rulesValid" type="primary" @click="Start">
+          開始
+        </ElButton>
+        <ElButton v-show="sequence>0" type="danger" @click="Stop">
+          中止
+        </ElButton>
+        <ElButton v-show="existName && (sequence==0)" type="primary" @click="Modify">
+          チャンネル修正
+        </ElButton>
+        <ElButton :disabled="sequence!=4" type="primary" @click="Submit">
+          保存
+        </ElButton>
+      </ElRow>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>

@@ -10,19 +10,19 @@
 const eventEmitter = require('events').EventEmitter;
 const registry = require('./Registry');
 const fs = require('fs');
-const getmac = require('getmac');
 const moment = require('moment');
 const crypto = require('crypto');
+const process = require('process');
 
 class Common extends eventEmitter {
 
-  constructor(config, callback) {
+  constructor(config) {
     super();
     this.setMaxListeners(100);
 
     this.config = config;
     this.config.basePath = this.config.basePath.replace(/\/$/, '');
-    
+
     this.alias = {};
     this.aliasTable = {};
     this.remocon = {};
@@ -63,6 +63,60 @@ class Common extends eventEmitter {
       fs.writeFileSync('/etc/apt/sources.list.d/geckolink.list', 'deb https://geckolink.com/archive stretch ' + this.updateMode + '\n', {mode: 0o644});
     } catch(e) {/* empty */}
 
+    this.wifiEnable = false;
+    if(!this.config.local) {
+      try {
+        fs.writeFileSync('/sys/class/gpio/export', '3');
+      } catch(e) {/* empty */}
+      try {
+        fs.writeFileSync('/sys/class/gpio/export', '5');
+      } catch(e) {/* empty */}
+      fs.writeFileSync('/sys/class/gpio/gpio3/direction', 'in');
+      fs.writeFileSync('/sys/class/gpio/gpio5/direction', 'in');
+      fs.writeFileSync('/sys/class/gpio/gpio3/edge', 'both');
+      fs.writeFileSync('/sys/class/gpio/gpio5/edge', 'both');
+      const buttonCheck = (err, value) => {
+        if(!parseInt(value) && !this.shutdownTimer) {
+          console.log('start button count');
+          this.emit('sendControllerCommand', this, {
+            deviceName: 'server',
+            command: 'sysled heartbeat',
+          });
+          this.shutdownTimer = setTimeout(() => {
+            console.log('shutdown');
+            this.shutdownTimer = null;
+            this.emit('sendControllerCommand', this, {
+              deviceName: 'server',
+              command: 'shutdown',
+            });
+          }, 5000);
+        }
+        if(parseInt(value) && this.shutdownTimer) {
+          console.log('buttonTrigger');
+          clearTimeout(this.shutdownTimer);
+          this.shutdownTimer = null;
+          this.emit('sendControllerCommand', this, {
+            deviceName: 'server',
+            command: `sysled ${ this.systemConfig.powerLED ? 'on' : 'off' }`,
+          });
+          this.emit('buttonTrigger', this);
+        }
+      };
+      fs.watch('/sys/class/gpio/gpio3/value', () => {
+        fs.readFile('/sys/class/gpio/gpio3/value', 'utf8', buttonCheck);
+      });
+      fs.watch('/sys/class/gpio/gpio5/value', () => {
+        fs.readFile('/sys/class/gpio/gpio5/value', 'utf8', buttonCheck);
+      });
+
+      try {
+        fs.writeFileSync('/sys/class/gpio/export', '22');
+      } catch(e) {/* empty */}
+      fs.writeFileSync('/sys/class/gpio/gpio22/direction', 'in');
+      this.wifiEnable = parseInt(fs.readFileSync('/sys/class/gpio/gpio22/value')) &&
+        fs.existsSync('/sys/class/net/wlan0');
+    }
+
     this.on('changeAlias', (caller) => {
       this.MakeAliasTable();
       if(caller != this) this.Registry.SetRegistry('alias', this.alias);
@@ -72,24 +126,29 @@ class Common extends eventEmitter {
       this.emit('changeAlias', this);
     });
     
+    this.on('changeUITable', (caller) => {
+      if(caller != this) this.Registry.SetRegistry('uiTable', this.uiTable);
+    });
+    this.Registry.GetRegistry('uiTable', (err, data) => {
+      this.uiTable = data || {};
+    });
+
     this.on('changeRemocon', (caller) => {
       if(caller != this) this.Registry.SetRegistry('remocon', this.remocon);
-      this.emit('changeUITable', this);
     });
-
     this.Registry.GetRegistry('remocon', (err, data) => {
       this.remocon = data || {};
-      this.emit('changeRemocon', this);
     });
 
+    this.on('changeHueBridges', (caller) => {
+      if(caller != this) this.Registry.SetRegistry('hueBridges', this.hueBridges);
+    });
     this.Registry.GetRegistry('hueBridges', (err, data) => {
       this.hueBridges = data || [];
-      this.emit('changeHueBridges', this);
     });
 
     this.Registry.GetRegistry('controllerLog', (err, data) => {
       this.controllerLog = data || [];
-      this.emit('changeControllerLog', this, this.controllerLog);
     });
 
     this.on('changeInternalStatus', (caller) => {
@@ -102,7 +161,10 @@ class Common extends eventEmitter {
             break;
           }
         }
-        const stat = {device: 'server', deviceName: 'server', func:func, value: val, valueName: ((val == 1)||(val == 'on')?'on':'off')};
+        let valueName = val;
+        if(valueName == 1) valueName = 'on';
+        if(valueName == 0) valueName = 'off';
+        const stat = {device: 'server', deviceName: 'server', func:func, value: val, valueName: valueName};
         if(f < 0) {
           this.status.push(stat);
         } else {
@@ -196,22 +258,9 @@ class Common extends eventEmitter {
       this.emit('statusNotify', this);
       if(caller != this) this.Registry.SetRegistry('internalStatus', this.internalStatus);
     });
-
     this.Registry.GetRegistry('internalStatus', (err, data) => {
       this.internalStatus = data || {virtualSW:{}};
       this.emit('changeInternalStatus', this);
-    });
-
-    this.on('changeUITable', (caller) => {
-      if(caller != this) this.Registry.SetRegistry('uiTable', this.uiTable);
-    });
-    this.Registry.GetRegistry('uiTable', (err, data) => {
-      this.uiTable = data || {};
-      this.emit('changeUITable', this);
-    });
-
-    this.on('changeHueBridges', (caller) => {
-      if(caller != this) this.Registry.SetRegistry('hueBridges', this.hueBridges);
     });
 
     this.on('changeSystemConfig', (caller) => {
@@ -233,8 +282,12 @@ class Common extends eventEmitter {
       if(this.version) this.systemConfig.version = this.version;
       this.systemConfig.hap = this.config.hap;
       this.systemConfig.amesh = this.config.amesh;
+      this.systemConfig.pwm = this.config.pwm;
+      this.systemConfig.dmx = this.config.dmx;
       this.systemConfig.led = this.config.led;
+      if(!this.systemConfig.powerLED) this.systemConfig.powerLED = this.config.powerLED;
       this.systemConfig.motor = this.config.motor;
+      this.systemConfig.wifiEnable = this.wifiEnable;
       this.systemConfig.smartMeter = this.config.smartMeter;
       this.systemConfig.initialPassword = this.initialPassword;
       this.systemConfig.defaultPassword = this.defaultPassword;
@@ -257,11 +310,17 @@ class Common extends eventEmitter {
       if(this.systemConfig.radius == null) this.systemConfig.radius = '5000';
       if(this.systemConfig.bridge == null) this.systemConfig.bridge = {};
       if(this.systemConfig.bridge.port == null) this.systemConfig.bridge.port = 51826;
+      this.systemConfigDirtyFlag = false;
+      if(this.systemConfig.sessionSecret == null) {
+        this.systemConfig.sessionSecret = crypto.randomBytes(32).toString('base64');
+        this.systemConfigDirtyFlag = true;
+      }
       if(this.systemConfig.bridge.pin == null) {
         const bytes = crypto.randomBytes(6);
         this.systemConfig.bridge.pin = ('00' + bytes.readUInt16BE(0)).slice(-3) + '-' +
                                        ('0' + bytes.readUInt16BE(2)).slice(-2) + '-' +
                                        ('00' + bytes.readUInt16BE(4)).slice(-3);
+        this.systemConfigDirtyFlag = true;
       }
       if(this.systemConfig.bridge.setupID == null) {
         const bytes = crypto.randomBytes(4);
@@ -271,35 +330,64 @@ class Common extends eventEmitter {
           setupID += chars.charAt(bytes.readUInt8(i) % 26);
         }
         this.systemConfig.bridge.setupID = setupID;
+        this.systemConfigDirtyFlag = true;
       }
-
       if(this.systemConfig.bridge.setupURI == null) {
         const setupCode = parseInt(this.systemConfig.bridge.pin.replace(/-/g, ''), 10);
         const category = 2; // BRIDGE
         const encodedPayload = ('00000000' + (setupCode + ( 1 << 28) /* Supports IP */ + (category << 31) + (category  >> 1) * Math.pow(2, 32)).toString(36).toUpperCase()).slice(-9);
         this.systemConfig.bridge.setupURI = "X-HM://" + encodedPayload + this.systemConfig.bridge.setupID;
+        this.systemConfigDirtyFlag = true;
       }
 
       this.systemConfig.bridge.changeState = true;
 
-      getmac.getMac((err, macAddr) => {
-        if(this.systemConfig.bridge.name == null) this.systemConfig.bridge.name = 'GeckoLink-' + macAddr.slice(-8).replace(/:/g,'');
-        if(this.systemConfig.bridge.username == null) this.systemConfig.bridge.username = macAddr.toUpperCase();
-        this.emit('changeSystemConfig', this);
-      });
+      if(this.systemConfig.bridge.name == null) this.systemConfig.bridge.name = 'GeckoLink-' + this.macAddr.slice(-8).replace(/:/g,'');
+      if(this.systemConfig.bridge.username == null) this.systemConfig.bridge.username = this.macAddr.toUpperCase();
+      this.emit('readSystemConfigDone', this);
+    });
 
-      if(callback) callback();
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.on('webServerStart', (_caller) => {
+      if(this.user) {
+        if(!this.group) this.group = this.user;
+        process.initgroups(this.user, this.group);
+        process.setgid(this.group);
+        process.setuid(this.user);
+      }
+      if(this.systemConfigDirtyFlag) this.Registry.SetRegistry('system', this.systemConfig);
+      this.systemConfigDirtyFlag = false;
+      this.emit('initializeAfterSetUID', this);
+      this.emit('changeSystemConfig', this);
+      this.emit('changeHueBridges', this);
+      this.emit('changeControllerLog', this, this.controllerLog);
+      this.emit('statusNotify', this);
     });
   }
 
   MakeAliasTable() {
-    if(!(0 in this.alias)) {
-      this.alias[0] = {name:'server'};
-      for(let i = 0; i < 4; i++) {
-        this.alias[0]['vsw'+i] = {name:'', valueLabel:{'0':'off', '1':'on'}};
-      }
-      this.alias[0]['rainInfo'] = {name:'アメッシュ', type: 'rain' };
-      this.alias[0]['smartMeter'] = {name:'消費電力', type: 'energy', unit: 'W' };
+    this.alias[0] = {
+      name: 'server',
+      rainInfo: {
+        name: 'アメッシュ',
+        type: 'rain',
+      },
+      smartMeter: {
+        name: '消費電力',
+        type: 'energy',
+        unit: 'W',
+      },
+    };
+    for(let i = 0; i < 4; i++) {
+      this.alias[0]['vsw'+i] = {
+        name: '',
+        valueLabel: {
+          '0': 'open',
+          '1': 'close',
+          '2': 'off',
+          '3': 'on',
+        },
+      };
     }
     this.aliasTable = {};
     for(const i in this.alias) {

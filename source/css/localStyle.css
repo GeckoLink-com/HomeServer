@@ -169,15 +169,15 @@ hr {
   vertical-align: middle;
 }
 
-.well input {
-  padding: 0;
+.well input, .well-transparent input {
+  padding: 0 3px;
 }
 
-.well input:disabled {
+.well input:disabled, .well-transparent input:disabled {
   color: #ccc;
 }
 
-.well select:disabled {
+.well select:disabled, .well-transparent select:disabled {
   color: #ccc;
 }
 
@@ -213,7 +213,7 @@ fieldset[disabled] .checkbox label {
 
 .code, textarea {
   width: 100%;
-  font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
+  font-family: Courier, 'NotoSansMonoCJKjp', monospace;
 }
 
 .pull-right {
@@ -336,7 +336,7 @@ th {
 
 .el-switch__core {
   border-color: #80b8ff;
-  background-color: #d0e0ec;
+  background-color: #80b8ff;
 }
 
 .el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label {

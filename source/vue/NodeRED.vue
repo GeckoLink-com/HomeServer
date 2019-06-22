@@ -1,5 +1,5 @@
 <template>
-  <iframe v-if="initialized()" v-show="display" src="/red/" id="node-red" scrolling="no" frameborder="no"/>
+  <iframe v-if="initialized()" v-show="display" src="/red/" id="node-red" scrolling="no" frameborder="no" />
 </template>
 
 <script>

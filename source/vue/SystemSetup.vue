@@ -1,163 +1,215 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>システム設定</h4>
       <div class="well">
         <div class="no-mobile">
-          <el-row>
+          <ElRow>
             <h5>アカウント設定 [ *.sconf ]</h5>
-          </el-row>
-          <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin"/>
-          <el-tooltip placement="right" content="暗号鍵が含まれるので取扱注意！" effect="light" open-delay="500">
-            <el-button @click="AuthSave" type="primary" class="system-config-btn">ファイルに保存</el-button>
-          </el-tooltip>
+          </ElRow>
+          <a id="auth-save" style="display:none" href="/config/gecko_system_auth.bin" />
+          <ElTooltip placement="right" content="暗号鍵が含まれるので取扱注意！" effect="light" open-delay="500">
+            <ElButton @click="AuthSave" type="primary" class="system-config-btn">
+              ファイルに保存
+            </ElButton>
+          </ElTooltip>
 
-          <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none" >
-          <el-button type="warning" @click="authLoadModal=true" class="system-config-btn" plain>ファイルから復元</el-button>
-          <el-dialog title="アカウント設定 [*.sconf]" :visible.sync="authLoadModal" :show-close="false">
+          <input @change="AuthLoadFile" id="auth-load" type="file" accept=".sconf" style="display:none">
+          <ElButton type="warning" @click="authLoadModal=true" class="system-config-btn" plain>
+            ファイルから復元
+          </ElButton>
+          <ElDialog title="アカウント設定 [*.sconf]" :visible.sync="authLoadModal" :show-close="false">
             現在の各種設定値を上書きしますがよろしいですか？
             <div slot="footer" class="dialog-footer">
-              <el-button type="default" @click="authLoadModal = false">中止</el-button>
-              <el-button type="danger" @click="AuthLoad" plain>実行</el-button>
+              <ElButton type="default" @click="authLoadModal = false">
+                中止
+              </ElButton>
+              <ElButton type="danger" @click="AuthLoad" plain>
+                実行
+              </ElButton>
             </div>
-          </el-dialog>
-          <el-row>
+          </ElDialog>
+          <ElRow>
             <h5>それ以外の設定 [ *.gconf ]</h5>
-          </el-row>
-          <a id="config-save" style="display:none" href="/config/gecko_system_config.bin"/>
-          <el-button @click="ConfigSave" type="primary" class="system-config-btn">ファイルに保存</el-button>
+          </ElRow>
+          <a id="config-save" style="display:none" href="/config/gecko_system_config.bin" />
+          <ElButton @click="ConfigSave" type="primary" class="system-config-btn">
+            ファイルに保存
+          </ElButton>
 
-          <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none" >
-          <el-button type="warning" @click="configLoadModal=true" class="system-config-btn" plain>ファイルから復元</el-button>
-          <el-dialog title="システム以外の設定[*.gconf]" :visible.sync="configLoadModal" :show-close="false">
+          <input @change="ConfigLoadFile" id="config-load" type="file" accept=".gconf" style="display:none">
+          <ElButton type="warning" @click="configLoadModal=true" class="system-config-btn" plain>
+            ファイルから復元
+          </ElButton>
+          <ElDialog title="システム以外の設定[*.gconf]" :visible.sync="configLoadModal" :show-close="false">
             現在の各種設定値を上書きしますがよろしいですか？
             <div slot="footer" class="dialog-footer">
-              <el-button type="default" @click="configLoadModal = false">中止</el-button>
-              <el-button type="danger" @click="ConfigLoad" plain>実行</el-button>
+              <ElButton type="default" @click="configLoadModal = false">
+                中止
+              </ElButton>
+              <ElButton type="danger" @click="ConfigLoad" plain>
+                実行
+              </ElButton>
             </div>
-          </el-dialog>
+          </ElDialog>
           <br>
 
-          <el-row>
+          <ElRow>
             <h5>初期化</h5>
-          </el-row>
-          <el-button type="warning" @click="configInitModal=true" class="system-config-btn" plain>工場出荷状態に戻す</el-button>
-          <el-dialog title="初期化" :visible.sync="configInitModal" :show-close="false">
+          </ElRow>
+          <ElButton type="warning" @click="configInitModal=true" class="system-config-btn" plain>
+            工場出荷状態に戻す
+          </ElButton>
+          <ElDialog title="初期化" :visible.sync="configInitModal" :show-close="false">
             工場出荷状態に戻します。<br>
             現在の設定値が全て消去されますがよろしいですか？
             <div slot="footer" class="dialog-footer">
-              <el-button type="default" @click="configInitModal = false">中止</el-button>
-              <el-button type="danger" @click="ConfigInit" plain>実行</el-button>
+              <ElButton type="default" @click="configInitModal = false">
+                中止
+              </ElButton>
+              <ElButton type="danger" @click="ConfigInit" plain>
+                実行
+              </ElButton>
             </div>
-          </el-dialog>
+          </ElDialog>
           <br>
         </div>
 
-        <el-row>
+        <ElRow>
           <h5>電源</h5>
-        </el-row>
-        <el-button type="warning" :disabled="!shutdownEnable" @click="shutdownModal=true" class="system-config-btn" plain>シャットダウン</el-button>
-        <el-dialog title="電源 シャットダウン" :modal="true" :visible.sync="shutdownModal" :show-close="false">
+        </ElRow>
+        <ElButton type="warning" :disabled="!shutdownEnable" @click="shutdownModal=true" class="system-config-btn" plain>
+          シャットダウン
+        </ElButton>
+        <ElDialog title="電源 シャットダウン" :modal="true" :visible.sync="shutdownModal" :show-close="false">
           シャットダウン処理を行います。<br>
           LEDの点滅が止まり、赤色のLEDの点灯のみになれば電源を抜いて大丈夫です。<br>
           再起動は電源を一度抜いてから、再度つないでください。
           <div slot="footer" class="dialog-footer">
-            <el-button type="default" :disabled="!shutdownModalButton" @click="shutdownModal = false">中止</el-button>
-            <el-button type="danger" :disabled="!shutdownModalButton" @click="Shutdown" plain>実行</el-button>
+            <ElButton type="default" :disabled="!shutdownModalButton" @click="shutdownModal = false">
+              中止
+            </ElButton>
+            <ElButton type="danger" :disabled="!shutdownModalButton" @click="Shutdown" plain>
+              実行
+            </ElButton>
           </div>
-        </el-dialog>
+        </ElDialog>
         <br>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main>
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
-        <el-form-item label="システムバージョン" prop="version">
+    <ElMain>
+      <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+        <ElFormItem label="システムバージョン" prop="version">
           {{ version }}
-        </el-form-item>
+        </ElFormItem>
 
-        <el-form-item label="アカウント" prop="account">
-          <el-tooltip placement="top" content="モバイル端末で受け取れるメールアドレス" effect="light" open-delay="500">
-            <el-input type="text" name="account" v-model="ruleForm.account" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem label="アカウント" prop="account">
+          <ElTooltip placement="top" content="モバイル端末で受け取れるメールアドレス" effect="light" open-delay="500">
+            <ElInput type="text" name="account" v-model="ruleForm.account" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="パスワード" prop="password1">
-          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
-            <el-input type="password" name="password1" v-model="ruleForm.password1" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem label="パスワード" prop="password1">
+          <ElTooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <ElInput type="password" name="password" v-model="ruleForm.password1" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="パスワード（確認）" prop="password2">
-          <el-tooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
-            <el-input type="password" name="password2" v-model="ruleForm.password2" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem label="パスワード（確認）" prop="password2">
+          <ElTooltip placement="top" content="英数記号８文字以上" effect="light" open-delay="500">
+            <ElInput type="password" name="password2" v-model="ruleForm.password2" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="リモートアクセス" prop="remote">
-          <el-tooltip placement="right" content="モバイル端末からのアクセスを許可します" effect="light" open-delay="500">
-            <el-switch v-model="remote" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem v-if="wifiEnable" label="Wi-Fi" prop="wifiEnable">
+          <ElTooltip placement="right" content="Wi-Fi機能を有効にします" effect="light" open-delay="500">
+            <ElSwitch v-model="wifi" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="自動update" prop="autoUpdate">
-          <el-tooltip placement="right" content="夜間にupdateを実行します" effect="light" open-delay="500">
-            <el-switch v-model="autoUpdate" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem v-if="wifi" label="SSID" prop="ssid">
+          <ElAutocomplete name="ssid" v-model="ruleForm.ssid" :fetch-suggestions="SearchSSID" clearable />
+        </ElFormItem>
 
-        <el-form-item label="Power LED" prop="powerLED">
-          <el-tooltip placement="right" content="フロントパネルの電源LEDを設定します" effect="light" open-delay="500">
-            <el-switch v-model="powerLED"/>
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem v-if="wifi" label="Wi-Fiパスワード" prop="wifiPassword">
+          <ElTooltip placement="top" content="Wi-Fiのパスワードを入れてください" effect="light" open-delay="500">
+            <ElInput type="password" name="wifiPassword" v-model="ruleForm.wifiPassword" />
+          </ElTooltip>
+        </ElFormItem>
 
-        <el-form-item label="通知用メールアドレス" prop="mailto">
-          <el-tooltip placement="top" content="プログラム等でのイベント通知のメールアドレス" effect="light" open-delay="500">
-            <el-input type="email" v-model="ruleForm.mailto" />
-          </el-tooltip>
-        </el-form-item>
+        <ElFormItem label="リモートアクセス" prop="remote">
+          <ElTooltip placement="right" content="モバイル端末からのアクセスを許可します" effect="light" open-delay="500">
+            <ElSwitch v-model="remote" />
+          </ElTooltip>
+        </ElFormItem>
+
+        <ElFormItem label="自動update" prop="autoUpdate">
+          <ElTooltip placement="right" content="夜間にupdateを実行します" effect="light" open-delay="500">
+            <ElSwitch v-model="autoUpdate" />
+          </ElTooltip>
+        </ElFormItem>
+
+        <ElFormItem label="Power LED" prop="powerLED">
+          <ElTooltip placement="right" content="フロントパネルの電源LEDを設定します" effect="light" open-delay="500">
+            <ElSwitch v-model="powerLED" />
+          </ElTooltip>
+        </ElFormItem>
+
+        <ElFormItem label="通知用メールアドレス" prop="mailto">
+          <ElTooltip placement="top" content="プログラム等でのイベント通知のメールアドレス" effect="light" open-delay="500">
+            <ElInput type="email" v-model="ruleForm.mailto" />
+          </ElTooltip>
+        </ElFormItem>
 
         <div class="no-mobile">
-          <el-form-item label="リモートサーバー認証" prop="remoteKey">
-            <el-tooltip placement="right" content="プレミアムアカウント用" effect="light" open-delay="500">
-              <el-button type="primary" @click="RemoteKeyFile">認証鍵ファイルを設定</el-button>
-            </el-tooltip>
-          </el-form-item>
+          <ElFormItem label="リモートサーバー認証" prop="remoteKey">
+            <ElTooltip placement="right" content="プレミアムアカウント用" effect="light" open-delay="500">
+              <ElButton type="primary" @click="RemoteKeyFile">
+                認証鍵ファイルを設定
+              </ElButton>
+            </ElTooltip>
+          </ElFormItem>
           <input @change="UploadRemoteKeyFile" id="remote-keyfile" type="file" accept="text/json" style="display:none">
 
-          <el-form-item label="SSH" prop="sshKey">
-            <el-tooltip placement="right" content="ssh gecko@geckolink.localでloginできます" effect="light" open-delay="500">
-              <el-button type="primary" @click="SSHKeyFile">公開鍵ファイルを設定</el-button>
-            </el-tooltip>
-          </el-form-item>
+          <ElFormItem label="SSH" prop="sshKey">
+            <ElTooltip placement="right" content="ssh gecko@geckolink.localでloginできます" effect="light" open-delay="500">
+              <ElButton type="primary" @click="SSHKeyFile">
+                公開鍵ファイルを設定
+              </ElButton>
+            </ElTooltip>
+          </ElFormItem>
           <input @change="UploadSSHKeyFile" id="ssh-keyfile" type="file" accept="text/json" style="display:none">
         </div>
 
-        <el-form-item>
-          <el-col offset="20">
-            <el-button type="primary" :disabled="!rulesValid" @click="Submit">設定</el-button>
-          </el-col>
-        </el-form-item>
-        <el-dialog title="アカウント設定" :visible.sync="accountMailMessage" :show-close="false">
+        <ElFormItem>
+          <ElCol offset="20">
+            <ElButton type="primary" :disabled="!rulesValid" @click="Submit">
+              設定
+            </ElButton>
+          </ElCol>
+        </ElFormItem>
+        <ElDialog title="アカウント設定" :visible.sync="accountMailMessage" :show-close="false">
           アカウントの確認のため、メールを送信しました。<br>
           3分以内にメールのリンクにアクセスしてください。<br>
           メールが届かない場合はアカウントの設定を再度確認してください。
           <div slot="footer" class="dialog-footer">
-            <el-button type="default" @click="accountMailMessage = false">中止</el-button>
+            <ElButton type="default" @click="accountMailMessage = false">
+              中止
+            </ElButton>
           </div>
-        </el-dialog>
-
-      </el-form>
-    </el-main>
-  </el-container>
+        </ElDialog>
+      </ElForm>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
-  import { Tooltip, Form, FormItem, Switch, Dialog, Input } from 'element-ui';
+  import { Tooltip, Form, FormItem, Switch, Autocomplete, Dialog, Input } from 'element-ui';
   import 'element-ui/lib/theme-chalk/tooltip.css';
   import 'element-ui/lib/theme-chalk/form.css';
   import 'element-ui/lib/theme-chalk/switch.css';
+  import 'element-ui/lib/theme-chalk/autocomplete.css';
   import 'element-ui/lib/theme-chalk/dialog.css';
   import 'element-ui/lib/theme-chalk/input.css';
   import JsSHA from 'jssha';
@@ -168,6 +220,7 @@
       ElForm: Form,
       ElFormItem: FormItem,
       ElSwitch: Switch,
+      ElAutocomplete: Autocomplete,
       ElDialog: Dialog,
       ElInput: Input,
     },
@@ -189,11 +242,15 @@
         powerLED: false,
         shutdownEnable: false,
         accountMailMessage: false,
+        wifiEnable: false,
+        wifi: false,
         ruleForm: {
           account: '',
           password1: '',
           password2: '',
           mailto: '',
+          ssid: '',
+          wifiPassword: '',
         },
         rules: {
           account: [
@@ -208,12 +265,20 @@
           mailto: [
             { type: 'email', message: '有効なメールアドレスを設定してください。', trigger: [ 'blur', 'change' ] },
           ],
+          ssid: [
+            { validator: this.ValidateSSID.bind(this), message: 'SSIDを入力してください。', trigger: [ 'blur', 'change' ] },
+          ],
+          wifiPassword: [
+            { validator: this.ValidateWifiPassword.bind(this), message: 'Wi-Fiパスワードを入力してください。', trigger: [ 'blur', 'change' ] },
+          ],
         },
         ruleValid: {
           account: true,
           password1: true,
           password2: true,
           mailto: true,
+          ssid: true,
+          wifiPassword: true,
         },
       };
     },
@@ -286,6 +351,18 @@
         }
         callback();
       },
+      ValidateSSID(rule, value, callback) {
+        if(value === '') {
+          return callback(new Error('SSIDを入れてください。'));
+        }
+        callback();
+      },
+      ValidateWifiPassword(rule, value, callback) {
+        if((!Common.systemConfig.psk || (Common.systemConfig.psk === '')) && (value === '')) {
+          return callback(new Error('Wi-Fiパスワードを入れてください。'));
+        }
+        callback();
+      },
       AuthSave() {
         const dt = new Date();
         this.authSave.href = this.authSave.origin +
@@ -345,6 +422,16 @@
         Socket.emit('shutdown');
         this.shutdownModalButton = false;
       },
+      SearchSSID(query, callback) {
+        Socket.emit('searchSSID', (data) => {
+          const results = (query ? data.filter((ssid) => {
+            return (ssid.toLowerCase().indexOf(query.toLowerCase()) === 0);
+          }): data).map((element) => {
+            return { value: element };
+          });
+          callback(results);
+        });
+      },
       RemoteKeyFile() {
         this.remoteKeyFile.click();
       },
@@ -384,6 +471,9 @@
         this.latitude = Common.systemConfig.latitude;
         this.longitude = Common.systemConfig.longitude;
         this.autoUpdate = Common.systemConfig.autoUpdate;
+        this.ruleForm.ssid = Common.systemConfig.ssid || '';
+        this.wifiEnable = Common.systemConfig.wifiEnable;
+        this.wifi = Common.systemConfig.wifi;
       },
       Reload() {
         setTimeout(() => { location.reload(); }, 3000);
@@ -417,11 +507,43 @@
           }
           this.accountMailMessage = Common.systemConfig.remote !== this.remote;
           if(this.accountMailMessage) Common.systemConfig.requestRemoteAccessState = 1;
-          Socket.emit('systemConfig', Common.systemConfig);
-          Common.emit('toastr_success', this, '設定しました。');
 
-          if(changeAccount && !this.accountMailMessage) {
-            setTimeout(window.location.reload.bind(window.location), 600);
+          Common.systemConfig.wifi = this.wifi;
+          Common.systemConfig.ssid = this.ruleForm.ssid;
+          if(this.ruleForm.wifiPassword !== '') {
+            const encoder = new TextEncoder();
+            crypto.subtle.importKey('raw', encoder.encode(this.ruleForm.wifiPassword),
+              { name: 'PBKDF2' }, false, ['deriveBits']).then((key) => {
+              return crypto.subtle.deriveBits({
+                  name: 'PBKDF2',
+                  salt: encoder.encode(this.ruleForm.ssid),
+                  iterations: 4096,
+                  hash: { name: 'SHA-1' },
+                },
+                key, 256);
+            }).then((buffer) => {
+              const buf = new Uint8Array(buffer);
+              let psk = '';
+              for(const d of buf) {
+                psk += ('00' + d.toString(16)).substr(-2);
+              }
+              return psk;
+            }).then((psk) => {
+              Common.systemConfig.psk = psk;
+              Socket.emit('systemConfig', Common.systemConfig);
+              Common.emit('toastr_success', this, '設定しました。');
+
+              if(changeAccount && !this.accountMailMessage) {
+                setTimeout(window.location.reload.bind(window.location), 600);
+              }
+            });
+          } else {
+            Socket.emit('systemConfig', Common.systemConfig);
+            Common.emit('toastr_success', this, '設定しました。');
+
+            if(changeAccount && !this.accountMailMessage) {
+              setTimeout(window.location.reload.bind(window.location), 600);
+            }
           }
         });
       },

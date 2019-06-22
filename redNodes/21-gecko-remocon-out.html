@@ -20,23 +20,28 @@
           return this.label;
         },
         oneditprepare: function() {
+          this.editValue = {
+            deviceName: this.deviceName,
+            remoconGroup: this.remoconGroup,
+            remoconCode: this.remoconCode,
+          };
+
           $.getJSON('gecko/' + this.id, (homeServer) => {
-          
             this.homeServer = homeServer;
-            if(this.deviceName == null) this.deviceName = 'server';
+            if(this.editValue.deviceName == null) this.editValue.deviceName = 'server';
             $('#node-input-deviceName').append($('<option></option>').val('server').text('server'));
             for(i in this.homeServer.alias) {
               if(!(parseInt(this.homeServer.alias[i].option, 16) & (1 << 21))) continue;
               $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
             }
-            $('#node-input-deviceName').val(this.deviceName);
+            $('#node-input-deviceName').val(this.editValue.deviceName);
             $('#node-input-remoconGroup').append($('<option></option>').val('noGroup').text('グループ外'));
             $('#node-input-remoconGroup').append($('<option></option>').val('macro').text('マクロ'));
             for(i in this.homeServer.remocon.remoconGroup) {
               $('#node-input-remoconGroup').append($('<option></option>').val(i).text(this.homeServer.remocon.remoconGroup[i].comment));
-              if(this.remoconGroup == null) this.remoconGroup = i;
+              if(this.editValue.remoconGroup == null) this.editValue.remoconGroup = i;
             }
-            $('#node-input-remoconGroup').val(this.remoconGroup);
+            $('#node-input-remoconGroup').val(this.editValue.remoconGroup);
 
             const RedrawRemoconCode = (group) => {
               $('#node-input-remoconCode option').remove();
@@ -45,18 +50,18 @@
                   if((group != 'noGroup') && (group != this.homeServer.remocon.remoconTable[i].group)) continue;
                   if((group == 'noGroup') && (this.homeServer.remocon.remoconTable[i].group && (this.homeServer.remocon.remoconTable[i].group != ''))) continue;
                   $('#node-input-remoconCode').append($('<option></option>').val(i).text(this.homeServer.remocon.remoconTable[i].comment));
-                  if(this.remoconCode == null) this.remoconCode = i;
+                  if(this.editValue.remoconCode == null) this.editValue.remoconCode = i;
                 }
               } else {
                 for(i in this.homeServer.remocon.remoconMacro) {
                   $('#node-input-remoconCode').append($('<option></option>').val(i).text(this.homeServer.remocon.remoconMacro[i].comment));
-                  if(this.remoconCode == null) this.remoconCode = i;
+                  if(this.editValue.remoconCode == null) this.editValue.remoconCode = i;
                 }
               }
-              $('#node-input-remoconCode').val(this.remoconCode);
+              $('#node-input-remoconCode').val(this.editValue.remoconCode);
             }
-            $('#node-input-remoconGroup').change((e) => {this.remoconCode = null;RedrawRemoconCode(e.target.value);});
-            RedrawRemoconCode(this.remoconGroup);
+            $('#node-input-remoconGroup').change((e) => {this.editValue.remoconCode = null;RedrawRemoconCode(e.target.value);});
+            RedrawRemoconCode(this.editValue.remoconGroup);
           });
         },
         oneditsave: function() {

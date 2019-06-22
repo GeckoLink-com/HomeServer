@@ -1,62 +1,90 @@
 <template>
   <div>
-    <navbar placement="top" type="default" id="top-bar" @page="Click">
+    <Navbar placement="top" type="default" id="top-bar" @page="Click">
       <div slot="brand">
         <img src="../images/GeckoLogo.png" class="logo" alt="GeckoLink"
              @mousedown="TouchLogoStart"
              @touchstart="TouchLogoStart"
              @mouseup="TouchLogoEnd"
-             @touchend="TouchLogoEnd">
+             @touchend="TouchLogoEnd"
+        >
       </div>
-      <li data-to="/system_setup">システム設定</li>
-      <dropdown text="子機設定" :disabled="!moduleMenu || !passwordValid" >
-        <li data-to="/pairing" :disabled="!module">ペアリング</li>
-        <li data-to="/basic_setup" >基本設定</li>
-        <li data-to="/advanced_setup" class="no-mobile" >詳細設定</li>
-        <li data-to="/module_list" >子機一覧</li>
-      </dropdown>
-      <li data-to="/link_devices" :disabled="!passwordValid" >リンク機器</li>
-      <dropdown text="リモコン" :disabled="!passwordValid" >
-        <li data-to="/remocon" >リモコン設定</li>
-        <li data-to="/remocon_macro" >マクロ登録・編集</li>
-        <li data-to="/remocon_aircon" class="no-mobile" >エアコン設定</li>
-        <li data-to="/remocon_tv" class="no-mobile" >テレビ設定</li>
-      </dropdown>
-      <li data-to="/ui_setting" :disabled="!passwordValid" class="no-mobile" >UI設定</li>
-      <li data-to="/node_red" :disabled="!passwordValid" class="no-mobile" >プログラム</li>
-      <li data-to="/debug_panel" v-show="debug" :disabled="!passwordValid" >debug</li>
-    </navbar>
+      <li data-to="/system_setup">
+        システム設定
+      </li>
+      <Dropdown text="子機設定" :disabled="!moduleMenu || !passwordValid">
+        <li data-to="/pairing" :disabled="!module">
+          ペアリング
+        </li>
+        <li data-to="/basic_setup">
+          基本設定
+        </li>
+        <li data-to="/advanced_setup" class="no-mobile">
+          詳細設定
+        </li>
+        <li data-to="/module_list">
+          子機一覧
+        </li>
+      </Dropdown>
+      <li data-to="/link_devices" :disabled="!passwordValid">
+        リンク機器
+      </li>
+      <Dropdown text="リモコン" :disabled="!passwordValid">
+        <li data-to="/remocon">
+          リモコン設定
+        </li>
+        <li data-to="/remocon_macro">
+          マクロ登録・編集
+        </li>
+        <li data-to="/remocon_aircon" class="no-mobile">
+          エアコン設定
+        </li>
+        <li data-to="/remocon_tv" class="no-mobile">
+          テレビ設定
+        </li>
+      </Dropdown>
+      <li data-to="/ui_setting" :disabled="!passwordValid" class="no-mobile">
+        UI設定
+      </li>
+      <li data-to="/node_red" :disabled="!passwordValid" class="no-mobile">
+        プログラム
+      </li>
+      <li data-to="/debug_panel" v-show="debug" :disabled="!passwordValid">
+        debug
+      </li>
+    </Navbar>
 
     <div class="main-container">
-      <system-setup v-show="selectedTab==='/system_setup'" />
-      <pairing v-show="selectedTab==='/pairing'" />
-      <basic-setup v-show="selectedTab==='/basic_setup'" />
-      <advanced-setup v-show="selectedTab==='/advanced_setup'" />
-      <module-list v-show="selectedTab=='/module_list'" />
-      <link-devices v-show="selectedTab==='/link_devices'" />
-      <remocon v-show="selectedTab==='/remocon'" />
-      <remocon-macro v-show="selectedTab==='/remocon_macro'" />
-      <remocon-aircon v-show="selectedTab==='/remocon_aircon'" />
-      <remocon-tv v-show="selectedTab==='/remocon_tv'" />
-      <ui-setting v-show="selectedTab==='/ui_setting'" />
-      <node-red :display="selectedTab==='/node_red'" />
-      <debug-panel v-show="selectedTab==='/debug_panel'" />
-      <toastr />
+      <SystemSetup v-show="selectedTab==='/system_setup'" />
+      <Pairing v-show="selectedTab==='/pairing'" />
+      <BasicSetup v-show="selectedTab==='/basic_setup'" />
+      <AdvancedSetup v-show="selectedTab==='/advanced_setup'" />
+      <ModuleList v-show="selectedTab=='/module_list'" />
+      <LinkDevices v-show="selectedTab==='/link_devices'" />
+      <Remocon v-show="selectedTab==='/remocon'" />
+      <RemoconMacro v-show="selectedTab==='/remocon_macro'" />
+      <RemoconAircon v-show="selectedTab==='/remocon_aircon'" />
+      <RemoconTv v-show="selectedTab==='/remocon_tv'" />
+      <UiSetting v-show="selectedTab==='/ui_setting'" />
+      <NodeRed :display="selectedTab==='/node_red'" />
+      <DebugPanel v-show="selectedTab==='/debug_panel'" />
+      <Toastr />
     </div>
 
-    <el-dialog title="モバイル端末接続確認" :visible.sync="requestAuth" :show-close="false" :close-on-click-modal="false" :close-on-press-escape="false" >
+    <ElDialog title="モバイル端末接続確認" :visible.sync="requestAuth" :show-close="false" :close-on-click-modal="false" :close-on-press-escape="false">
       3分以内にモバイル端末に表示されている6桁のパスコードを入力してください。<br>
       もしモバイル端末の登録をしようとしていない場合は拒否を選択してください。<br>
-      <el-row>
-        <el-col v-for="i in 6" :key="'passcode' + i" offset="1" span="3">
-          <el-input type="text" :ref="'passcode'+(i-1)" :autofocus="i == 1" v-model="passcode[i - 1]" maxlength="1" pattern="[0-9]" @input="Passcode(i)" />
-        </el-col>
-      </el-row>
+      <ElRow>
+        <ElCol v-for="i in 6" :key="'passcode' + i" offset="1" span="3">
+          <ElInput type="text" :ref="'passcode'+(i-1)" :autofocus="i == 1" v-model="passcode[i - 1]" maxlength="1" pattern="[0-9]" @input="Passcode(i)" />
+        </ElCol>
+      </ElRow>
       <div slot="footer" class="dialog-footer">
-        <el-button type="danger" @click="RejectAuth">拒否</el-button>
+        <ElButton type="danger" @click="RejectAuth">
+          拒否
+        </ElButton>
       </div>
-    </el-dialog>
-
+    </ElDialog>
   </div>
 </template>
 

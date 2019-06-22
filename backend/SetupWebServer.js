@@ -18,13 +18,13 @@ const socketIO = require('socket.io');
 const fs = require('fs');
 const zlib = require('zlib');
 const RED = require('node-red');
-const process = require('process');
 const execSync = require('child_process').execSync;
+const exec = require('child_process').exec;
 const crypto = require('crypto');
 
 class SetupWebServer {
 
-  constructor(common, initalCallback) {
+  constructor(common) {
     this.common = common;
     this.setupWebClientConnections = [];
     this.requestAuth = false;
@@ -83,6 +83,22 @@ class SetupWebServer {
         }
       } catch(e) {/* empty */}
 
+      try {
+        const str1 = `
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=JP
+`;
+        const str2 = `
+network={
+  ssid="${this.common.systemConfig.ssid}"
+  psk=${this.common.systemConfig.psk}
+}
+`;
+        const str = (this.common.systemConfig.wifiEnable && this.common.systemConfig.wifi)?(str1 + str2):str1;
+        fs.writeFileSync('/etc/wpa_supplicant/wpa_supplicant.conf', str);
+      } catch(e) {/* empty */}
+
       this.common.emit('sendControllerCommand', this, {
         deviceName: 'server',
         command: `sysled ${ this.common.systemConfig.powerLED ? 'on' : 'off' }`,
@@ -103,167 +119,171 @@ class SetupWebServer {
       this.SendMessage('requestAuth', true);
     });
 
-    const app = express();
-    app.use(cookieParser());
+    this.common.on('readSystemConfigDone', (_caller) => {
+      const app = express();
+      app.use(cookieParser());
 
-    const session = expressSession({
-      secret: this.common.config.sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      rolling: true,
-      cookie: {
-        maxAge: 31 * 24 * 60 * 60 * 1000,
-        secure: false,
-        httpOnly: false,
-      },
-      store: new nedbStore({
-        filename: this.common.config.basePath + '/session.db',
-      }),
-    });
-    app.use(session);
-    app.enable('trust proxy');
-
-    app.use('/js/*', (req, res) => {
-      console.log('js/* ', req.originalUrl);
-      const user = req.session.user || {};
-      user.pv = (user.pv || 0) + 1;
-      user.expire = user.expire || (moment().add(14, 'days').unix());
-      req.session.user = user;
-      req.session.save();
-      req.session.touch();
-
-      const hash = crypto.createHash('sha256');
-      hash.update(this.common.systemConfig.password + user.nonce);
-      const digest = hash.digest('hex');
-
-      if((user.account !== this.common.systemConfig.account) ||
-         (user.digest !== digest)) {
-        req.originalUrl = '/js/SignIn.js';
-      }
-
-      fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
-        if(err) return res.end();
-        res.set('Content-Type', 'application/javascript');
-        res.set('Content-Encoding', 'gzip');
-        res.send(data);
+      const session = expressSession({
+        secret: this.common.systemConfig.sessionSecret,
+        resave: false,
+        saveUninitialized: false,
+        rolling: true,
+        cookie: {
+          maxAge: 31 * 24 * 60 * 60 * 1000,
+          secure: false,
+          httpOnly: false,
+        },
+        store: new nedbStore({
+          filename: this.common.config.basePath + '/session.db',
+        }),
       });
-    });
+      app.use(session);
+      app.enable('trust proxy');
 
-    app.use(express.static(__dirname + '/../frontend/'));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+      app.use('/js/*', (req, res) => {
+        const user = req.session.user || {};
+        user.pv = (user.pv || 0) + 1;
+        user.expire = user.expire || (moment().add(14, 'days').unix());
+        req.session.user = user;
+        req.session.save();
+        req.session.touch();
 
-    app.get('/config/:filename', (req, res) => {
-      let nodeRedConfig = null;
-      try {
-        nodeRedConfig = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/.config.json'));
-      } catch(e) {/* empty */}
+        const hash = crypto.createHash('sha256');
+        hash.update(this.common.systemConfig.password + user.nonce);
+        const digest = hash.digest('hex');
 
-      let nodeRedFlow = null;
-      try {
-        nodeRedFlow = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/flow.json'));
-      } catch(e) {/* empty */}
-
-      const buf = JSON.stringify({alias: this.common.alias, remocon: this.common.remocon, uiTable:this.common.uiTable, status:this.common.internalStatus, nodeRedConfig:nodeRedConfig, nodeRedFlow:nodeRedFlow}, null, 2);
-      zlib.gzip(buf, (err, data) => {
-        res.send(data);
-      });
-    });
-
-    app.get('/auth/:filename', (req, res) => {
-      const buf = JSON.stringify({system:this.common.systemConfig}, null, 2);
-      zlib.gzip(buf, (err, data) => {
-        res.send(data);
-      });
-    });
-
-    app.get('/remocon/:filename', (req, res) => {
-      const buf = JSON.stringify({remocon:this.common.remocon}, null, 2);
-      zlib.gzip(buf, (err, data) => {
-        res.send(data);
-      });
-    });
-    this.server = http.Server(app);
-
-    // node-red
-    this.redSettings = {
-      httpAdminRoot: '/red/',
-      httpNodeRoot: '/node/',
-      flowFile: 'flow.json',
-      userDir: this.common.config.basePath + '/red',
-      nodesDir: __dirname + '/../redNodes',
-      logging: {
-        console: {
-          level: 'warning',
-          metrics: false,
-          audit: false
+        if((user.account !== this.common.systemConfig.account) ||
+           (user.digest !== digest)) {
+          req.originalUrl = '/js/SignIn.js';
         }
-      },
-      debugMaxLength: 1000,
-      paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
-      editorTheme: {
-        page: {
-          css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
-        },
-        deployButton: {
-            type: 'simple',
-        },
-        menu: {
-          'menu-item-import-library': false,
-          'menu-item-export-library': false,
-          'menu-item-keyboard-shortcuts': false,
-          'menu-item-help': false,
-          'menu-item-show-tips': true,
-        },
-        userMenu: false,
-      },
-      adminAuth: {
-        type: 'credentials',
-        users: [],
-        default: {
-          permissions: '*',
-        },
-      },
-      functionGlobalContext: {
-        homeServer: this.common,
-      },
-    };
 
-    RED.init(this.server, this.redSettings);
-    app.use(this.redSettings.httpAdminRoot, RED.httpAdmin);
-    app.use(this.redSettings.httpNodeRoot, (req, res) => { RED.httpNode(req, res); });
-    RED.start();
+        fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
+          if(err) return res.end();
+          res.set('Content-Type', 'application/javascript');
+          res.set('Content-Encoding', 'gzip');
+          res.send(data);
+        });
+      });
 
-    app.get('/*', function(req, res, _next) {
+      app.use(express.static(__dirname + '/../frontend/'));
+      app.use(bodyParser.urlencoded({ extended: true }));
+      app.use(bodyParser.json());
 
-      if(req.path.indexOf('/node/') === 0) {
-        return res.sendStatus(404);
-      }
-      res.redirect('/');
+      app.get('/config/:filename', (req, res) => {
+        let nodeRedConfig = null;
+        try {
+          nodeRedConfig = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/.config.json'));
+        } catch(e) {/* empty */}
+
+        let nodeRedFlow = null;
+        try {
+          nodeRedFlow = JSON.parse(fs.readFileSync(this.common.config.basePath + '/red/flow.json'));
+        } catch(e) {/* empty */}
+
+        const buf = JSON.stringify({alias: this.common.alias, remocon: this.common.remocon, uiTable:this.common.uiTable, status:this.common.internalStatus, nodeRedConfig:nodeRedConfig, nodeRedFlow:nodeRedFlow}, null, 2);
+        zlib.gzip(buf, (err, data) => {
+          res.send(data);
+        });
+      });
+
+      app.get('/auth/:filename', (req, res) => {
+        const buf = JSON.stringify({system:this.common.systemConfig}, null, 2);
+        zlib.gzip(buf, (err, data) => {
+          res.send(data);
+        });
+      });
+
+      app.get('/remocon/:filename', (req, res) => {
+        const buf = JSON.stringify({remocon:this.common.remocon}, null, 2);
+        zlib.gzip(buf, (err, data) => {
+          res.send(data);
+        });
+      });
+      this.server = http.Server(app);
+
+      // node-red
+      this.redSettings = {
+        httpAdminRoot: '/red/',
+        httpNodeRoot: '/node/',
+        flowFile: 'flow.json',
+        userDir: this.common.config.basePath + '/red',
+        nodesDir: __dirname + '/../redNodes',
+        logging: {
+          console: {
+            level: 'warning',
+            metrics: false,
+            audit: false
+          }
+        },
+        debugMaxLength: 1000,
+        paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
+        editorTheme: {
+          page: {
+            css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
+          },
+          deployButton: {
+              type: 'simple',
+          },
+          menu: {
+            'menu-item-import-library': false,
+            'menu-item-export-library': false,
+            'menu-item-keyboard-shortcuts': false,
+            'menu-item-help': false,
+            'menu-item-show-tips': true,
+          },
+          userMenu: false,
+        },
+        adminAuth: {
+          type: 'credentials',
+          users: [],
+          default: {
+            permissions: '*',
+          },
+        },
+        functionGlobalContext: {
+          homeServer: this.common,
+        },
+      };
+      Object.defineProperties(this.redSettings.functionGlobalContext, {
+        get: { configurable: true },
+        set: { configurable: true },
+        keys: { configurable: true },
+      });
+
+      RED.init(this.server, this.redSettings);
+      app.use(this.redSettings.httpAdminRoot, RED.httpAdmin);
+      app.use(this.redSettings.httpNodeRoot, RED.httpNode);
+      RED.start();
+
+      app.get('/*', function(req, res, _next) {
+
+        if(req.path.indexOf('/node/') === 0) {
+          return res.sendStatus(404);
+        }
+        res.redirect('/');
+      });
+
+      app.use('/:page', this.IndexResponse);
+      app.use('/', this.IndexResponse);
+
+      this.server.listen(this.common.config.setupWebServerPort, '::0', () => {
+        console.log('setupWebServer listing on port %d', this.common.config.setupWebServerPort);
+        this.common.emit('webServerStart', this);
+        this.common.emit('sendControllerCommand', this, {
+          deviceName: 'server',
+          command: `sysled ${ this.common.systemConfig.powerLED ? 'on' : 'off' }`,
+        });
+      });
+
+      // socketio
+      this.socketio = socketIO(this.server);
+      if(this.common.config.setupWebServerProtocol) this.socketio.set('transports', this.common.config.setupWebServerProtocol);
+      this.socketio.use((socket, next) => {
+        session(socket.request, socket.request.res, next);
+      });
+
+      this.socketio.on('connection', this.Connection.bind(this));
     });
-
-    app.use('/:page', this.IndexResponse);
-    app.use('/', this.IndexResponse);
-
-    this.server.listen(this.common.config.setupWebServerPort, '::0', () => {
-      console.log('setupWebServer listing on port %d', this.common.config.setupWebServerPort);
-      if(this.common.user) {
-        if(!this.common.group) this.common.group = this.common.user;
-        process.initgroups(this.common.user, this.common.group);
-        process.setgid(this.common.group);
-        process.setuid(this.common.user);
-      }
-      initalCallback();
-    });
-
-    // socketio
-    this.socketio = socketIO(this.server);
-    if(this.common.config.setupWebServerProtocol) this.socketio.set('transports', this.common.config.setupWebServerProtocol);
-    this.socketio.use((socket, next) => {
-      session(socket.request, socket.request.res, next);
-    });
-
-    this.socketio.on('connection', (socket) => { this.Connection(socket); });
   }
 
   Connection(socket) {
@@ -374,27 +394,31 @@ class SetupWebServer {
         this.common.emit('changeAlias', this);
 
         this.common.remocon = d3.remocon;
-        this.common.emit('changeRemocon', this);
-        
         this.common.uiTable = d3.uiTable;
+        this.common.emit('changeRemocon', this);
         this.common.emit('changeUITable', this);
 
         this.common.internalStatus = d3.status;
         this.common.emit('changeInternalStatus', this);
-                
-        RED.stop();
-        if(d3.nodeRedConfig) {
-          fs.writeFileSync(this.common.config.basePath + '/red/.config.json_new', JSON.stringify(d3.nodeRedConfig, null, 2));
-          fs.renameSync(this.common.config.basePath + '/red/.config.json_new', this.common.config.basePath + '/red/.config.json');
-        }
 
-        if(d3.nodeRedFlow) {
-          fs.writeFileSync(this.common.config.basePath + '/red/flow.json_new', JSON.stringify(d3.nodeRedFlow, null, 2));
-          fs.renameSync(this.common.config.basePath + '/red/flow.json_new', this.common.config.basePath + '/red/flow.json');
+        for(const func of this.server.listeners('upgrade')) {
+          if(func.name === 'upgrade') this.server.off('upgrade', func);
         }
-        RED.init(this.server, this.redSettings);
-        RED.start();
-        this.common.emit('changeSystemConfig', this);
+        RED.stop().then(() => {
+          console.log('RED stopped');
+          if(d3.nodeRedConfig) {
+            fs.writeFileSync(this.common.config.basePath + '/red/.config.json_new', JSON.stringify(d3.nodeRedConfig, null, 2));
+            fs.renameSync(this.common.config.basePath + '/red/.config.json_new', this.common.config.basePath + '/red/.config.json');
+          }
+
+          if(d3.nodeRedFlow) {
+            fs.writeFileSync(this.common.config.basePath + '/red/flow.json_new', JSON.stringify(d3.nodeRedFlow, null, 2));
+            fs.renameSync(this.common.config.basePath + '/red/flow.json_new', this.common.config.basePath + '/red/flow.json');
+          }
+          RED.init(this.server, this.redSettings);
+          RED.start();
+          this.common.emit('changeSystemConfig', this);
+        });
       });
     });
 
@@ -417,7 +441,10 @@ class SetupWebServer {
         this.common.systemConfig = d3.system;
         this.common.systemConfig.version = this.common.version;
         this.common.systemConfig.hap = this.common.config.hap;
+        this.common.systemConfig.pwm = this.common.config.pwm;
+        this.common.systemConfig.dmx = this.common.config.dmx;
         this.common.systemConfig.led = this.common.config.led;
+        if(!this.common.systemConfig.powerLED) this.common.systemConfig.powerLED = this.common.config.powerLED;
         this.common.systemConfig.motor = this.common.config.motor;
         this.common.systemConfig.smartMeter = this.common.config.smartMeter;
         this.common.systemConfig.initialPassword = this.common.initialPassword;
@@ -514,6 +541,16 @@ class SetupWebServer {
       this.requestAuthTimer = null;
       this.SendMessage('requestAuth', false);
     });
+
+    socket.on('searchSSID', (callback) => {
+      exec('/sbin/iwlist wlan0 scan', (err, stdout) => {
+        if(stdout) {
+          callback((stdout.replace(/\\x00/g, '').match(/ESSID\s*:\s*"(.+)(?=")/g)||[]).map(s => s.replace(/^ESSID\s*:\s*"/, '')));
+        } else {
+          callback([]);
+        }
+      });
+    });
     
     this.SendMessage('deviceInfo', {type:'deviceInfo', data:this.common.deviceInfo});
     this.SendMessage('status', this.common.status);
@@ -529,17 +566,10 @@ class SetupWebServer {
                                    (clientAddress !== '::1'));
     this.SendMessage('shutdownEnable', this.common.shutdownEnable);
     this.SendMessage('requestAuth', this.requestAuth);
-
-    this.common.emit('sendControllerCommand', this, {
-      deviceName: 'server',
-      command: `sysled ${ this.common.systemConfig.powerLED ? 'on' : 'off' }`,
-    });
-
     this.common.emit('setupWebConnect', this);
   }
 
   IndexResponse(req, res) {
-    console.log('IndexRes ', req.originalUrl);
     fs.readFile(__dirname + '/../frontend/index.html.gz', (err, data) => {
       if(err) {
         res.writeHead(404, {'Content-Type': 'text/plain'});

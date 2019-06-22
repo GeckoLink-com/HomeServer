@@ -21,54 +21,60 @@
           return this.label;
         },
         oneditprepare: function() {
+          this.editValue = {
+            deviceName: this.deviceName,
+            func: this.func,
+            mode: this.mode,
+            script: this.script,
+          };
           $.getJSON('gecko/' + this.id, (homeServer) => {
             this.homeServer = homeServer;
             for(i in this.homeServer.alias) {
               $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
-              if(this.deviceName == null) this.deviceName = this.homeServer.alias[i].name;
+              if(this.editValue.deviceName == null) this.editValue.deviceName = this.homeServer.alias[i].name;
             }
-            $('#node-input-deviceName').val(this.deviceName);
+            $('#node-input-deviceName').val(this.editValue.deviceName);
             
             const RedrawFunc = () => {
               $('#node-input-func option').remove();
-              for(i in this.homeServer.aliasTable[this.deviceName].property) {
+              for(i in this.homeServer.aliasTable[this.editValue.deviceName].property) {
                 if(this.homeServer.commandFunc.indexOf(i) < 0) continue;
-                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.deviceName].property[i].type != 'out')) continue;
-                let name = this.homeServer.aliasTable[this.deviceName].property[i].name;
+                if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.editValue.deviceName].property[i].type != 'out')) continue;
+                let name = this.homeServer.aliasTable[this.editValue.deviceName].property[i].name;
                 if(!name || (name == '')) name = i;
-                if(this.func == null) this.func = i;
+                if(this.editValue.func == null) this.editValue.func = i;
                 $('#node-input-func').append($('<option></option>').val(i).text(name));
               }
               $('#node-input-func').append($('<option></option>').val('script').text('script'));
-              if(this.func == null) this.func = 'script';
-              $('#node-input-func').val(this.func);
+              if(this.editValue.func == null) this.editValue.func = 'script';
+              $('#node-input-func').val(this.editValue.func);
               RedrawMode();
             }
 
             const RedrawMode = () => {
-              if(this.func != 'script') {
+              if(this.editValue.func != 'script') {
                 $('#node-input-mode').parents('.form-row').removeClass('hidden');
                 $('#node-input-script').parents('.form-row').addClass('hidden');
                 $('#node-input-mode-block').removeClass('hidden');
                 $('#node-input-mode option').remove();
-                if(!(this.deviceName in this.homeServer.aliasTable)) return;
-                if(!(this.func in this.homeServer.aliasTable[this.deviceName].property)) return;
-                for(let i in this.homeServer.aliasTable[this.deviceName].property[this.func].valueLabel) {
-                  const mode = this.homeServer.aliasTable[this.deviceName].property[this.func].valueLabel[i];
-                  if(this.mode == null) this.mode = mode;
+                if(!(this.editValue.deviceName in this.homeServer.aliasTable)) return;
+                if(!(this.editValue.func in this.homeServer.aliasTable[this.editValue.deviceName].property)) return;
+                for(let i in this.homeServer.aliasTable[this.editValue.deviceName].property[this.editValue.func].valueLabel) {
+                  const mode = this.homeServer.aliasTable[this.editValue.deviceName].property[this.editValue.func].valueLabel[i];
+                  if(this.editValue.mode == null) this.editValue.mode = mode;
                   $('#node-input-mode').append($('<option></option>').val(mode).text(mode));
                 }
-                $('#node-input-mode').val(this.mode);
+                $('#node-input-mode').val(this.editValue.mode);
               } else {
                 $('#node-input-mode').parents('.form-row').addClass('hidden');
                 $('#node-input-script').parents('.form-row').removeClass('hidden');
-                $('#node-input-script').val(this.script);
+                $('#node-input-script').val(this.editValue.script);
               }
             }
                    
-            $('#node-input-deviceName').change((e) => {this.func = null;this.mode = null;this.deviceName = e.target.value; RedrawFunc();});
+            $('#node-input-deviceName').change((e) => {this.editValue.func = null;this.editValue.mode = null;this.editValue.deviceName = e.target.value; RedrawFunc();});
             RedrawFunc();
-            $('#node-input-func').change((e) => {this.mode = null;this.func = e.target.value; RedrawMode();});
+            $('#node-input-func').change((e) => {this.editValue.mode = null;this.editValue.func = e.target.value; RedrawMode();});
           });
         },
         oneditsave: function() {

@@ -1,71 +1,87 @@
 <template>
-  <el-container>
-    <el-aside width="30%">
+  <ElContainer>
+    <ElAside width="30%">
       <h4>エアコン設定</h4>
       <div class="well well-transparent">
-        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
-          <el-form-item label="登録名" prop="name">
-            <el-tooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.name" />
-            </el-tooltip>
+        <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <ElFormItem label="登録名" prop="name">
+            <ElTooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.name" />
+            </ElTooltip>
             <div v-if="nameAlert" class="form_item_error">
               登録名が既に存在しています。上書きしますがよろしいですか？
             </div>
-          </el-form-item>
+          </ElFormItem>
 
-          <el-form-item label="コメント" prop="comment">
-            <el-tooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.comment" />
-            </el-tooltip>
-          </el-form-item>
-        </el-form>
+          <ElFormItem label="コメント" prop="comment">
+            <ElTooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.comment" />
+            </ElTooltip>
+          </ElFormItem>
+        </ElForm>
 
-        <el-alert title="事前準備" description="風向、風量等の設定は固定になるので開始前に最適な状態にしてください。" :type="(sequence==0)?'success':'info'" :closable="false" />
-        <el-alert title="1.暖房の各温度のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='heater')?'success':'info'" :closable="false" />
-        <el-alert title="2.冷房の各温度のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='cooler')?'success':'info'" :closable="false" />
-        <el-alert title="3.電源(Off)のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='power')?'success':'info'" :closable="false" />
-        <el-alert title="4.登録をします。" :type="(sequence==40)?'success':'info'" :closable="false" />
-        <el-row class="pull-right">
-          <el-button v-show="sequence==0" :disabled="!rulesValid" type="primary" @click="Start">開始</el-button>
-          <el-button v-show="sequence!=0" type="danger" @click="Stop">中止</el-button>
-          <el-button v-show="sequence==40" type="primary" @click="Submit">保存</el-button>
-        </el-row>
+        <ElAlert title="事前準備" description="風向、風量等の設定は固定になるので開始前に最適な状態にしてください。" :type="(sequence==0)?'success':'info'" :closable="false" />
+        <ElAlert title="1.暖房の各温度のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='heater')?'success':'info'" :closable="false" />
+        <ElAlert title="2.冷房の各温度のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='cooler')?'success':'info'" :closable="false" />
+        <ElAlert title="3.電源(Off)のリモコンを学習します。" :type="(sequence!=0)&&(sequence!=40)&&(mode=='power')?'success':'info'" :closable="false" />
+        <ElAlert title="4.登録をします。" :type="(sequence==40)?'success':'info'" :closable="false" />
+        <ElRow class="pull-right">
+          <ElButton v-show="sequence==0" :disabled="!rulesValid" type="primary" @click="Start">
+            開始
+          </ElButton>
+          <ElButton v-show="sequence!=0" type="danger" @click="Stop">
+            中止
+          </ElButton>
+          <ElButton v-show="sequence==40" type="primary" @click="Submit">
+            保存
+          </ElButton>
+        </ElRow>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main>
+    <ElMain>
       <div v-show="sequence!=0" class="well well-transparent">
         <h4>{{ modeLabel[mode] }}</h4>
       </div>
       <div v-show="sequence!=0" class="well well-transparent">
-        <el-row>
-          <el-col v-show="lowTempShow" span="8">
+        <ElRow>
+          <ElCol v-show="lowTempShow" span="8">
             <h5>最低温度</h5>
-            <el-select v-model="lowTemp[mode]" @change="LowTemp">
-              <el-option v-for="temp in 9" :key="'ra-lowTemp' + temp" :label="temp+11 + '°C'" :value="temp+11">{{ temp+11 }}°C</el-option>
-            </el-select>
-          </el-col>
-          <el-col v-show="lowTempShow" span="8">
+            <ElSelect v-model="lowTemp[mode]" @change="LowTemp">
+              <ElOption v-for="temp in 9" :key="'ra-lowTemp' + temp" :label="temp+11 + '°C'" :value="temp+11">
+                {{ temp+11 }}°C
+              </ElOption>
+            </ElSelect>
+          </ElCol>
+          <ElCol v-show="lowTempShow" span="8">
             <h5>温度間隔</h5>
-            <el-select v-model="tempStep[mode]" @change="TempStep">
-              <el-option v-for="temp in 2" :key="'ra-lowTempStep' + temp" :label="temp*0.5+'°C'" :value="temp*0.5">{{ temp*0.5 }}°C</el-option>
-            </el-select>
-          </el-col>
-          <el-col v-show="highTempShow" span="8">
+            <ElSelect v-model="tempStep[mode]" @change="TempStep">
+              <ElOption v-for="temp in 2" :key="'ra-lowTempStep' + temp" :label="temp*0.5+'°C'" :value="temp*0.5">
+                {{ temp*0.5 }}°C
+              </ElOption>
+            </ElSelect>
+          </ElCol>
+          <ElCol v-show="highTempShow" span="8">
             <h5>最高温度</h5>
-            <el-select v-model="highTemp[mode]" @change="HighTemp">
-              <el-option v-for="temp in 9" :key="'ra-highTemp' + temp" :label="temp + 25 + '°C'" :value="temp+25">{{ temp+25 }}°C</el-option>
-            </el-select>
-          </el-col>
-        </el-row>
+            <ElSelect v-model="highTemp[mode]" @change="HighTemp">
+              <ElOption v-for="temp in 9" :key="'ra-highTemp' + temp" :label="temp + 25 + '°C'" :value="temp+25">
+                {{ temp+25 }}°C
+              </ElOption>
+            </ElSelect>
+          </ElCol>
+        </ElRow>
       </div>
 
       <div id="airconTable" v-show="tableShow" class="well-transparent scrollable">
         <table class="table">
           <thead>
             <tr>
-              <th width="20%">温度</th>
-              <th width="80%">コード</th>
+              <th width="20%">
+                温度
+              </th>
+              <th width="80%">
+                コード
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -76,9 +92,8 @@
           </tbody>
         </table>
       </div>
-
-    </el-main>
-  </el-container>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
@@ -536,7 +551,7 @@
   }
 
   .ui-select-menu {
-    font-family: 'Monaco', 'NotoSansMonoCJKjp', monospace;
+    font-family: Courier, 'NotoSansMonoCJKjp', monospace;
     font-size:12px;
     margin: 0px;
     padding:0px;

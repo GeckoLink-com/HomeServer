@@ -1,97 +1,117 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>マクロ登録・編集</h4>
       <div class="well well-transparent">
-        <el-tooltip placement="right" content="既存のマクロを選択すると編集できます" effect="light" open-delay="500">
-          <el-select v-model="selectedMacro" @change="SelectMacro">
-            <el-option label="新規追加" value="newMacro">
+        <ElTooltip placement="right" content="既存のマクロを選択すると編集できます" effect="light" open-delay="500">
+          <ElSelect v-model="selectedMacro" @change="SelectMacro">
+            <ElOption label="新規追加" value="newMacro">
               新規追加
-            </el-option>
-            <el-option v-for="(item,index) of remocon.remoconMacro" :key="'rm-remoconMacro' + index" :label="index" :value="index">
+            </ElOption>
+            <ElOption v-for="(item,index) of remocon.remoconMacro" :key="'rm-remoconMacro' + index" :label="index" :value="index">
               {{ index }}
-            </el-option>
-          </el-select>
-        </el-tooltip>
+            </ElOption>
+          </ElSelect>
+        </ElTooltip>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main>
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+    <ElMain>
+      <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
         <div v-if="selectedMacro != null" class="well well-transparent">
-          <el-form-item label="登録名" prop="name">
-            <el-tooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.name" />
-            </el-tooltip>
+          <ElFormItem label="登録名" prop="name">
+            <ElTooltip placement="top" content="識別しやすい名前" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.name" />
+            </ElTooltip>
             <div v-if="nameAlert" class="form_item_error">
               登録名が既に存在しています。上書きしますがよろしいですか？
             </div>
-          </el-form-item>
-          <el-form-item label="コメント" prop="comment">
-            <el-tooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
-              <el-input v-model="ruleForm.comment" />
-            </el-tooltip>
-          </el-form-item>
+          </ElFormItem>
+          <ElFormItem label="コメント" prop="comment">
+            <ElTooltip placement="top" content="用途などを記述" effect="light" open-delay="500">
+              <ElInput v-model="ruleForm.comment" />
+            </ElTooltip>
+          </ElFormItem>
         </div>
 
         <div v-if="macro.length > 0" class="well well-transparent">
           <table class="table remocon-table">
             <thead>
               <tr>
-                <th width="40%">登録名</th>
-                <th width="60%">コメント</th>
+                <th width="40%">
+                  登録名
+                </th>
+                <th width="60%">
+                  コメント
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(item, idx) of macro" :key="'rm-macro' + idx">
                 <td v-if="item.wait==null">
-                  <el-tooltip placement="top" content="登録済みのリモコンコードに置き換える場合は選択" effect="light" open-delay="500">
-                    <el-select v-model="item.label" @change="dirty=true">
-                      <el-option v-for="(remocon,idx) of remocon.remoconTable" :key="'rm-remoconTable' + idx" :label="idx" :value="idx">
-                        {{ idx }}
-                      </el-option>
-                    </el-select>
-                  </el-tooltip>
+                  <ElTooltip placement="top" content="登録済みのリモコンコードに置き換える場合は選択" effect="light" open-delay="500">
+                    <ElSelect v-model="item.label" @change="dirty=true">
+                      <ElOption v-for="(table,idx2) of remocon.remoconTable" :key="'rm-remoconTable' + idx2" :label="idx2" :value="idx2">
+                        {{ idx2 }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElTooltip>
                 </td>
                 <td v-else>
-                  <el-tooltip placement="top" content="次のリモコンコードを発行するまでの間隔" effect="light" open-delay="500">
-                    <el-input-number min="0.1" step="0.1" precision="1" v-model="item.wait" @change="dirty=true" />
+                  <ElTooltip placement="top" content="次のリモコンコードを発行するまでの間隔" effect="light" open-delay="500">
+                    <ElInputNumber min="0.1" step="0.1" precision="1" v-model="item.wait" @change="dirty=true" />
                     秒
-                  </el-tooltip>
+                  </ElTooltip>
                 </td>
                 <td v-if="item.wait == null">
                   {{ item.label && remocon.remoconTable[item.label] ? remocon.remoconTable[item.label].comment : item.info }}
                 </td>
-                <td v-else>待ち時間</td>
+                <td v-else>
+                  待ち時間
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <div v-if="selectedMacro != null" class="well well-transparent">
-          <el-row class="pull-right">
-            <el-button v-if="(selectedMacro === 'newMacro') && (sequence === 0)" type="primary" @click="Start">開始</el-button>
-            <el-button v-if="selectedMacro !== 'newMacro'" :disabled="dirty" type="danger" @click="removeDialog = true">削除</el-button>
-            <el-dialog title="マクロ登録の削除" :visible.sync="removeDialog" :show-close="false">
+          <ElRow class="pull-right">
+            <ElButton v-if="(selectedMacro === 'newMacro') && (sequence === 0)" type="primary" @click="Start">
+              開始
+            </ElButton>
+            <ElButton v-if="selectedMacro !== 'newMacro'" :disabled="dirty" type="danger" @click="removeDialog = true">
+              削除
+            </ElButton>
+            <ElDialog title="マクロ登録の削除" :visible.sync="removeDialog" :show-close="false">
               <div v-if="selectedMacro !== 'newMacro'">
                 {{ selectedMacro }}を削除します。よろしいですか？
               </div>
-              <div v-if="selectedMacro === 'newMacro'" >
+              <div v-if="selectedMacro === 'newMacro'">
                 削除しました。
               </div>
               <div slot="footer" class="dialog-footer">
-                <el-button type="default" @click="removeDialog = false">中止</el-button>
-                <el-button type="primary" @click="Remove" >実行</el-button>
+                <ElButton type="default" @click="removeDialog = false">
+                  中止
+                </ElButton>
+                <ElButton type="primary" @click="Remove">
+                  実行
+                </ElButton>
               </div>
-            </el-dialog>
-            <el-button v-if="(selectedMacro !== 'newMacro')||(sequence !== 0)" :disabled="!dirty" type="danger" @click="Cancel">中止</el-button>
-            <el-button v-if="(selectedMacro === 'newMacro')&&(sequence < 2)" type="primary" :disabled="!rulesValid||!dirty||(macro.length === 0)" @click="sequence=2">終了</el-button>
-            <el-button v-if="(selectedMacro !== 'newMacro')||(sequence === 2)" type="primary" :disabled="!rulesValid||!dirty||(macro.length === 0)" @click="Submit">保存</el-button>
-          </el-row>
+            </ElDialog>
+            <ElButton v-if="(selectedMacro !== 'newMacro')||(sequence !== 0)" :disabled="!dirty" type="danger" @click="Cancel">
+              中止
+            </ElButton>
+            <ElButton v-if="(selectedMacro === 'newMacro')&&(sequence < 2)" type="primary" :disabled="!rulesValid||!dirty||(macro.length === 0)" @click="sequence=2">
+              終了
+            </ElButton>
+            <ElButton v-if="(selectedMacro !== 'newMacro')||(sequence === 2)" type="primary" :disabled="!rulesValid||!dirty||(macro.length === 0)" @click="Submit">
+              保存
+            </ElButton>
+          </ElRow>
         </div>
-      </el-form>
-    </el-main>
-  </el-container>
+      </ElForm>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>

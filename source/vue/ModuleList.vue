@@ -1,22 +1,34 @@
 <template>
-  <el-container @click.native="ClearSelect">
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer @click.native="ClearSelect">
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>子機一覧</h4>
       <br>
-      <div class="module-image no-mobile" >
-        <img src="../images/HB-6.png" alt="GL-1100" width="90%" >
+      <div class="module-image no-mobile">
+        <img src="../images/HB-6.png" alt="GL-1100" width="90%">
       </div>
-    </el-aside>
-    <el-main>
+    </ElAside>
+    <ElMain>
       <table class="table module-table" v-show="devices && (devices.length > 0)">
         <thead>
           <tr>
-            <th width="25%">name</th>
-            <th width="16%">module</th>
-            <th width="9%">type</th>
-            <th width="16%">version</th>
-            <th width="9%">power</th>
-            <th width="25%">status</th>
+            <th width="25%">
+              name
+            </th>
+            <th width="16%">
+              module
+            </th>
+            <th width="9%">
+              type
+            </th>
+            <th width="16%">
+              version
+            </th>
+            <th width="9%">
+              power
+            </th>
+            <th width="25%">
+              status
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -28,19 +40,19 @@
             <td>{{ dev.voltage?dev.voltage:'-' }}</td>
             <td v-if="dev.fwupdateSeq == dev.fwupdateNum">
               {{ dev.state }}
-              <el-button v-if="(selectedDevice==dev.device)&&(dev.state=='dead')" type="danger" icon="el-icon-delete" class="module-button" @click.stop="Delete(dev.device)" />
-              <el-button v-if="(selectedDevice==dev.device)&&(dev.state!='dead')&&(dev.type=='HA/FC')" type="danger" class="module-button" @click.stop="Update(dev.device)">
+              <ElButton v-if="(selectedDevice==dev.device)&&(dev.state=='dead')" type="danger" icon="el-icon-delete" class="module-button" @click.stop="Delete(dev.device)" />
+              <ElButton v-if="(selectedDevice==dev.device)&&(dev.state!='dead')&&(dev.type=='HA/FC')" type="danger" class="module-button" @click.stop="Update(dev.device)">
                 update
-              </el-button>
+              </ElButton>
             </td>
             <td v-if="dev.fwupdateSeq != dev.fwupdateNum">
-              <el-progress :show-text="false" :stroke-width="22" :percentage="dev.fwupdateSeq * 100 / dev.fwupdateNum" color="#e6a23c" class="progress-striped" />
+              <ElProgress :show-text="false" :stroke-width="22" :percentage="dev.fwupdateSeq * 100 / dev.fwupdateNum" color="#e6a23c" class="progress-striped" />
             </td>
           </tr>
         </tbody>
       </table>
-    </el-main>
-  </el-container>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>

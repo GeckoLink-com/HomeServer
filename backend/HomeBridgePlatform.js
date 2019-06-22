@@ -22,8 +22,6 @@ class HomeBridgePlatform {
     this.published = false;
     this.Bridge = null;
 
-    init(this.common.config.basePath + '/homeBridge');
-
     this.API = {
       SendCommand: this.SendCommand.bind(this),
       GetStatus: this.GetStatus.bind(this),
@@ -34,10 +32,13 @@ class HomeBridgePlatform {
       GetLastCommand: this.GetLastCommand.bind(this),
     }; 
 
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+    this.common.on('initializeAfterSetUID', (_caller) => {
+      init(this.common.config.basePath + '/homeBridge');
+    });
     this.common.on('changeUITable', this.UITableNotify.bind(this));
     this.common.on('changeRemocon', this.UITableNotify.bind(this));
     this.common.on('statusNotify', this.StatusNotify.bind(this));
-    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this.common.on('changeSystemConfig', (_caller) => {
       if(!this.common.systemConfig) return;
       if(!this.common.systemConfig.platform) return;

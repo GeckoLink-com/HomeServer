@@ -4,18 +4,20 @@
       <img src="../images/GeckoLogo.png" class="logo">
     </div>
     <div class="sign-in">
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left">
-        <el-form-item label="アカウント" prop="account">
-          <el-input type="text" name="account" v-model="ruleForm.account" />
-        </el-form-item>
-        <el-form-item label="パスワード" prop="password">
-          <el-input type="password" name="password" v-model="ruleForm.password" />
-        </el-form-item>
+      <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left">
+        <ElFormItem label="アカウント" prop="account">
+          <ElInput type="text" name="account" v-model="ruleForm.account" />
+        </ElFormItem>
+        <ElFormItem label="パスワード" prop="password">
+          <ElInput type="password" name="password" v-model="ruleForm.password" @change="Submit" />
+        </ElFormItem>
         <div v-if="alert" class="form_item_error">
           アカウントもしくはパスワードが正しくありません。
         </div>
-        <el-button type="primary" class="pull-right" @click="Submit">認証</el-button>
-      </el-form>
+        <ElButton type="primary" class="pull-right" @click="Submit">
+          認証
+        </ElButton>
+      </ElForm>
     </div>
   </article>
 </template>

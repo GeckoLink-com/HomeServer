@@ -21,7 +21,7 @@ module.exports = function(RED) {
   RED.nodes.registerType('gecko remocon in',Remocon);
   
   Remocon.prototype.close = function() {
-    RED.settings.functionGlobalContext.homeServer.removeListener('irReceive', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.off('irReceive', this.eventListener);
   }
   
   RED.httpAdmin.get('/gecko/:id', RED.auth.needsPermission('gecko.read'), (req, res) => {

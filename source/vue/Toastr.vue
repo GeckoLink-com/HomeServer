@@ -1,18 +1,16 @@
 <template>
   <div class="toast-container">
-    <transition-group appear name="toast-fade" tag="div">
+    <TransitionGroup appear name="toast-fade" tag="div">
       <div v-for="msg of messages" :key="msg.key" class="toast-fade-item alert" :class="'alert-'+msg.type" style="width: 100%" role="alert">
-        <h5 class="toast-text" v-html="msg.text"/>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <h5 class="toast-text" v-html="msg.text" />
       </div>
-    </transition-group>
+    </TransitionGroup>
   </div>
 </template>
 
 <script>
   export default {
-    components: {
-      alert,
-    },
     data() {
       return {
         messages: [],

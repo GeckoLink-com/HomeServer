@@ -2,9 +2,9 @@
   <nav class="navbar">
     <div class="navbar-header">
       <button v-if="!$slots.collapse" type="button" class="navbar-toggle" @click="ToggleCollapse">
-        <span class="icon-bar"/>
-        <span class="icon-bar"/>
-        <span class="icon-bar"/>
+        <span class="icon-bar" />
+        <span class="icon-bar" />
+        <span class="icon-bar" />
       </button>
       <slot name="brand" />
     </div>

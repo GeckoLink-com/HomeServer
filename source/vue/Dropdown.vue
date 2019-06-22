@@ -1,14 +1,14 @@
 <template>
-  <div is="li" class="dropdown" >
+  <div is="li" class="dropdown">
     <slot name="button">
       <div class="dropdown-toggle">
         {{ text }}
       </div>
     </slot>
-    <span class="caret"/>
+    <span class="caret" />
     <slot name="dropdown-menu">
       <ul class="dropdown-menu">
-        <slot/>
+        <slot />
       </ul>
     </slot>
   </div>

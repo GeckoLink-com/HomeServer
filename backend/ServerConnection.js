@@ -215,8 +215,8 @@ class ServerConnection {
 
   WSSConnect() {
 
+    if(!this.wssClient) return;
     if(this.wssClient.readyState == 0) {
-      console.log('ServerConnection : ---152 WSSConnect no ready');  // DEBUG
       this.connectState = 0;
       return this.wssClient.terminate();
     }
@@ -225,7 +225,7 @@ class ServerConnection {
     this.connectState = 1;
     this.connectMessage = true;
     this.wssSendRetry = 0;
-    console.log('ServerConnection : connect ' + this.serverHost); // DEBUG
+    console.log('ServerConnection : connect ' + this.serverHost);
     if(this.common.systemConfig.accessKey) this.SendData(this, {type:'accessKey', data:this.common.systemConfig.accessKey});
     this.SendClientUi();
     this.SendData(this, {type:'interval', data:this.common.status});
@@ -281,11 +281,9 @@ class ServerConnection {
 
   SendData(caller, msg) {
     if(this.connectState != 1) return;
+    if(!this.wssClient) return;
     if(this.wssClient.readyState == 0) return;
-    if(this.wssClient._closeReceived)  console.log('ServerConnection : closeReceived'); // DEBUG
-    if(this.wssClient._socket) { // DEBUG
-      if(this.wssClient._socket.connecting) console.log('ServerConnection : connecting false'); // DEBUG
-    } // DEBUG
+    if(this.wssClient._closeReceived) console.log('ServerConnection : closeReceived');
     if(!this.common.systemConfig.remote && (msg.type !== 'accessKey')) {
       console.log('ServerConnection : remote off');
       return;
@@ -295,7 +293,7 @@ class ServerConnection {
       this.lastSendTime = new Date();
       this.wssSendRetry = 0;
     } catch(e) {
-      console.log('ServerConnection : wssClient send error'); // DEBUG
+      console.log('ServerConnection : wssClient send error');
       console.dir(this.wssClient); // DEBUG
       this.wssSendRetry++;
       if(this.wssSendRetry > 3) {

@@ -8,6 +8,7 @@
 'use strict';
 
 const EchonetLite = require('node-echonet-lite');
+const mSerialPort = require('serialport');
 
 class SmartMeter {
 
@@ -30,7 +31,7 @@ class SmartMeter {
   
  Reset() {
     if(!this.common.systemConfig) return;
-    
+
     if(this.el) {
       if(this.intervalId) {
         clearInterval(this.intervalId);
@@ -58,6 +59,60 @@ class SmartMeter {
       pass: this.common.systemConfig.smartMeterPassword,
       baud: 115200,
     });
+
+    this.el.mELNet._prepare = function(callback) {
+      if(typeof(callback) !== 'function') {
+        callback = function() {};
+      }
+
+      this.port = new mSerialPort(this.params['path'], {
+        baudRate: this.params['baud']
+      });
+
+      this.port.on('error', (err) => {
+        callback(err);
+      });
+
+      this.port.once('open', () => {
+        this.initialized = true;
+        this._disableEchoback(callback);
+      });
+
+      this.port.on('data', (buf) => {
+        this.response_text += buf.toString('utf8');
+        if(this.response_buffer === null) {
+          this.response_buffer = buf;
+        } else {
+          this.response_buffer = Buffer.concat([this.response_buffer, buf]);
+        }
+
+        while(this.response_text.match(/\r\n$/)) {
+          const sep = this.response_text.substr(1).match(/(EVENT )|(ERXUDP )|(OK)/);
+          const len = sep ? sep.index + 1 : this.response_text.length;
+          const blen = sep ? this.response_buffer.indexOf(sep[0], 1) : this.response_buffer.length;
+          this.dataCallbackSerial(this.response_buffer.slice(0, blen));
+
+          this.serialCallback(this.response_text.substr(0, len), this.response_buffer.slice(0, blen));
+          this.response_text = this.response_text.substr(len);
+          this.response_buffer = this.response_buffer.slice(blen);
+        }
+      });
+    };
+
+/* for DEBUG
+    this.el.on('data-serial', (res) => {
+      console.log('< --------');
+      console.log(res.data);
+      console.log('< --------');
+    });
+    this.el.on('sent-serial', (res) => {
+      console.log('> --------');
+      console.log(res.device);
+      console.log(res.data);
+      console.log('> --------');
+    });
+*/
+
     this.retryInitialize = 5;
     this.intervalDropCount = 0;
     this.Initialize();
@@ -72,6 +127,7 @@ class SmartMeter {
         this.Initialize();
         return;
       }
+      this.el.initialized = true;
       this.retryDiscovery = 10;
       this.Discovery();
     });
@@ -107,7 +163,6 @@ class SmartMeter {
   }
 
   IntervalSequence() {
-    console.log('SmartMeter: Interval\n');
     this.intervalDropCount++;
     if(this.intervalDropCount > 5) {
       console.log('SmartMeter: WARNING IntervalDropCount = %d', this.intervalDropCount);
@@ -123,13 +178,11 @@ class SmartMeter {
     }
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this.GetValue(0xe7, (err, _res) => {
-      console.log('SmartMeter: 0xe7\n');
       if(err) {
         console.log('SmartMeter: GetValue 0xe7 error');
         console.log(err);
       }
       this.GetValue(0xe8, (err, _res) => {
-        console.log('SmartMeter: 0xe8\n');
         if(err) {
           console.log('SmartMeter: GetValue 0xe8 error');
           console.log(err);
@@ -137,7 +190,6 @@ class SmartMeter {
         const value = this.deviceInfo.energy < 0 ? -this.deviceInfo.energy : this.deviceInfo.energy;
         this.common.internalStatus.smartMeter = value;
         this.common.emit('changeInternalStatus', this);
-        console.log('SmartMeter: ', value);
         this.intervalDropCount = 0;
       });
     });

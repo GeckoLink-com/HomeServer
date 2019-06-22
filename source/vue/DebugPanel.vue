@@ -1,27 +1,27 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '35%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '35%' : '90%'">
       <h4>debug</h4>
 
       <div class="well-transparent">
         <h5>ControlServer Command</h5>
-        <el-input type="textarea" class="textarea" :rows="3" v-model="command" />
-        <el-select v-model="selectedModule" placeholder="送信するモジュール" value-key="label" @change="SelectModule">
-          <el-option v-for="module of moduleList" :key="'debug-moduleList' + module.device" :disabled="!module.enable" :label="module.label" :value="module" />
-        </el-select>
+        <ElInput type="textarea" class="textarea" :rows="3" v-model="command" />
+        <ElSelect v-model="selectedModule" placeholder="送信するモジュール" value-key="label" @change="SelectModule">
+          <ElOption v-for="module of moduleList" :key="'debug-moduleList' + module.device" :disabled="!module.enable" :label="module.label" :value="module" />
+        </ElSelect>
       </div>
 
       <div class="well-transparent">
         <h5>ControlServer Response</h5>
-        <el-input id="response" type="textarea" class="textarea" :rows="8" v-model="response"/>
+        <ElInput id="response" type="textarea" class="textarea" :rows="8" v-model="response" />
       </div>
       <div class="well-transparent">
         <h5>Sensor Event</h5>
-        <el-input id="events" type="textarea" class="textarea" readonly :rows="8" :value="events"/>
+        <ElInput id="events" type="textarea" class="textarea" readonly :rows="8" :value="events" />
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main>
+    <ElMain>
       <div v-show="devices && (devices.length > 0)" class="well-transparent scrollable-x">
         <h5>Modules</h5>
         <table class="table">
@@ -117,10 +117,18 @@
         <table class="table">
           <thead>
             <tr>
-              <th width="20%">time</th>
-              <th width="10%">type</th>
-              <th width="20%">module</th>
-              <th width="50%">message</th>
+              <th width="20%">
+                time
+              </th>
+              <th width="10%">
+                type
+              </th>
+              <th width="20%">
+                module
+              </th>
+              <th width="50%">
+                message
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -134,20 +142,18 @@
         </table>
         <br>
       </div>
-    </el-main>
-  </el-container>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
-  import { Tooltip, Select, Option, Input } from 'element-ui';
-  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import { Select, Option, Input } from 'element-ui';
   import 'element-ui/lib/theme-chalk/select.css';
   import 'element-ui/lib/theme-chalk/option.css';
   import 'element-ui/lib/theme-chalk/input.css';
 
   export default {
     components: {
-      ElTooltip: Tooltip,
       ElSelect: Select,
       ElOption: Option,
       ElInput: Input,
@@ -334,7 +340,7 @@
       border-left: 1px solid #CCC;
       border-spacing:0;
       color: #606266;
-      font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
+      font-family: Courier, 'NotoSansMonoCJKjp', monospace;
   }
 
   .scrollable-x {

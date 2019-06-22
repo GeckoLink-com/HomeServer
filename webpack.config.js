@@ -1,7 +1,6 @@
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
-const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const VueLoadewrPlugin = require('vue-loader/lib/plugin');
 
 process.noDeprecation = true;
@@ -144,9 +143,6 @@ module.exports = {
       threshold: 0,
       minRatio: 0.8,
       deleteOriginalAssets: true
-    }),
-    new HardSourceWebpackPlugin({
-      cacheDirectory: '.cache/hard-source/[confighash]',
     }),
     new VueLoadewrPlugin(),
   ],

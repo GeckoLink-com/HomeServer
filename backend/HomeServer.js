@@ -47,33 +47,33 @@ for(let i = 2; i < process.argv.length; i++) {
   }
   if(process.argv[i] == '-l') local = true;
 }
-if(configFile == null) configFile = __dirname + '/../config.json';
-const common = new Common(JSON.parse(fs.readFileSync(configFile, 'UTF-8')), () => {
-  common.user = user;
-  common.group = group;
-  if(process.env['HOME']) common.home = process.env['HOME'];
-  if(user) {
-    if(process.platform == 'darwin') {
-      common.home = '/Users/' + user;
-    } else if(process.platform == 'linux') {
-      common.home = '/home/' + user;
-    }
+if(configFile == null) configFile = '../config';
+
+const common = new Common(require(configFile));
+common.user = user;
+common.group = group;
+if(process.env['HOME']) common.home = process.env['HOME'];
+if(user) {
+  if(process.platform == 'darwin') {
+    common.home = '/Users/' + user;
+  } else if(process.platform == 'linux') {
+    common.home = '/home/' + user;
   }
-  common.config.local = local;
-  if(local) common.config.setupWebServerPort = 4080;
+}
+common.config.local = local;
+if(local) common.config.setupWebServerPort = 4080;
 
-  new SetupWebServer(common, () => {
-    new ControllerConnection(common);
-    new ServerConnection(common);
-    new HomeBridgePlatform(common);
-    new SmartMeter(common);
-    new LocalAddressRegister(common);
-    new HueAPI(common);
-    common.emit('changeSystemConfig', common);
-    common.emit('changeHueBridges', common);
-    common.emit('changeUITable', common);
-    common.emit('changeControllerLog', common, common.controllerLog);
-    common.emit('statusNotify', common);
-  });
-});
+if(common.config.logFile) {
+  const out = fs.createWriteStream(common.config.logFile, { flags: 'a'});
+  /*eslint no-global-assign: "off"*/
+  console = new console.Console({ stdout: out, stderr: out });
+}
 
+console.log('GeckoLink HomeServer');
+new LocalAddressRegister(common);
+new ControllerConnection(common);
+new ServerConnection(common);
+new HomeBridgePlatform(common);
+new SmartMeter(common);
+new HueAPI(common);
+new SetupWebServer(common);

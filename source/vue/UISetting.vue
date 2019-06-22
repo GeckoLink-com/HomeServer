@@ -1,56 +1,59 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '65%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '65%' : '90%'">
       <h4>UI設定</h4>
       <div id="ui-table" class="scrollable">
         <div class="well well-uisel">
           <table class="table ui-table" v-for="(room, roomIdx) of uiTable.RoomList" :key="'ui-itemRoomList' + roomIdx">
             <thead>
               <tr class="gray" @click="SelectItem('room', roomIdx)" :class="{success:('room'==selectedItem.type)&&(roomIdx==selectedItem.index)}" data-item-index="room" :data-room-index="roomIdx">
-                <th width="25%">{{ room }}</th>
-                <th width="20%"/>
-                <th width="20%"/>
-                <th width="30%"/>
+                <th width="25%">
+                  {{ room }}
+                </th>
+                <th width="20%" />
+                <th width="20%" />
+                <th width="30%" />
                 <th width="5%">
-                  <el-button v-show="RoomDeleteEnable(room)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem('room', room)" />
+                  <ElButton v-show="RoomDeleteEnable(room)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem('room', room)" />
                 </th>
               </tr>
             </thead>
             <tbody>
+              <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
               <tr v-for="(item, itemIdx) of uiTable.ItemList" :key="'ui-itemItemList' + itemIdx" v-if="item.room==room" @click="SelectItem(item.type, itemIdx)" :data-item-index="itemIdx" :data-room-index="roomIdx" :class="{success:('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)}">
                 <td>{{ item.label }}</td>
                 <td>{{ StatusItem(item, 0) }}</td>
                 <td>{{ StatusItem(item, 1) }}</td>
                 <td>
                   <div class="btn-inline">
-                    <el-button v-if="item.type=='aircon'" type="default">
+                    <ElButton v-if="item.type=='aircon'" type="default">
                       aircon mode
-                    </el-button>
-                    <el-button v-if="item.type=='hue'" type="default">
+                    </ElButton>
+                    <ElButton v-if="(item.type=='dimmerLight')&&item.table.colorTemp" type="default">
                       ctemp
-                    </el-button>
-                    <el-button v-if="item.type=='hue'" type="default">
+                    </ElButton>
+                    <ElButton v-if="(item.type=='dimmerLight')&&item.table.dimmer" type="default">
                       bright
-                    </el-button>
-                    <el-button v-if="item.type=='colorLight'" type="default">
+                    </ElButton>
+                    <ElButton v-if="item.type=='colorLight'" type="default">
                       red
-                    </el-button>
-                    <el-button v-if="item.type=='colorLight'" type="default">
+                    </ElButton>
+                    <ElButton v-if="item.type=='colorLight'" type="default">
                       green
-                    </el-button>
-                    <el-button v-if="item.type=='colorLight'" type="default">
+                    </ElButton>
+                    <ElButton v-if="item.type=='colorLight'" type="default">
                       blue
-                    </el-button>
-                    <el-button v-for="(btn, idx) of item.buttons" :key="'ui-itemButtons' + idx" type="primary">
+                    </ElButton>
+                    <ElButton v-for="(btn, idx) of item.buttons" :key="'ui-itemButtons' + idx" type="primary">
                       {{ ButtonItem(item, idx) }}
-                    </el-button>
-                    <el-button v-if="item.type=='tv'" type="default">
+                    </ElButton>
+                    <ElButton v-if="item.type=='tv'" type="default">
                       ch
-                    </el-button>
+                    </ElButton>
                   </div>
                 </td>
                 <td>
-                  <el-button v-show="('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem(item.type, itemIdx)" />
+                  <ElButton v-show="('room'!=selectedItem.type)&&(itemIdx==selectedItem.index)" type="danger" icon="el-icon-delete" class="pull-right" @click="DeleteItem(item.type, itemIdx)" />
                 </td>
               </tr>
             </tbody>
@@ -58,131 +61,135 @@
           <table class="table ui-table">
             <thead>
               <tr class="blue" :class="{success:selectedItem.index==-1}" data-item-index="new" data-room-index="-1" @click="SelectItem('new', -1)">
-                <th width="35%">新規項目追加</th>
-                <th width="15%"/>
-                <th width="15%"/>
-                <th width="35%"/>
+                <th width="35%">
+                  新規項目追加
+                </th>
+                <th width="15%" />
+                <th width="15%" />
+                <th width="35%" />
               </tr>
             </thead>
           </table>
         </div>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main class="ui-selector">
+    <ElMain class="ui-selector">
       <div class="well">
-        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
-          <el-form-item label="項目の種類" prop="itemType">
-            <el-select v-model="itemType">
-              <el-option v-for="type of validTypeTable" :key="'ui-validTypeTable' + type.label" :label="type.label" :value="type.value" :disabled="type.value=='disabled'">
+        <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <ElFormItem label="項目の種類" prop="itemType">
+            <ElSelect v-model="itemType">
+              <ElOption v-for="type of validTypeTable" :key="'ui-validTypeTable' + type.label" :label="type.label" :value="type.value" :disabled="type.value=='disabled'">
                 {{ type.label }}
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="項目名" prop="itemName">
-            <el-input type="text" v-model="ruleForm.itemName" />
-          </el-form-item>
-          <el-form-item label="他の呼び方" prop="itemAlias">
-            <el-input type="text" v-model="itemAlias" />
-          </el-form-item>
+              </ElOption>
+            </ElSelect>
+          </ElFormItem>
+          <ElFormItem label="項目名" prop="itemName">
+            <ElInput type="text" v-model="ruleForm.itemName" />
+          </ElFormItem>
+          <ElFormItem label="他の呼び方" prop="itemAlias">
+            <ElInput type="text" v-model="itemAlias" />
+          </ElFormItem>
           <div v-if="itemType!='room'">
-            <el-form-item label="ルーム" prop="itemRoom">
-              <el-select v-model="itemRoom">
-                <el-option v-for="room of uiTable.RoomList" :key="'ui-RoomList' + room" :label="room" :value="room">
+            <ElFormItem label="ルーム" prop="itemRoom">
+              <ElSelect v-model="itemRoom">
+                <ElOption v-for="room of uiTable.RoomList" :key="'ui-RoomList' + room" :label="room" :value="room">
                   {{ room }}
-                </el-option>
-              </el-select>
-            </el-form-item>
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
           </div>
-          <div v-if="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
+          <div v-if="(itemType!='room')&&(itemType!='dimmerLight')&&(itemType!='ctLight')&&(itemType!='colorLight')">
             <div v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
-              <el-form-item :label="'ステータス' + statIdx" :prop="'status' + statusIdx">
-                <el-select v-model="status[statIdx]" value-key="label">
-                  <el-option v-for="(sensor, idx) of sensorList" :key="'ui-sensorList' + idx" :label="sensor.label" :value="sensor">
+              <ElFormItem :label="'ステータス' + statIdx" :prop="'status' + statusIdx">
+                <ElSelect v-model="status[statIdx]" value-key="label">
+                  <ElOption v-for="(sensor, idx) of sensorList" :key="'ui-sensorList' + idx" :label="sensor.label" :value="sensor">
                     {{ sensor.label }}
-                  </el-option>
-                </el-select>
-              </el-form-item>
+                  </ElOption>
+                </ElSelect>
+              </ElFormItem>
             </div>
             <br>
           </div>
 
           <div v-if="itemType=='aircon'" class="well">
-            <el-form-item label="リモコンGp" prop="airconGroup">
-              <el-select v-model="airconGroup">
-                <el-option v-for="(group, idx) of remocon.remoconGroup" :key="'ui-airconRemoconGp' + idx" v-if="group.type=='aircon'" :label="group.comment" :value="idx">
+            <ElFormItem label="リモコンGp" prop="airconGroup">
+              <ElSelect v-model="airconGroup">
+                <ElOption v-for="(group, idx) of airconRemoconGroup" :key="'ui-airconRemoconGp' + idx" :label="group.comment" :value="idx">
                   {{ group.comment }}
-                </el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="モジュール" prop="itemRoom">
-              <el-select v-model="airconModule">
-                <el-option v-for="module of remoconTxList" :key="'ui-airconRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
+            <ElFormItem label="モジュール" prop="itemRoom">
+              <ElSelect v-model="airconModule">
+                <ElOption v-for="module of remoconTxList" :key="'ui-airconRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
                   {{ module.label }}
-                </el-option>
-              </el-select>
-            </el-form-item>
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
             <br>
           </div>
 
-          <div v-if="(itemType!='room')&&(itemType!='hue')&&(itemType!='colorLight')">
-            <div v-for="(btn,btnIdx) of button" class="well" :key="'ui-button' + btnIdx" v-if="btnIdx < buttonNum">
-              <el-form-item :label="'ボタン' + btnIdx" :prop="'btn' + btnIndex + 'command'">
-                <el-select v-model="btn.command" value-key="label">
-                  <el-option v-for="cmd of commandList" :key="'ui-commandList' + cmd.label" :label="cmd.label" :value="cmd">
-                    {{ cmd.label }}
-                  </el-option>
-                </el-select>
-              </el-form-item>
-              <div v-show="btn.command.type=='mode'">
-                <el-form-item label="モード" :prop="'btn' + btnIndex + 'mode'">
-                  <el-select v-model="btn.mode">
-                    <el-option v-for="mode of btn.command.mode" :key="'ui-commandMode' + mode" :label="mode" :value="mode">
-                      {{ mode }}
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-              </div>
-              <div v-show="btn.command.type=='remocon'">
-                <el-form-item label="リモコン" :prop="'btn' + btnIndex + 'remocon'">
-                  <el-select v-model="btn.remocon">
-                    <el-option v-for="(item,idx) of remocon.remoconTable" :key="'ui-remoconTable' + idx" :label="item.comment" :value="idx">
-                      {{ item.comment }}
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-              </div>
-              <div v-show="btn.command.type=='macro'">
-                <el-form-item label="リモコンマクロ" :prop="'btn' + btnIndex + 'macro'">
-                  <el-select class="form-control" v-model="btn.macro">
-                    <el-option v-for="(item,idx) of remocon.remoconMacro" :key="'ui-remoconMacro' + idx" :label="item.comment" :value="idx">
-                      {{ item.comment }}
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-              </div>
-              <div v-show="(btn.command.type=='remocon')||(btn.command.type=='macro')" >
-                <el-form-item label="モジュール" :prop="'btn' + btnIndex + 'module'">
-                  <el-select v-model="btn.module">
-                    <el-option v-for="(item,idx) of remoconTxList" :key="'ui-remoconTx' + idx" :label="item.label" :value="item.deviceName">
-                      {{ item.label }}
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-              </div>
-              <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&(itemType!='light')&&(itemType!='onOff')">
-                <el-form-item label="ラベル" :prop="'btn' + btnIndex + 'label'">
-                  <el-input type="text" v-model="btn.label" />
-                </el-form-item>
-              </div>
-              <div v-show="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&((itemType==='light')||(itemType==='onOff'))">
-                <el-form-item label="モード" :prop="'btn' + btnIndex + 'mode'">
-                  <el-select v-model="btn.mode">
-                    <el-option v-for="mode of remoconMode" :key="'ui-remoconMode' + mode" :label="mode" :value="mode">
-                      {{ mode }}
-                    </el-option>
-                  </el-select>
-                </el-form-item>
+          <div v-if="(itemType!='room')&&(itemType!='dimmerLight')&&(itemType!='ctLight')&&(itemType!='colorLight')">
+            <div v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx">
+              <div class="well" v-if="btnIdx < buttonNum">
+                <ElFormItem :label="'ボタン' + btnIdx" :prop="'btn' + btnIndex + 'command'">
+                  <ElSelect v-model="btn.command" value-key="label">
+                    <ElOption v-for="cmd of commandList" :key="'ui-commandList' + cmd.label" :label="cmd.label" :value="cmd">
+                      {{ cmd.label }}
+                    </ElOption>
+                  </ElSelect>
+                </ElFormItem>
+                <div v-if="btn.command.type=='mode'">
+                  <ElFormItem label="モード" :prop="'btn' + btnIndex + 'mode'">
+                    <ElSelect v-model="btn.mode">
+                      <ElOption v-for="mode of btn.command.mode" :key="'ui-commandMode' + mode" :label="mode" :value="mode">
+                        {{ mode }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElFormItem>
+                </div>
+                <div v-if="btn.command.type=='remocon'">
+                  <ElFormItem label="リモコン" :prop="'btn' + btnIndex + 'remocon'">
+                    <ElSelect v-model="btn.remocon">
+                      <ElOption v-for="(item,idx) of remoconTable" :key="'ui-remoconTable' + idx" :label="item.comment" :value="idx">
+                        {{ item.comment }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElFormItem>
+                </div>
+                <div v-if="btn.command.type=='macro'">
+                  <ElFormItem label="リモコンマクロ" :prop="'btn' + btnIndex + 'macro'">
+                    <ElSelect class="form-control" v-model="btn.macro">
+                      <ElOption v-for="(item,idx) of remoconMacro" :key="'ui-remoconMacro' + idx" :label="item.comment" :value="idx">
+                        {{ item.comment }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElFormItem>
+                </div>
+                <div v-if="(btn.command.type=='remocon')||(btn.command.type=='macro')">
+                  <ElFormItem label="モジュール" :prop="'btn' + btnIndex + 'module'">
+                    <ElSelect v-model="btn.module">
+                      <ElOption v-for="(item,idx) of remoconTxList" :key="'ui-remoconTx' + idx" :label="item.label" :value="item.deviceName">
+                        {{ item.label }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElFormItem>
+                </div>
+                <div v-if="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&(itemType!='light')&&(itemType!='onOff')">
+                  <ElFormItem label="ラベル" :prop="'btn' + btnIndex + 'label'">
+                    <ElInput type="text" v-model="btn.label" />
+                  </ElFormItem>
+                </div>
+                <div v-if="((btn.command.type=='remocon')||(btn.command.type=='macro'))&&((itemType==='light')||(itemType==='onOff'))">
+                  <ElFormItem label="モード" :prop="'btn' + btnIndex + 'mode'">
+                    <ElSelect v-model="btn.mode">
+                      <ElOption v-for="mode of remoconMode" :key="'ui-remoconMode' + mode" :label="mode" :value="mode">
+                        {{ mode }}
+                      </ElOption>
+                    </ElSelect>
+                  </ElFormItem>
+                </div>
               </div>
             </div>
             <br>
@@ -190,74 +197,88 @@
 
           <div v-show="itemType=='tv'">
             <div class="well">
-              <el-form-item label="リモコンGp" prop="tvGroup">
-                <el-select v-model="tvGroup">
-                  <el-option v-for="(group,idx) of remocon.remoconGroup" :key="'ui-tvRemoconGp' + idx" v-if="group.type=='tv'" :label="group.comment" :value="idx">
+              <ElFormItem label="リモコンGp" prop="tvGroup">
+                <ElSelect v-model="tvGroup">
+                  <ElOption v-for="(group,idx) of tvRemoconGroup" :key="'ui-tvRemoconGp' + idx" :label="group.comment" :value="idx">
                     {{ group.comment }}
-                  </el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="モジュール" prop="tvGroup">
-                <el-select v-model="tvModule">
-                  <el-option v-for="module of remoconTxList" :key="'ui-tvRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
+                  </ElOption>
+                </ElSelect>
+              </ElFormItem>
+              <ElFormItem label="モジュール" prop="tvGroup">
+                <ElSelect v-model="tvModule">
+                  <ElOption v-for="module of remoconTxList" :key="'ui-tvRemoconTx' + module.deviceName" :label="module.label" :value="module.deviceName">
                     {{ module.label }}
-                  </el-option>
-                </el-select>
-              </el-form-item>
+                  </ElOption>
+                </ElSelect>
+              </ElFormItem>
             </div>
             <br>
           </div>
 
-          <div v-show="itemType=='hue'">
-            <el-form-item label="ライト" prop="hueLight">
-              <el-select v-model="hueLight" value-key="name">
-                <el-option v-for="light of hueLights" :key="'ui-hueLights' + light.name" :label="light.name" :value="light">
-                  {{ light.name }}
-                </el-option>
-              </el-select>
-            </el-form-item>
+          <div v-show="itemType=='dimmerLight'">
+            <ElFormItem label="ライト" prop="dimmerLight">
+              <ElSelect v-model="dimmerLight" value-key="deviceName">
+                <ElOption v-for="light of dimmerLights" :key="'ui-dimmerLights' + light.deviceName" :label="light.deviceName" :value="light">
+                  {{ light.deviceName }}
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
+            <ElFormItem v-if="dimmerLight && (dimmerLight.type==='dmx')" label="アドレス" prop="dmxAddress">
+              <ElInputNumber :min="1" :max="512" controls-position="right" size="mini" v-model="dmxAddress" />
+            </ElFormItem>
+            <ElFormItem label="調光" prop="dimmer">
+              <ElCheckbox v-model="dimmer" />
+            </ElFormItem>
+            <ElFormItem label="調色" prop="colorTemp">
+              <ElCheckbox v-model="colorTemp" />
+            </ElFormItem>
             <br>
           </div>
 
           <div v-show="itemType=='colorLight'">
-            <el-form-item label="ライト" prop="colorLight">
-              <el-select v-model="colorLight" value-key="deviceName">
-                <el-option v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :label="light.deviceName" :value="light">
+            <ElFormItem label="ライト" prop="colorLight">
+              <ElSelect v-model="colorLight" value-key="deviceName">
+                <ElOption v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :label="light.deviceName" :value="light">
                   {{ light.deviceName }}
-                </el-option>
-              </el-select>
-            </el-form-item>
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
+            <ElFormItem v-if="colorLight && (colorLight.type==='dmx')" label="アドレス" prop="dmxAddress">
+              <ElInputNumber :min="1" :max="511" controls-position="right" size="mini" v-model="dmxAddress" />
+            </ElFormItem>
             <br>
           </div>
-        </el-form>
+        </ElForm>
       </div>
       <br>
 
-      <el-row class="pull-right">
-        <el-button type="primary" @click="Submit">
+      <ElRow class="pull-right">
+        <ElButton type="primary" @click="Submit">
           {{ (selectedItem.index==-1)?'追加':'修正' }}
-        </el-button>
-      </el-row>
-    </el-main>
-  </el-container>
+        </ElButton>
+      </ElRow>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
-  import { Tooltip, Select, Option, Form, FormItem, Input } from 'element-ui';
-  import 'element-ui/lib/theme-chalk/tooltip.css';
+  import { Select, Option, Form, FormItem, Input, InputNumber, Checkbox } from 'element-ui';
   import 'element-ui/lib/theme-chalk/select.css';
   import 'element-ui/lib/theme-chalk/option.css';
   import 'element-ui/lib/theme-chalk/form.css';
   import 'element-ui/lib/theme-chalk/input.css';
+  import 'element-ui/lib/theme-chalk/input-number.css';
+  import 'element-ui/lib/theme-chalk/checkbox.css';
 
   export default {
     components: {
-      ElTooltip: Tooltip,
       ElSelect: Select,
       ElOption: Option,
       ElForm: Form,
       ElFormItem: FormItem,
       ElInput: Input,
+      ElInputNumber: InputNumber,
+      ElCheckbox: Checkbox,
     },
     props: {
       display: {
@@ -272,13 +293,16 @@
           ItemList: [],
         },
         alias: {},
-        remocon: {
-          remoconTable: {},
-          remoconGroup: {},
-          remoconMacro: {},
-        },
+        remoconTable: {},
+        airconRemoconGroup: {},
+        tvRemoconGroup: {},
+        remoconMacro: {},
         hueLights: [],
+        dimmerLights: [],
         colorLights: [],
+        dimmer: true,
+        colorTemp: true,
+        dmxAddress: 1,
         typeTable: [
           { value: 'room', label: 'ルーム', buttons: 0 },
           { value: 'disabled', label: '-----------------------', buttons: 0 },
@@ -288,9 +312,9 @@
           { value: 'lock', label: '電気錠', buttons: 2 },
           { value: 'tv', label: 'テレビ', buttons: 4 },
           { value: 'aircon', label: 'エアコン', buttons: 1 },
-          { value: 'light', label: '照明', buttons: 2 },
-          { value: 'colorLight', label: '照明(color)', buttons: 0 },
-          { value: 'hue', label: '照明(Hue)', buttons: 0 },
+          { value: 'light', label: '照明(on/off)', buttons: 2 },
+          { value: 'dimmerLight', label: '照明(調光/調色)', buttons: 0 },
+          { value: 'colorLight', label: '照明(RGB)', buttons: 0 },
           { value: 'onOff', label: 'on/offスイッチ', buttons: 2 },
           { value: 'openClose', label: 'open/closeスイッチ', buttons: 2 },
           { value: 'other', label: 'その他', buttons: 4 },
@@ -309,8 +333,8 @@
         status: [],
         airconGroup: '',
         airconModule: '',
-        hueLight: '',
-        colorLight: '',
+        dimmerLight: {},
+        colorLight: {},
         button: [],
         tvGroup: '',
         tvModule: '',
@@ -348,6 +372,7 @@
         for(const type of this.typeTable) {
           if(this.itemType === type.value) return type.buttons;
         }
+        return null;
       },
       rulesValid() {
         for(const v in this.ruleValid) {
@@ -364,13 +389,39 @@
         this.alias = Common.alias;
         this.ChangeAlias();
       });
-      this.remocon = Common.remocon;
+      this.SetRemoconTable();
       Common.on('changeRemocon', () => {
-        this.remocon = Common.remocon;
+        this.SetRemoconTable();
       });
       this.hueLights = Common.hueLights;
       Common.on('changeHueBridges', () => {
         this.hueLights = Common.hueLights;
+
+        const dimmerLights = [];
+        for(const dev in this.hueLights) {
+          dimmerLights.push({
+            deviceName: this.hueLights[dev].name,
+            label: this.hueLights[dev].name,
+            type: 'hue',
+          });
+        }
+        for(const dev in this.alias) {
+          if((parseInt(this.alias[dev].option, 16) >> 27) & 1) {
+            dimmerLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+              type: 'pwm',
+            });
+          }
+          if((parseInt(this.alias[dev].option, 16) >> 28) & 1) {
+            dimmerLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+              type: 'dmx',
+            });
+          }
+        }
+        this.dimmerLights = dimmerLights;
       });
       this.uiTable = Common.uiTable;
       Common.on('changeUITable', () => {
@@ -379,9 +430,11 @@
       this.SelectItem('new', -1);
 
       this.uiTableElement = document.getElementById('ui-table');
-      this.uiTableElement.addEventListener('mousedown', this.TouchStart.bind(this));
-      this.uiTableElement.addEventListener('mousemove', this.TouchMove.bind(this));
-      this.uiTableElement.addEventListener('mouseup', this.TouchEnd.bind(this));
+      if(this.uiTableElement) {
+        this.uiTableElement.addEventListener('mousedown', this.TouchStart.bind(this));
+        this.uiTableElement.addEventListener('mousemove', this.TouchMove.bind(this));
+        this.uiTableElement.addEventListener('mouseup', this.TouchEnd.bind(this));
+      }
       document.addEventListener('mouseup', this.TouchCancel.bind(this));
     },
     methods: {
@@ -490,6 +543,17 @@
           this.selectedItem.index = this.currentPos.index;
         }
       },
+      SetRemoconTable() {
+        this.remoconTable = Common.remocon.remoconTable;
+        this.remoconMacro = Common.remocon.remoconMacro;
+        this.airconRemoconGroup = {};
+        this.tvRemoconGroup = {};
+        for(const idx in Common.remocon.remoconGroup) {
+          const group = Common.remocon.remoconGroup[idx];
+          if(group.type === 'aircon') this.$set(this.airconRemoconGroup, idx, group);
+          if(group.type === 'tv') this.$set(this.tvRemoconGroup, idx, group);
+        }
+      },
       StatusItem(item, idx) {
         let stat = '';
         if(item.status && item.status[idx]) {
@@ -562,12 +626,45 @@
         }
         this.remoconTxList = txList;
 
+        const dimmerLights = [];
+        for(const dev in this.hueLights) {
+          dimmerLights.push({
+              deviceName: this.hueLights[dev].name,
+              label: this.hueLights[dev].name,
+              type: 'hue',
+            });
+        }
+        for(const dev in this.alias) {
+          if((parseInt(this.alias[dev].option, 16) >> 27) & 1) {
+            dimmerLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+              type: 'pwm',
+            });
+          }
+          if((parseInt(this.alias[dev].option, 16) >> 28) & 1) {
+            dimmerLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+              type: 'dmx',
+            });
+          }
+        }
+        this.dimmerLights = dimmerLights;
         const colorLights = [];
         for(const dev in this.alias) {
-          if(((parseInt(this.alias[dev].option, 16) >> 25) & 1) === 1) {
+          if((parseInt(this.alias[dev].option, 16) >> 25) & 1) {
             colorLights.push({
               deviceName: this.alias[dev].name,
               label: this.alias[dev].name,
+              type: 'led',
+            });
+          }
+          if((parseInt(this.alias[dev].option, 16) >> 28) & 1) {
+            colorLights.push({
+              deviceName: this.alias[dev].name,
+              label: this.alias[dev].name,
+              type: 'dmx',
             });
           }
         }
@@ -613,6 +710,11 @@
           this.airconModule = '';
           this.tvGroup = '';
           this.tvModule = '';
+          this.dimmer = true;
+          this.colorTemp = true;
+          this.dmxAddress = 1;
+          this.dimmerLight = {};
+          this.colorLight = {};
           return;
         }
         if(this.uiTable.ItemList[idx] == null) return;
@@ -656,7 +758,7 @@
               }
             }
             if(!cmd) {
-              for(const j in this.remocon.remoconTable) {
+              for(const j in this.remoconTable) {
                 if(item.buttons[i].command === j) {
                   cmd = this.commandList[this.commandList.length - 2];
                   remocon = j;
@@ -671,7 +773,7 @@
               }
             }
             if(!cmd) {
-              for(const j in this.remocon.remoconMacro) {
+              for(const j in this.remoconMacro) {
                 if(item.buttons[i].command === j) {
                   cmd = this.commandList[this.commandList.length - 1];
                   macro = j;
@@ -704,21 +806,25 @@
           this.tvGroup = item.table.prefix;
           this.tvModule = item.table.deviceName;
         }
-        if(item.type === 'hue') {
-          for(const i in this.hueLights) {
-            if(this.hueLights[i].name === item.table.deviceName) {
-              this.hueLight = this.hueLights[i];
-              break;
-            }
-          }
+        if(item.type === 'dimmerLight') {
+          this.dimmerLight = {
+            deviceName: item.table.deviceName,
+            device: item.table.device,
+            type: item.table.type,
+            label: item.table.deviceName,
+          };
+          this.dimmer = item.table.dimmer;
+          this.colorTemp = item.table.colorTemp;
+          if(item.table.type === 'dmx') this.dmxAddress = item.table.dmxAddress;
         }
         if(item.type === 'colorLight') {
-          for(const i in this.colorLights) {
-            if(this.colorLights[i].deviceName === item.table.deviceName) {
-              this.colorLight = this.colorLights[i];
-              break;
-            }
-          }
+          this.colorLight = {
+            deviceName: item.table.deviceName,
+            device: item.table.device,
+            type: item.table.type,
+            label: item.table.deviceName,
+          };
+          if(item.table.type === 'dmx') this.dmxAddress = item.table.dmxAddress;
         }
       },
       DeleteItem(type, idx) {
@@ -851,46 +957,50 @@
             deviceName: this.tvModule,
           };
         }
-        if(this.itemType === 'hue') {
+        if(this.itemType === 'dimmerLight') {
           item.status = [{
-            deviceName: this.hueLight.name,
-            func: 'hue',
-            sensor: this.hueLight.name,
-            type: 'hue',
+            deviceName: this.dimmerLight.deviceName,
+            func: this.dimmerLight.type,
+            sensor: this.dimmerLight.deviceName,
+            type: this.dimmerLight.type,
           }];
           item.buttons = [
             {
               command: 'switch on',
-              deviceName: this.hueLight.name,
+              deviceName: this.dimmerLight.deviceName,
               label: 'on',
             },
             {
               command: 'switch off',
-              deviceName: this.hueLight.name,
+              deviceName: this.dimmerLight.deviceName,
               label: 'off',
             },
           ];
           item.table = {
             prefix: '',
-            deviceName: this.hueLight.name,
-            device: this.hueLight.device,
+            deviceName: this.dimmerLight.deviceName,
+            device: this.dimmerLight.device,
+            type: this.dimmerLight.type,
+            dimmer: this.dimmer,
+            colorTemp: this.colorTemp,
           };
+          if(this.dimmerLight.type === 'dmx') item.table.dmxAddress = this.dmxAddress;
         }
         if(this.itemType === 'colorLight') {
           item.status = [{
             deviceName: this.colorLight.deviceName,
-            func: 'led',
+            func: this.colorLight.type,
             sensor: this.colorLight.deviceName,
-            type: 'colorLight',
+            type: this.colorLight.type,
           }];
           item.buttons = [
             {
-              command: 'led on',
+              command: 'switch on',
               deviceName: this.colorLight.deviceName,
               label: 'on',
             },
             {
-              command: 'led off',
+              command: 'switch off',
               deviceName: this.colorLight.deviceName,
               label: 'off',
             },
@@ -898,8 +1008,10 @@
           item.table = {
             prefix: '',
             deviceName: this.colorLight.deviceName,
+            type: this.colorLight.type,
           };
-        }
+          if(this.dimmerLight.type === 'dmx') item.table.dmxAddress = this.dmxAddress;
+       }
 
         if(this.selectedItem.type === 'new') {
           this.uiTable.ItemList.push(item);
@@ -977,5 +1089,3 @@
   }
 
 </style>
-
-

@@ -1,130 +1,133 @@
 <template>
-  <el-container>
-    <el-aside :width="$root.$el.clientWidth > 768 ? '15%' : '90%'">
+  <ElContainer>
+    <ElAside :width="$root.$el.clientWidth > 768 ? '15%' : '90%'">
       <h4>リンク機器</h4>
       <br>
-    </el-aside>
-    <el-main>
+    </ElAside>
+    <ElMain>
       <div v-if="hueBridges && (hueBridges.length > 0)" class="well">
         <h4>Hue</h4>
-        <el-row v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
-          <el-row>
-            <label class="label">Bridge {{ bridge.id }}</label>
+        <ElRow v-for="bridge of hueBridges" :key="'link-hueBridges' + bridge.id">
+          <ElRow>
+            <label class="label">
+              Bridge {{ bridge.id }}
+            </label>
             <div class="pull-right">
-              <el-button v-if="bridge.state ==0" @click="HuePairing(bridge.id)" type="primary">
+              <ElButton v-if="bridge.state ==0" @click="HuePairing(bridge.id)" type="primary">
                 ペアリング
-              </el-button>
-              <el-button v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueSearch(bridge.id)" type="primary">
+              </ElButton>
+              <ElButton v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueSearch(bridge.id)" type="primary">
                 新規ライトのサーチ
-              </el-button>
-              <el-button v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueTouchLink(bride.id)" type="primary">
+              </ElButton>
+              <ElButton v-if="bridge.state>=1" :disabled="bridge.state==2" @click="HueTouchLink(bridge.id)" type="primary">
                 TouchLinkサーチ
-              </el-button>
+              </ElButton>
             </div>
-          </el-row>
-          <el-row v-if="hueProgress[bridge.id] > 0" >
-            <el-col span="12" offset="4">
-              <el-progress :show-text="false" :stroke-width="18" :percentage="hueProgress[bridge.id]" :class="{'progress-striped':HueProgressing(bridge.id)}" />
-            </el-col>
-          </el-row>
-          <el-row v-if="bridge.message.length > 0">
-            <el-col span="12" offset="4">
+          </ElRow>
+          <ElRow v-if="hueProgress[bridge.id] > 0">
+            <ElCol span="12" offset="4">
+              <ElProgress :show-text="false" :stroke-width="18" :percentage="hueProgress[bridge.id]" :class="{'progress-striped':HueProgressing(bridge.id)}" />
+            </ElCol>
+          </ElRow>
+          <ElRow v-if="bridge.message && (bridge.message.length > 0)">
+            <ElCol span="12" offset="4">
               <h6>{{ bridge.message }}</h6>
-            </el-col>
-          </el-row>
-          <el-row v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx" >
-            <el-col span="12" offset="4">
-              <el-input type="text" v-model="light.name" />
-            </el-col>
-            <el-col span="8">
+            </ElCol>
+          </ElRow>
+          <ElRow v-for="(light,idx) of bridge.lights" :key="'link-lights' + idx">
+            <ElCol span="12" offset="4">
+              <ElInput type="text" v-model="light.name" />
+            </ElCol>
+            <ElCol span="8">
               <div class="pull-right">
-                <el-button @click="LightFlash(bridge.id, idx)" type="primary">
+                <ElButton @click="LightFlash(bridge.id, idx)" type="primary">
                   フラッシュ
-                </el-button>
-                <el-button @click="DeleteLight(bridge.id, idx)" type="danger">
+                </ElButton>
+                <ElButton @click="DeleteLight(bridge.id, idx)" type="danger">
                   削除
-                </el-button>
+                </ElButton>
               </div>
-            </el-col>
-          </el-row>
-        </el-row>
-        <el-row>
-          <el-button class="pull-right" type="primary" @click="SubmitHue">
+            </ElCol>
+          </ElRow>
+        </ElRow>
+        <ElRow>
+          <ElButton class="pull-right" type="primary" @click="SubmitHue">
             設定
-          </el-button>
-        </el-row>
+          </ElButton>
+        </ElRow>
       </div>
 
       <div v-if="hap" class="well">
         <h4>HAP Device</h4>
-        <el-row>
-          <el-col span="6" offset="1">
+        <ElRow>
+          <ElCol span="6" offset="1">
             <img src="../images/home.png" alt="home" width="60px">
-          </el-col>
-          <el-col span="15" offset="1">
-            <qrcode class="hap-qr" :value="hapSetupURI"/>
+          </ElCol>
+          <ElCol span="15" offset="1">
+            <QrcodeVue class="hap-qr" :value="hapSetupURI" />
             <div class="well well-homekit">
               {{ hapPin }}
             </div>
-          </el-col>
-        </el-row>
+          </ElCol>
+        </ElRow>
         <br>
-        <el-row>
-          <el-col span="6" offset="1">
+        <ElRow>
+          <ElCol span="6" offset="1">
             <H5>HAPデバイスID</h5>
-          </el-col>
-          <el-col span="7" offset="1">
-            <el-input type="text" v-model="hapDeviceId" />
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-button class="pull-right" type="primary" @click="SubmitHAP">
+          </ElCol>
+          <ElCol span="7" offset="1">
+            <ElInput type="text" v-model="hapDeviceId" />
+          </ElCol>
+        </ElRow>
+        <ElRow>
+          <ElButton class="pull-right" type="primary" @click="SubmitHAP">
             設定
-          </el-button>
-        </el-row>
+          </ElButton>
+        </ElRow>
       </div>
 
       <div v-if="smartMeterEnable && smartMeterConnect" class="well">
         <h4>SmartMeter</h4>
-        <el-row>
-          <el-col span="6" offset="1">
+        <ElRow>
+          <ElCol span="6" offset="1">
             <H5>Wi-SUNドングル</h5>
-          </el-col>
-          <el-col span="15" offset="1">
-            <el-select v-model="smartMeterAdapter">
-              <el-option v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :label="item.name" :value="item.id">{{ item.name }}</el-option>
-            </el-select>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col span="6" offset="1">
+          </ElCol>
+          <ElCol span="15" offset="1">
+            <ElSelect v-model="smartMeterAdapter">
+              <ElOption v-for="item of smartMeterAdapters" :key="'link-smartMeterAdapters' + item.id" :label="item.name" :value="item.id">
+                {{ item.name }}
+              </ElOption>
+            </ElSelect>
+          </ElCol>
+        </ElRow>
+        <ElRow>
+          <ElCol span="6" offset="1">
             <H5>電力計ＩＤ</h5>
-          </el-col>
-          <el-col span="15" offset="1">
-            <el-input v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]" />
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col span="6" offset="1">
+          </ElCol>
+          <ElCol span="15" offset="1">
+            <ElInput v-for="(id, idx) in smartMeterID" :key="'link-smartMeterID' + idx" class="smart-meter-id" type="text" :class="SmartMeterIDValid(idx)" v-model="smartMeterID[idx]" />
+          </ElCol>
+        </ElRow>
+        <ElRow>
+          <ElCol span="6" offset="1">
             <H5>電力計パスワード</h5>
-          </el-col>
-          <el-col span="15" offset="1">
-            <el-input v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + idx" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]" />
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-button class="pull-right" type="primary" @click="SubmitSmartMeter">
+          </ElCol>
+          <ElCol span="15" offset="1">
+            <ElInput v-for="(id, idx) in smartMeterPassword" :key="'link-smartMeterPassword' + idx" class="smart-meter-id" type="text" :class="SmartMeterPasswordValid(idx)" v-model="smartMeterPassword[idx]" />
+          </ElCol>
+        </ElRow>
+        <ElRow>
+          <ElButton class="pull-right" type="primary" @click="SubmitSmartMeter">
             設定
-          </el-button>
-        </el-row>
+          </ElButton>
+        </ElRow>
       </div>
-
-    </el-main>
-  </el-container>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
-  import qrcode from 'v-qrcode';
+  import QrcodeVue from 'qrcode.vue';
   import { Input, Progress, Select, Option } from 'element-ui';
   import 'element-ui/lib/theme-chalk/input.css';
   import 'element-ui/lib/theme-chalk/progress.css';
@@ -133,7 +136,7 @@
 
   export default {
     components: {
-      qrcode,
+      QrcodeVue,
       ElInput: Input,
       ElProgress: Progress,
       ElSelect: Select,
@@ -247,7 +250,6 @@
       },
       HueProgressStart(id, time) {
         if(this.hueProgressTimer[id]) return;
-        console.log('HueProgress ', id);
         this.$set(this.hueProgress, id, 1);
         this.hueProgressTimer[id] = setInterval(() => {
           this.$set(this.hueProgress, id, this.hueProgress[id] + 1);
@@ -260,9 +262,6 @@
       },
       HueProgressing(id) {
         return (this.hueProgress[id] > 0) && (this.hueProgress[id] < 100);
-      },
-      BTPairing(e) {
-        console.log(e.target);
       },
       SmartMeterIDValid(idx) {
         if(this.smartMeterID[idx].length !== 4) return { error: true };

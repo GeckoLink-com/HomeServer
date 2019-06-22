@@ -65,7 +65,7 @@ module.exports = function(RED) {
   RED.nodes.registerType('gecko elapsed time', ElapsedTime);
   
   ElapsedTime.prototype.close = function() {
-    RED.settings.functionGlobalContext.homeServer.removeListener('statusNotify', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.off('statusNotify', this.eventListener);
   }
 
   RED.httpAdmin.get('/gecko/:id', RED.auth.needsPermission('gecko.read'), (req, res) => {

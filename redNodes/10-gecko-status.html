@@ -18,22 +18,27 @@
           return this.label;
         },
         oneditprepare: function() {
+          this.editValue = {
+            deviceName: this.deviceName,
+            func: this.func,
+          };
+
           $.getJSON('gecko/' + this.id, (homeServer) => {
             this.homeServer = homeServer;
-            if(this.deviceName == null) this.deviceName = 'all';
+            if(this.editValue.deviceName == null) this.editValue.deviceName = 'all';
             $('#node-input-deviceName').append($('<option></option>').val('all').text('all'));
             for(i in this.homeServer.alias) {
               $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
             }
-            $('#node-input-deviceName').val(this.deviceName);
+            $('#node-input-deviceName').val(this.editValue.deviceName);
             
             const RedrawFunc = (deviceName) => {
               $('#node-input-func option').remove();
               $('#node-input-func').append($('<option></option>').val('all').text('all'));
               if(deviceName == 'all') {
-                this.func = 'all';
+                this.editValue.func = 'all';
               } else {
-                if(this.func == null) this.func = 'all';
+                if(this.editValue.func == null) this.editValue.func = 'all';
                 for(i in this.homeServer.aliasTable[deviceName].property) {
                   if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
                   if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[deviceName].property[i].type == 'out')) continue;
@@ -42,10 +47,10 @@
                   $('#node-input-func').append($('<option></option>').val(i).text(name));
                 }
               }
-              $('#node-input-func').val(this.func);
+              $('#node-input-func').val(this.editValue.func);
             }            
-            $('#node-input-deviceName').change((e) => {this.func = null;RedrawFunc(e.target.value);});
-            RedrawFunc(this.deviceName);
+            $('#node-input-deviceName').change((e) => {this.editValue.func = null;RedrawFunc(e.target.value);});
+            RedrawFunc(this.editValue.deviceName);
           });
         },
         oneditsave: function() {

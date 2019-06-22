@@ -25,7 +25,7 @@ module.exports = function(RED) {
   RED.nodes.registerType('gecko remocon out',Command);
   
   Command.prototype.close = function() {
-    RED.settings.functionGlobalContext.homeServer.removeListener('response', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.off('response', this.eventListener);
   }
   
   RED.httpAdmin.get('/gecko/:id', RED.auth.needsPermission('gecko.read'), (req, res) => {

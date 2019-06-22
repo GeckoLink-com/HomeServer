@@ -1,32 +1,42 @@
 <template>
-  <el-container @click.native="ClearSelect">
-    <el-aside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
+  <ElContainer @click.native="ClearSelect">
+    <ElAside :width="$root.$el.clientWidth > 768 ? '25%' : '90%'">
       <h4>リモコン設定</h4>
       <div class="well no-mobile">
-        <el-row>
+        <ElRow>
           <h5>リモコンコード</h5>
-        </el-row>
-        <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json"/>
-        <el-button @click="Save" type="primary" class="system-config-btn">ファイルに保存</el-button>
+        </ElRow>
+        <a id="remocon-save" style="display:none" href="/remocon/gecko_remocon.json" />
+        <ElButton @click="Save" type="primary" class="system-config-btn">
+          ファイルに保存
+        </ElButton>
 
-        <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none" >
-        <el-tooltip placement="right" content="同じ登録名のコードは上書きされます" effect="light" open-delay="500">
-          <el-button @click="Load" type="primary" class="system-config-btn">ファイルから追加</el-button>
-        </el-tooltip>
+        <input @change="LoadFile" id="remocon-load" type="file" accept="text/json" style="display:none">
+        <ElTooltip placement="right" content="同じ登録名のコードは上書きされます" effect="light" open-delay="500">
+          <ElButton @click="Load" type="primary" class="system-config-btn">
+            ファイルから追加
+          </ElButton>
+        </ElTooltip>
       </div>
-    </el-aside>
+    </ElAside>
 
-    <el-main>
+    <ElMain>
       <div v-if="receivedCode" class="well-transparent">
         <h5>受信したリモコンコード</h5>
         <br>
-        <el-tooltip placement="top" content="clickすることで選択されます" effect="light" open-delay="500">
+        <ElTooltip placement="top" content="clickすることで選択されます" effect="light" open-delay="500">
           <table class="table table-striped">
             <thead>
               <tr>
-                <th width="16%">モジュール</th>
-                <th width="16%">フォーマット</th>
-                <th width="60%">コード</th>
+                <th width="16%">
+                  モジュール
+                </th>
+                <th width="16%">
+                  フォーマット
+                </th>
+                <th width="60%">
+                  コード
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -37,7 +47,7 @@
               </tr>
             </tbody>
           </table>
-        </el-tooltip>
+        </ElTooltip>
         <div v-if="selectedItem == null">
           <h5>登録するリモコンコードを選択して下さい。</h5>
         </div>
@@ -47,33 +57,37 @@
       </div>
 
       <div v-if="selectedItem != null" class="well-transparent">
-        <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
-          <el-row>
-            <el-tooltip placement="top" content="種類＋メーカー名＋シリーズ名＋機能名など、判別しやすい名前" effect="light" open-delay="500">
-              <el-form-item label="登録名" prop="name">
-                <el-input type="text" v-model="ruleForm.name" />
+        <ElForm :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="30%" label-position="left" @validate="Validated">
+          <ElRow>
+            <ElTooltip placement="top" content="種類＋メーカー名＋シリーズ名＋機能名など、判別しやすい名前" effect="light" open-delay="500">
+              <ElFormItem label="登録名" prop="name">
+                <ElInput type="text" v-model="ruleForm.name" />
                 <div v-if="nameAlert" class="form_item_error">
                   登録名が既に存在しています。上書きしますがよろしいですか？
                 </div>
-              </el-form-item>
-            </el-tooltip>
-          </el-row>
-          <el-row>
-            <el-tooltip placement="top" content="UIなどで表示される名称" effect="light" open-delay="500">
-              <el-form-item label="コメント" prop="comment">
-                <el-input type="text" v-model="ruleForm.comment" />
-              </el-form-item>
-            </el-tooltip>
-          </el-row>
-          <el-row>
-            <el-col span="3" offset="16">
-              <el-button @click="Cancel" type="danger">中止</el-button>
-            </el-col>
-            <el-col span="3" offset="1">
-              <el-button @click="Submit" :disabled="!rulesValid" type="primary">保存</el-button>
-            </el-col>
-          </el-row>
-        </el-form>
+              </ElFormItem>
+            </ElTooltip>
+          </ElRow>
+          <ElRow>
+            <ElTooltip placement="top" content="UIなどで表示される名称" effect="light" open-delay="500">
+              <ElFormItem label="コメント" prop="comment">
+                <ElInput type="text" v-model="ruleForm.comment" />
+              </ElFormItem>
+            </ElTooltip>
+          </ElRow>
+          <ElRow>
+            <ElCol span="3" offset="16">
+              <ElButton @click="Cancel" type="danger">
+                中止
+              </ElButton>
+            </ElCol>
+            <ElCol span="3" offset="1">
+              <ElButton @click="Submit" :disabled="!rulesValid" type="primary">
+                保存
+              </ElButton>
+            </ElCol>
+          </ElRow>
+        </ElForm>
       </div>
 
       <div v-if="remocon.remoconTable && (Object.keys(remocon.remoconTable).length > 0)" class="well-transparent">
@@ -81,37 +95,41 @@
         <table class="table">
           <thead>
             <tr>
-              <th width="40%">登録名<br>コメント</th>
-              <th class="60%">コード</th>
+              <th width="40%">
+                登録名<br>コメント
+              </th>
+              <th class="60%">
+                コード
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="!item.group||(item.group=='')" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
-              <el-tooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
+            <tr v-for="(item,idx) of singleRemoconTable" :key="'r-remoconTable' + idx" @click.stop="SelectItem(idx)" :class="{success:IsSelect(item,idx)}">
+              <ElTooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
                 <td width="40%">
-                  <el-button type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
+                  <ElButton type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
                   <div>
                     {{ idx }}<br>
                     {{ item.comment }}
                   </div>
                 </td>
-              </el-tooltip>
-              <el-tooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
+              </ElTooltip>
+              <ElTooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
                 <td width="60%">
-                  <el-col span="20">
+                  <ElCol span="20">
                     {{ Decode(item.code) }}
-                  </el-col>
-                  <el-col span="4">
-                    <el-button v-show="(idx===selectedIdx)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteItem(item, idx)" />
-                  </el-col>
+                  </ElCol>
+                  <ElCol span="4">
+                    <ElButton v-show="(idx===selectedIdx)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteItem(item, idx)" />
+                  </ElCol>
                 </td>
-              </el-tooltip>
+              </ElTooltip>
             </tr>
           </tbody>
         </table>
         <table class="table" v-for="(group, groupName) of remocon.remoconGroup" :key="'r-remoconGroup' + groupName">
           <tbody>
-            <el-tooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
+            <ElTooltip placement="top" content="リモコンコードを削除するには選択して右端の赤いボタンを押してください" effect="light" open-delay="500">
               <tr @click.stop="SelectGroup(groupName)" :class="{success:(groupName==selectedGroup)}">
                 <td width="40%">
                   <div>
@@ -119,36 +137,36 @@
                   </div>
                 </td>
                 <td width="60%">
-                  <el-tooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)はまとめて消去されます" effect="light" open-delay="500">
-                    <el-button v-show="(selectedGroup==groupName)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteGroup(groupName)" />
-                  </el-tooltip>
+                  <ElTooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)はまとめて消去されます" effect="light" open-delay="500">
+                    <ElButton v-show="(selectedGroup==groupName)" type="danger" icon="el-icon-delete" class="remocon-btn pull-right" @click="DeleteGroup(groupName)" />
+                  </ElTooltip>
                 </td>
               </tr>
-            </el-tooltip>
+            </ElTooltip>
+            <!-- eslint-disable-next-line vue/no-use-v-if-with-v-for -->
             <tr v-for="(item,idx) of remocon.remoconTable" :key="'r-remoconTable' + idx" v-if="(item.group==selectedGroup)&&(item.group==groupName)">
-              <el-tooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
+              <ElTooltip placement="top" content="リモコンコードを送信するには左端のボタンを押してください" effect="light" open-delay="500">
                 <td width="40%">
-                  <el-button type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
+                  <ElButton type="default" icon="el-icon-d-arrow-right" class="remocon-btn pull-left" @click.stop="IRSend(item, idx)" />
                   <div>
                     {{ idx }}<br>
                     {{ item.comment }}
                   </div>
                 </td>
-              </el-tooltip>
-              <el-tooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)は個別に消去できません" effect="light" open-delay="500">
+              </ElTooltip>
+              <ElTooltip placement="top" content="グループ登録されているコード(エアコン設定・TV設定で登録したコード)は個別に消去できません" effect="light" open-delay="500">
                 <td width="60%">
-                  <el-col span="22">
+                  <ElCol span="22">
                     {{ Decode(item.code) }}
-                  </el-col>
+                  </ElCol>
                 </td>
-              </el-tooltip>
+              </ElTooltip>
             </tr>
           </tbody>
         </table>
       </div>
-
-    </el-main>
-  </el-container>
+    </ElMain>
+  </ElContainer>
 </template>
 
 <script>
@@ -210,6 +228,14 @@
           if(!this.ruleValid[v]) return false;
         }
         return true;
+      },
+      singleRemoconTable() {
+        const remoconTable = {};
+        for(const item in this.remocon.remoconTable) {
+          if(!this.remocon.remoconTable[item].group||this.remocon.remoconTable[item].group==='')
+            remoconTable[item] = this.remocon.remoconTable[item];
+        }
+        return remoconTable;
       },
     },
     mounted() {
@@ -361,7 +387,7 @@
   }
 
   .table {
-      font-family: Monaco, 'NotoSansMonoCJKjp', monospace;
+      font-family: Courier, 'NotoSansMonoCJKjp', monospace;
   }
 
   .table td .remocon-btn {
