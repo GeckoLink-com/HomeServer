@@ -17,7 +17,7 @@
     "node-echonet-lite": "^0.4.0",
     "node-red": "^0.20.6",
     "node-red-contrib-schedex": "^1.6.2",
-    "node-red-dashboard": "^2.15.4",
+    "node-red-dashboard": "^2.17.0",
     "node-upnp-ssdp": "^0.1.1",
     "request": "^2.88.0",
     "serialport": "^7.1.5",
