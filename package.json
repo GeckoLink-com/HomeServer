@@ -15,7 +15,7 @@
     "jssha": "^2.3.1",
     "moment": "^2.24.0",
     "node-echonet-lite": "^0.4.0",
-    "node-red": "^0.20.6",
+    "node-red": "^0.20.8",
     "node-red-contrib-schedex": "^1.6.2",
     "node-red-dashboard": "^2.15.4",
     "node-upnp-ssdp": "^0.1.1",
