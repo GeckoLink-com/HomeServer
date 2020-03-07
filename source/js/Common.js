@@ -105,6 +105,10 @@ class Common extends EventEmitter {
       }
     */
 
+    Socket.on('reload', () => {
+      location.reload();
+    });
+
     Socket.on('deviceInfo', (msg) => {
       this.devices = msg.data;
       this.emit('changeDevices', this);

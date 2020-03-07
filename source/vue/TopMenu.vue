@@ -147,7 +147,7 @@
     mounted() {
       Common.on('changeDevices', () => {
         let f = false;
-        for(const dev of Common.devices) {
+        for(const dev of Common.devices || []) {
           if(dev.device === 'pairing') {
             if(dev.state === 'connect') {
               this.module = true;

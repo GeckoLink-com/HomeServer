@@ -33,7 +33,9 @@
               <th>net</th>
               <th>option</th>
               <th>param</th>
+              <th>XBeeHW</th>
               <th>version</th>
+              <th>rev</th>
               <th>power</th>
               <th>state</th>
             </tr>
@@ -46,7 +48,9 @@
               <td>{{ dev.networkAddr?dev.networkAddr:'-' }}</td>
               <td>{{ dev.option?dev.option:'-' }}</td>
               <td>{{ dev.param?parseInt(dev.param):'-' }}</td>
+              <td>{{ dev.xbeeVersion?dev.xbeeVersion:'-' }}</td>
               <td>{{ dev.version?dev.version:'-' }}</td>
+              <td>{{ dev.revision?dev.revision:'-' }}</td>
               <td>{{ dev.voltage?dev.voltage:'-' }}</td>
               <td>{{ dev.state }}</td>
             </tr>
@@ -167,7 +171,7 @@
     data() {
       return {
         devices: Common.devices,
-        hueLights: Common.hueLights || [],
+        hueBridges: Common.hueBridges || [],
         alias: Common.alias,
         command: '',
         response: '',
@@ -181,9 +185,21 @@
     },
     computed: {
       actualDevices() {
-        return this.devices.filter((dev) => {
+        const actualDevices = this.devices.filter((dev) => {
           return dev.device !== 'pairing';
         });
+        for(const bridge of this.hueBridges) {
+          for(const l in bridge.lights) {
+            actualDevices.push({
+              device: 'Hue_' + bridge.id + '_' + l,
+              deviceName: bridge.lights[l].name,
+              type: bridge.lights[l].modelid,
+              version: bridge.lights[l].swversion,
+              state: bridge.lights[l].state.on?'on':'off',
+            });
+          }
+        }
+        return actualDevices;
       },
       moduleList() {
         const moduleList = [];
@@ -197,14 +213,6 @@
             name: name,
             label: dev.device + ((name.length > 0) ? ':' : '') + name,
             enable: dev.state === 'alive',
-          });
-        }
-        for(const dev of this.hueLights) {
-          moduleList.push({
-            device: dev.device,
-            name: dev.name,
-            label: dev.name,
-            enable: true,
           });
         }
         return moduleList;
@@ -276,15 +284,15 @@
       });
       this.devices = Common.devices;
       Common.on('changeDevices', () => {
-        this.devices = Common.devices;
+        this.devices = Common.devices || [];
       });
       this.alias = Common.alias;
       Common.on('changeAlias', () => {
         this.alias = Common.alias;
       });
-      this.hueLights = Common.hueLights;
+      this.hueBridges = Common.hueBridges;
       Common.on('changeHueBridges', () => {
-        this.hueLights = Common.hueLights;
+        this.hueBridges = Common.hueBridges;
       });
     },
     updated() {

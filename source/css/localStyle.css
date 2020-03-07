@@ -141,7 +141,7 @@ hr {
 }
 
 .well hr {
-  margin: 1vh -2vw;
+  margin: 1vh -1vw;
 }
 
 .well .el-row, .well-transparent .el-row  {
@@ -293,7 +293,7 @@ th {
 
 .el-aside, .el-main {
   overflow-x: hidden;
-  padding: 0 20px;
+  padding: 0 20px 20px 20px;
 }
 
 .el-tooltip:focus, .el-switch:focus, .el-dropdown-link:focus, .el-radio-button:focus  {

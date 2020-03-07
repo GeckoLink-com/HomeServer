@@ -7,8 +7,13 @@ process.noDeprecation = true;
 
 module.exports = {
   entry: {
-    'bundle': __dirname + '/source/js/HomeServer.js',
-    'SignIn': __dirname + '/source/js/SignIn.js',
+    'bundle': [
+      './source/js/HomeServer.js',
+      './source/red/theme/css/nodeRed.css',
+      './source/images/GeckoIcon.png', // for apple-icon
+      './source/images/GeckoIcon.ico', // for favicon
+    ],
+    'SignIn': './source/js/SignIn.js',
   },
   output: {
     path: __dirname + '/frontend',
@@ -118,6 +123,9 @@ module.exports = {
         use: [
           {
             loader: 'url-loader',
+            options: {
+              esModule: false,
+            },
           }
         ],
       },

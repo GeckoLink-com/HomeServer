@@ -34,7 +34,7 @@ class Common extends eventEmitter {
     this.controllerLog = [];
     this.hueBridges = [];
     this.Registry = new registry(this.config.basePath);
-    this.statusFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter'];
+    this.statusFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3'];
     this.analogFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'rainInfo', 'smartMeter'];
     this.commandFunc = ['gpio0', 'gpio1', 'ha0', 'ha1', 'hao0', 'hao1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'switch'];
     this.responsiveCommandFunc = ['ha0', 'ha1', 'sw'];
@@ -60,7 +60,7 @@ class Common extends eventEmitter {
       fs.mkdirSync('/etc/apt/sources.list.d', 0o755);
     } catch(e) {/* empty */}
     try {
-      fs.writeFileSync('/etc/apt/sources.list.d/geckolink.list', 'deb https://geckolink.com/archive stretch ' + this.updateMode + '\n', {mode: 0o644});
+      fs.writeFileSync('/etc/apt/sources.list.d/geckolink.list', 'deb https://geckolink.com/archive buster ' + this.updateMode + '\n', {mode: 0o644});
     } catch(e) {/* empty */}
 
     this.wifiEnable = false;
@@ -151,6 +151,25 @@ class Common extends eventEmitter {
       this.controllerLog = data || [];
     });
 
+    this.on('changeValue', (caller, msg) => {
+      msg.device = this.aliasTable[msg.deviceName].device;
+      msg.funcName = this.alias[msg.device][msg.func].name;
+      msg.valueName = msg.value + this.alias[msg.device][msg.func].unit;
+      msg.type = this.alias[msg.device][msg.func].type;
+
+      let f = false;
+      for(const i in this.status) {
+        const st = this.status[i];
+        if((st.deviceName == msg.deviceName) && (st.func == msg.func)) {
+          this.status[i] = msg;
+          f = true;
+          break;
+        }
+      }
+      if(!f) this.status.push(msg);
+      this.emit('statusNotify', this);
+    });
+
     this.on('changeInternalStatus', (caller) => {
       for(const func in this.internalStatus.virtualSW) {
         const val = this.internalStatus.virtualSW[func];
@@ -195,13 +214,15 @@ class Common extends eventEmitter {
           state.prefix = val.replace(/_[^_]*$/,'');
         }
         if(f < 0) {
-          this.status.push({
-            deviceName: deviceName,
-            device: this.aliasTable[deviceName],
-            func: 'remocon',
-            valueName: val,
-            state: state,
-          });
+          if(this.aliasTable[deviceName]) {
+            this.status.push({
+              deviceName: deviceName,
+              device: this.aliasTable[deviceName].device,
+              func: 'remocon',
+              valueName: val,
+              state: state,
+            });
+          }
         } else {
           this.status[f].valueName = val;
           this.status[f].state = state;
@@ -301,16 +322,20 @@ class Common extends eventEmitter {
         model: 'HomeServer',
         serial: this.serial,
       };
+      this.systemConfigDirtyFlag = false;
 
       if(this.systemConfig.account == null) this.systemConfig.account = 'admin';
       if(this.systemConfig.password == null) this.systemConfig.password = this.initialPassword;
+      if(this.systemConfig.nodeRedCredential == null) {
+        this.systemConfig.nodeRedCredential = crypto.randomBytes(32).toString('base64');
+        this.systemConfigDirtyFlag = true;
+      }
       if(this.systemConfig.mailto == null) this.systemConfig.mailto = '';
       if(this.systemConfig.longitude == null) this.systemConfig.longitude = '';
       if(this.systemConfig.latitude == null) this.systemConfig.latitude = '';
       if(this.systemConfig.radius == null) this.systemConfig.radius = '5000';
       if(this.systemConfig.bridge == null) this.systemConfig.bridge = {};
       if(this.systemConfig.bridge.port == null) this.systemConfig.bridge.port = 51826;
-      this.systemConfigDirtyFlag = false;
       if(this.systemConfig.sessionSecret == null) {
         this.systemConfig.sessionSecret = crypto.randomBytes(32).toString('base64');
         this.systemConfigDirtyFlag = true;

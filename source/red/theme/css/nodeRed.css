@@ -1,4 +1,4 @@
-#header {
+#red-ui-header {
   position: absolute;
   top: 0;
   left: 0;
@@ -8,7 +8,7 @@
   padding: 0px 0px 0px 0px;
 }
 
-#header .logo {
+#red-ui-header span.red-ui-header-logo {
   margin: 2px 0px 0px 0px;
   padding: 0px 0px 0px 15px;
   background-color: #f8f8f8;
@@ -18,63 +18,98 @@
   width: 180px;
 }
 
-#header li.open .button {
+#red-ui-header li.open .button {
   background: #fff;
   border-color: #fff;
 }
 
-#header .button {
+#red-ui-header .button-group {
   border-color: #fff;
   background: #fff;
 }
 
-#header .button:hover {
-  border: 1px solid rgba(255,255,255,0.2);
-  background: #fff;
-}
-
-#header .button:active, #header .button.active {
-  border-color: #fff;
-  background: #fff;
-}
-
-#header ul.dropdown-menu {
-  background: #fff;
+#red-ui-header .button {
   border: 1px solid rgba(255,255,255,0.2);
 }
 
-#header ul.dropdown-menu li a {
+#red-ui-header .button:hover {
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+#red-ui-header .button:active, #red-ui-header .button.active {
+  border-color: #fff;
+  background: #fff;
+}
+
+#red-ui-header ul.red-ui-menu-dropdown {
+  background: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+#red-ui-header ul.red-ui-menu-dropdown li a {
   color: #777;
 }
 
-#header ul.dropdown-menu > li:hover > a, #header ul.dropdown-menu > li:focus > a {
+#red-ui-header ul.red-ui-menu-dropdown > li:hover > a, #red-ui-header ul.red-ui-menu-dropdown > li:focus > a {
   background: #f0f0f0 !important;
 }
 
-.dropdown-submenu > a::before {
+.red-ui-menu-dropdown-submenu > a::before {
   border-right-color: #777;
 }
 
-.dropdown-menu * .fa-check-square {
+.red-ui-menu-dropdown * .fa-check-square {
   color: #777;
 }
 
-.dropdown-submenu.disabled > a::before {
+.red-ui-menu-dropdown-submenu.disabled > a::before {
   border-right-color: #ddd;
 }
 
-#header ul.dropdown-menu li.divider {
+#red-ui-header ul.red-ui-menu-dropdown li.red-ui-menu-divider {
   background: #eaeaea;
   border-bottom-color: #f3f3f3;
 }
 
-#header ul#btn-deploy-options-submenu li a {
+#red-ui-header ul#red-ui-header-button-deploy-options-submenu li a {
   color: #777;
 }
 
-#btn-deploy.disabled {
-    cursor: default;
-    background: #fff;
-    color: #fff !important
+#red-ui-header #red-ui-header-button-deploy.disabled {
+  cursor: default;
+  background: #fff;
+  color: #fff !important
 }
 
+.red-ui-popover {
+  color: #777;
+  background-color: #f0f0f0;
+  border-color: #f0f0f0;
+}
+.red-ui-popover.red-ui-popover-right:after {
+    border-right-color: #f0f0f0;
+}
+.red-ui-popover.red-ui-popover-right:before {
+    border-right-color: #f0f0f0;
+}
+
+.red-ui-popover.red-ui-popover-left:after {
+    border-left-color: #f0f0f0;
+}
+.red-ui-popover.red-ui-popover-left:before {
+    border-left-color: #f0f0f0;
+}
+
+.red-ui-popover.red-ui-popover-bottom:after {
+    border-bottom-color: #f0f0f0;
+}
+.red-ui-popover.red-ui-popover-bottom:before {
+    border-bottom-color: #f0f0f0;
+}
+
+.red-ui-popover.red-ui-popover-top:after {
+    border-top-color: #f0f0f0;
+}
+.red-ui-popover.red-ui-popover-top:before {
+    border-top-color: #f0f0f0;
+}

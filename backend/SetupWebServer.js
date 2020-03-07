@@ -10,7 +10,9 @@
 const http = require('http');
 const express = require('express');
 const expressSession = require('express-session');
+const sharedSession = require('express-socket.io-session');
 const cookieParser = require('cookie-parser');
+const uuid = require('uuid/v4');
 const nedbStore = require('connect-nedb-session')(expressSession);
 const moment = require('moment');
 const bodyParser = require('body-parser');
@@ -28,6 +30,7 @@ class SetupWebServer {
     this.common = common;
     this.setupWebClientConnections = [];
     this.requestAuth = false;
+    this.uuid = null;
     
     this.common.on('changeStatus', (caller, msg) => {
       this.SendMessage('events', msg);
@@ -77,9 +80,9 @@ class SetupWebServer {
     this.common.on('changeSystemConfig', (_caller) => {
       try {
         if(this.common.systemConfig.autoUpdate) {
-          fs.writeFileSync(this.common.config.basePath + '/autoupdate', 'on');
+          fs.writeFileSync('etc/apt/apt.conf.d/20auto-upgrades', 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\nAPT::Periodic::AutocleanInterval "1";\n');
         } else {
-          fs.unlinkSync(this.common.config.basePath + '/autoupdate');
+          fs.writeFileSync('etc/apt/apt.conf.d/20auto-upgrades', 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";\nAPT::Periodic::AutocleanInterval "0";\n');
         }
       } catch(e) {/* empty */}
 
@@ -95,8 +98,24 @@ network={
   psk=${this.common.systemConfig.psk}
 }
 `;
+
         const str = (this.common.systemConfig.wifiEnable && this.common.systemConfig.wifi)?(str1 + str2):str1;
-        fs.writeFileSync('/etc/wpa_supplicant/wpa_supplicant.conf', str);
+
+        const oldStr = fs.readFileSync('/etc/wpa_supplicant/wpa_supplicant.conf', 'utf-8').replace(/[\r \t]/g,'');
+        const oldSsid = (oldStr.match(/ssid="(.+)"/)||[null,null])[1];
+        const oldPsk = (oldStr.match(/psk=([^"\n]+)/)||[null,null])[1];
+        let writeFlag = false;
+        if(this.common.systemConfig.wifiEnable && this.common.systemConfig.wifi) {
+          if(this.common.systemConfig.ssid != oldSsid) writeFlag = true;
+          if(this.common.systemConfig.psk != oldPsk) writeFlag = true;
+        } else {
+          if(oldSsid || oldPsk) writeFlag = true;
+        }
+        if(writeFlag) {
+          console.log('set wpa_supplicant ', this.common.systemConfig.wifiEnable && this.common.systemConfig.wifi);
+          fs.writeFileSync('/etc/wpa_supplicant/wpa_supplicant.conf', str);
+          exec('/usr/local/bin/wificontrol --link');
+        }
       } catch(e) {/* empty */}
 
       this.common.emit('sendControllerCommand', this, {
@@ -126,7 +145,7 @@ network={
       const session = expressSession({
         secret: this.common.systemConfig.sessionSecret,
         resave: false,
-        saveUninitialized: false,
+        saveUninitialized: true,
         rolling: true,
         cookie: {
           maxAge: 31 * 24 * 60 * 60 * 1000,
@@ -144,6 +163,7 @@ network={
         const user = req.session.user || {};
         user.pv = (user.pv || 0) + 1;
         user.expire = user.expire || (moment().add(14, 'days').unix());
+        this.uuid = user.uuid = uuid();
         req.session.user = user;
         req.session.save();
         req.session.touch();
@@ -206,17 +226,25 @@ network={
         httpAdminRoot: '/red/',
         httpNodeRoot: '/node/',
         flowFile: 'flow.json',
+        credentialSecret: this.common.systemConfig.nodeRedCredential,
         userDir: this.common.config.basePath + '/red',
         nodesDir: __dirname + '/../redNodes',
         logging: {
           console: {
-            level: 'warning',
+            level: 'off',
+          },
+          myCustomLogger: {
+            level: 'info',
             metrics: false,
-            audit: false
-          }
+            handler() {
+              return (data) => {
+                console.log(data.msg);
+              };
+            },
+          },
         },
         debugMaxLength: 1000,
-        paletteCategories: ['subflows', 'GeckoLink', 'input', 'output', 'function', 'social', 'storage', 'analysis', 'advanced'],
+        paletteCategories: ['subflows', 'GeckoLink', 'function', 'common', 'input', 'output', 'sequence', 'network', 'storage', 'parser', 'dashboard'],
         editorTheme: {
           page: {
             css: __dirname + '/../frontend/red/theme/css/nodeRed.css',
@@ -225,8 +253,8 @@ network={
               type: 'simple',
           },
           menu: {
-            'menu-item-import-library': false,
-            'menu-item-export-library': false,
+            'menu-item-import-library': true,
+            'menu-item-export-library': true,
             'menu-item-keyboard-shortcuts': false,
             'menu-item-help': false,
             'menu-item-show-tips': true,
@@ -239,6 +267,9 @@ network={
           default: {
             permissions: '*',
           },
+        },
+        prjects: {
+          enabled: false,
         },
         functionGlobalContext: {
           homeServer: this.common,
@@ -281,7 +312,7 @@ network={
       this.socketio.use((socket, next) => {
         session(socket.request, socket.request.res, next);
       });
-
+      this.socketio.use(sharedSession(session, { autoSave: true }));
       this.socketio.on('connection', this.Connection.bind(this));
     });
   }
@@ -290,8 +321,13 @@ network={
 
     const clientAddress = socket.handshake.address;
     console.log(`new webBrowser client ${clientAddress}`);
+    const user = socket.handshake.session.user || {};
+    if(!this.uuid || (this.uuid !== user.uuid)) {
+      socket.emit('reload');
+      return;
+    }
     this.setupWebClientConnections.push(socket);
-    
+
   // receive jobs
     socket.on('requestNonce', (callback) => {
       this.nonce = crypto.randomBytes(32).toString('hex');
@@ -543,7 +579,7 @@ network={
     });
 
     socket.on('searchSSID', (callback) => {
-      exec('/sbin/iwlist wlan0 scan', (err, stdout) => {
+      exec('/usr/local/bin/wificontrol --scan', (err, stdout) => {
         if(stdout) {
           callback((stdout.replace(/\\x00/g, '').match(/ESSID\s*:\s*"(.+)(?=")/g)||[]).map(s => s.replace(/^ESSID\s*:\s*"/, '')));
         } else {

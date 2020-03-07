@@ -28,14 +28,8 @@
       const els = this.$el.querySelectorAll('li');
       for(const el of els) {
         if(el.classList.contains('dropdown')) continue;
-        el.addEventListener('click', (ev) => {
-          if(ev.target.classList.contains('disabled')) {
-            ev.preventDefault();
-          } else {
-            this.collapsed = true;
-            this.$emit('page', { to: ev.target.dataset.to });
-          }
-        }, true);
+        el.addEventListener('click', this.SelectPage.bind(this), true);
+        el.addEventListener('touchstart', this.SelectPage.bind(this), true);
       }
     },
     updated() {
@@ -73,6 +67,14 @@
           el = el.parentElement;
         } while(el !== document.body);
         this.collapsed = true;
+      },
+      SelectPage(ev) {
+        if(ev.target.classList.contains('disabled')) {
+          ev.preventDefault();
+        } else {
+          this.collapsed = true;
+          this.$emit('page', { to: ev.target.dataset.to });
+        }
       },
     },
   };

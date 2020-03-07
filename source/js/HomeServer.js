@@ -28,7 +28,6 @@ import Common from './Common.js';
 import TopMenu from '../vue/TopMenu.vue';
 
 // css
-import '../red/theme/css/nodeRed.css';
 import 'element-ui/lib/theme-chalk/base.css';
 import 'element-ui/lib/theme-chalk/container.css';
 import 'element-ui/lib/theme-chalk/aside.css';
@@ -40,8 +39,6 @@ import '../css/localStyle.css';
 
 // for webpack
 import '../index.html';
-import '../images/GeckoIcon.png'; // for apple-icon
-import '../images/GeckoIcon.ico'; // for favicon
 
 class HomeServer {
   constructor() {

@@ -190,11 +190,7 @@
     },
     data() {
       return {
-        remocon: {
-          remoconTable: {},
-          remoconGroup: {},
-          remoconMacro: {},
-        },
+        remocon: {},
         lastRemoconCode: {},
         nameAlert: false,
         selectedGroup: null,
@@ -316,10 +312,10 @@
         this.$refs.ruleForm.validate((valid) => {
           if(!valid) return;
           this.nameAlert = false;
-          this.remocon.remoconTable[this.ruleForm.name] = {
+          this.$set(this.remocon.remoconTable, this.ruleForm.name, {
             comment: this.ruleForm.comment,
              code: this.selectedItem.code,
-          };
+          });
           Common.emit('changeRemocon', this);
           this.selectedItem = null;
         });
@@ -327,7 +323,7 @@
       DeleteItem(item, idx) {
         this.selectedGroup = null;
         this.selectedIdx = null;
-        delete this.remocon.remoconTable[idx];
+        this.$delete(this.remocon.remoconTable, idx);
         Common.emit('changeRemocon', this);
       },
       DeleteGroup(group) {
@@ -335,10 +331,10 @@
         this.selectedIdx = null;
         for(const i in this.remocon.remoconTable) {
           if(this.remocon.remoconTable[i].group === group) {
-            delete this.remocon.remoconTable[i];
+            this.$delete(this.remocon.remoconTable, i);
           }
         }
-        delete this.remocon.remoconGroup[group];
+        this.$delete(this.remocon.remoconGroup, group);
         Common.emit('changeRemocon', this);
       },
       IsSelect(item, idx) {

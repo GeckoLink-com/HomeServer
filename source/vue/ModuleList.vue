@@ -84,10 +84,9 @@
       },
     },
     mounted() {
-      /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
       this.devices = Common.devices;
       Common.on('changeDevices', () => {
-        this.devices = Common.devices;
+        this.devices = Common.devices || [];
       });
       this.alias = Common.alias;
       Common.on('changeAlias', () => {

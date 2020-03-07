@@ -1,0 +1,92 @@
+<script type="text/javascript">
+    
+    RED.nodes.registerType('gecko notify', {
+        paletteLabel:'notify',
+        category: 'GeckoLink',
+        color: '#ccff66',
+        defaults: {
+            name: {value:''},
+            label: {value:'notify'},
+            deviceName: {value:'', required:true},
+            func: {value:'', required:true},
+        },
+        inputs:1,
+        outputs:0,
+        icon: 'GeckoLogo_White.png',
+        label: function() {
+          if(this.name && (this.name != '')) return this.name;
+          return this.label;
+        },
+        oneditprepare: function() {
+          this.editValue = {
+            deviceName: this.deviceName,
+            func: this.func,
+          };
+
+          $.getJSON('gecko/' + this.id, (homeServer) => {
+            this.homeServer = homeServer;
+            for(i in this.homeServer.alias) {
+              if(this.homeServer.alias[i].value0 ||
+                 this.homeServer.alias[i].value1 ||
+                 this.homeServer.alias[i].value2 ||
+                 this.homeServer.alias[i].value3) {
+                $('#node-input-deviceName').append($('<option></option>')
+                  .val(this.homeServer.alias[i].name)
+                  .text(this.homeServer.alias[i].name));
+              }
+            }
+            $('#node-input-deviceName').val(this.editValue.deviceName);
+
+            const RedrawFunc = (deviceName) => {
+              $('#node-input-func option').remove();
+              for(i in this.homeServer.aliasTable[deviceName].property) {
+                if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
+                if(i.indexOf('value') != 0) continue;
+                let name = this.homeServer.aliasTable[deviceName].property[i].name;
+                if(!name || (name == '')) name = i;
+                $('#node-input-func').append($('<option></option>').val(i).text(name));
+              }
+              $('#node-input-func').val(this.editValue.func);
+            }            
+            $('#node-input-deviceName').change((e) => {this.editValue.func = null;RedrawFunc(e.target.value);});
+            RedrawFunc(this.editValue.deviceName);
+          });
+        },
+        oneditsave: function() {
+          this.deviceName = $('#node-input-deviceName').val();
+          this.func = $('#node-input-func').val();
+          if(this.homeServer &&
+             ('alias' in this.homeServer) &&
+             ('aliasTable' in this.homeServer) &&
+             this.deviceName && (this.deviceName != '') &&
+             this.func && (this.func != '')) {
+            let n = null;
+            if(this.func in this.homeServer.aliasTable[this.deviceName].property)
+              n = this.homeServer.aliasTable[this.deviceName].property[this.func].name;
+            if(!n || (n == '')) n = this.deviceName+':'+this.func;
+            this.label = n;
+          }
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="gecko notify">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deviceName"><i class="fa fa-cube"></i> module</span></label>
+        <select id="node-input-deviceName" style="width:120px; margin-right:5px;"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-func"><i class="fa fa-exchange"></i> value</span></label>
+        <select id="node-input-func" style="width:120px; margin-right:5px;"></select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="gecko notify">
+    <p>入力された値を子機の仮想レジスタに設定します。</p>
+    <p><code>msg.payload.value</code>を選択されたmoduleの仮想レジスタに設定し通知します。</p>
+</script>
+

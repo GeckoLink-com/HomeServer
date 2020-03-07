@@ -49,7 +49,10 @@ for(let i = 2; i < process.argv.length; i++) {
 }
 if(configFile == null) configFile = '../config';
 
-const common = new Common(require(configFile));
+const config = require(configFile);
+config.local = local;
+if(local) config.setupWebServerPort = 4080;
+const common = new Common(config);
 common.user = user;
 common.group = group;
 if(process.env['HOME']) common.home = process.env['HOME'];
@@ -60,8 +63,6 @@ if(user) {
     common.home = '/home/' + user;
   }
 }
-common.config.local = local;
-if(local) common.config.setupWebServerPort = 4080;
 
 if(common.config.logFile) {
   const out = fs.createWriteStream(common.config.logFile, { flags: 'a'});

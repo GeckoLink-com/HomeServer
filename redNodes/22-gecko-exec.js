@@ -14,6 +14,7 @@ module.exports = function(RED) {
           device: msg.data[0].origin.deviceName,
           command: msg.data[0].origin.command,
           status: msg.data[0].status,
+          result: msg.data[0].result,
         }});
       }
     };

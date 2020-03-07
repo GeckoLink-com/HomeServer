@@ -181,7 +181,7 @@
       });
 
       Common.on('changeDevices', () => {
-        for(const dev of Common.devices) {
+        for(const dev of Common.devices || []) {
           if(dev.device === 'pairing') {
             if(dev.state !== 'connect') {
               this.progress = 0;

@@ -290,6 +290,19 @@
         return true;
       },
     },
+    watch: {
+      wifi(val) {
+        if(val) {
+          if(this.ruleForm.ssid === '') this.ruleValid.ssid = false;
+          if((!Common.systemConfig.psk || (Common.systemConfig.psk === '')) && (this.ruleForm.wifiPassword === '')) {
+            this.ruleValid.wifiPassword = false;
+          }
+        } else {
+          this.ruleValid.ssid = true;
+          this.ruleValid.wifiPassword = true;
+        }
+      },
+    },
     mounted() {
       this.reader = new FileReader();
 
@@ -352,13 +365,13 @@
         callback();
       },
       ValidateSSID(rule, value, callback) {
-        if(value === '') {
+        if(this.wifi && (value === '')) {
           return callback(new Error('SSIDを入れてください。'));
         }
         callback();
       },
       ValidateWifiPassword(rule, value, callback) {
-        if((!Common.systemConfig.psk || (Common.systemConfig.psk === '')) && (value === '')) {
+        if(this.wifi && (!Common.systemConfig.psk || (Common.systemConfig.psk === '')) && (value === '')) {
           return callback(new Error('Wi-Fiパスワードを入れてください。'));
         }
         callback();

@@ -45,6 +45,17 @@
             </ElCol>
           </ElRow>
 
+          <ElRow class="well-transparent">
+            <ElCol span="10">
+              <fieldset :disabled="motor.sw===1">
+                <h5>I2C制御</h5>
+              </fieldset>
+            </ElCol>
+            <ElCol span="14">
+              <ElSwitch v-model="i2c.sw" :disabled="motor.sw===1" :active-value="1" :inactive-value="0" />
+            </ElCol>
+          </ElRow>
+
           <ElRow class="well-transparent" v-if="PWMEnable">
             <ElCol span="10">
               <fieldset :disabled="motor.sw===1">
@@ -58,23 +69,23 @@
 
           <ElRow class="well-transparent" v-if="DMXEnable && DMXAcceptable">
             <ElCol span="10">
-              <fieldset :disabled="(motor.sw===1)||(ledTape.sw===1)">
+              <fieldset :disabled="(motor.sw===1)||(ledTape.sw===1)||(i2c.sw===1)">
                 <h5>DMX Light制御</h5>
               </fieldset>
             </ElCol>
             <ElCol span="14">
-              <ElSwitch v-model="dmx.sw" :disabled="(motor.sw===1)||(ledTape.sw===1)" :active-value="1" :inactive-value="0" />
+              <ElSwitch v-model="dmx.sw" :disabled="(motor.sw===1)||(ledTape.sw===1)||(i2c.sw===1)" :active-value="1" :inactive-value="0" />
             </ElCol>
           </ElRow>
 
           <ElRow class="well-transparent" v-if="ledTapeEnable">
             <ElCol span="10">
-              <fieldset :disabled="(motor.sw===1)||(dmx.sw===1)">
+              <fieldset :disabled="(motor.sw===1)||(i2c.sw===1)">
                 <h5>LED Tape Light制御</h5>
               </fieldset>
             </ElCol>
             <ElCol span="14">
-              <ElSwitch :disabled="(motor.sw===1)||(dmx.sw===1)" v-model="ledTape.sw" :active-value="1" :inactive-value="0" />
+              <ElSwitch :disabled="(motor.sw===1)||(i2c.sw===1)" v-model="ledTape.sw" :active-value="1" :inactive-value="0" />
             </ElCol>
           </ElRow>
 
@@ -148,21 +159,21 @@
             <hr>
             <ElRow v-for="num of [0, 1]" :key="'as-gpio' + num">
               <ElCol span="4">
-                <fieldset :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)">
+                <fieldset :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||(i2c.sw===1)">
                   <h5>GPIO{{ num }}</h5>
                 </fieldset>
               </ElCol>
               <ElCol span="6">
-                <ElInput class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||(gpio[num].mode==='off')" />
+                <ElInput class="func-name" type="text" v-model="gpio[num].name" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||(i2c.sw===1)||(gpio[num].mode==='off')" />
               </ElCol>
               <ElCol span="14">
-                <ElRadioGroup class="btn-inline" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)" v-model="gpio[num].mode">
+                <ElRadioGroup class="btn-inline" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||(i2c.sw===1)" v-model="gpio[num].mode">
                   <ElRadioButton label="pu-in" />
                   <ElRadioButton label="in" />
                   <ElRadioButton label="out" />
                   <ElRadioButton label="off" />
                 </ElRadioGroup>
-                <ElSelect v-model="gpio[num].type" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||((gpio[num].mode!=='in')&&(gpio[num].mode!=='pu-in'))">
+                <ElSelect v-model="gpio[num].type" :disabled="(rainSensor.sw===1)||(motor.sw===1)||(dmx.sw===1)||(ledTape.sw===1)||(i2c.sw===1)||((gpio[num].mode!=='in')&&(gpio[num].mode!=='pu-in'))">
                   <ElOption v-for="item of gpioFuncTable" :key="'as-gpioFuncTable' + item.name" :label="item.name" :value="item.type" :data-type="item.type">
                     {{ item.name }}
                   </ElOption>
@@ -314,6 +325,37 @@
               </ElCol>
             </ElRow>
           </div>
+
+          <div class="well">
+            <ElRow>
+              <ElCol span="4">
+                <h5>仮想レジスタ</h5>
+              </ElCol>
+            </ElRow>
+            <hr>
+            <ElRow v-for="num of [0, 1, 2, 3]" :key="'as-val' + num">
+              <ElCol span="4">
+                <h5>value{{ num }}</h5>
+              </ElCol>
+              <ElCol span="6">
+                <ElInput class="func-name" type="text" v-model="value[num].name" :disabled="value[num].sw==0" />
+              </ElCol>
+              <ElCol span="14">
+                <ElSwitch class="btn-inline" v-model="value[num].sw" :active-value="1" :inactive-value="0" />
+                <ElSelect v-model="value[num].type" :disabled="value[num].sw==0" @input="ValueTypeSelected(num)">
+                  <ElOption v-for="item of valueFuncTable" :key="'as-valueFuncTable' + item.name" :label="item.name" :value="item.type">
+                    {{ item.name }}
+                  </ElOption>
+                </ElSelect>
+                <fieldset class="btn-inline">
+                  <div class="item-label">
+                    unit
+                  </div>
+                  <ElInput class="state" type="text" v-model="value[num].unit" :disabled="value[num].sw==0" />
+                </fieldset>
+              </ElCol>
+            </ElRow>
+          </div>
         </div>
 
         <div v-else>
@@ -390,7 +432,7 @@
     data() {
       /*
        option value : bit 31:0
-         AVR  HB   DALI DMX  : PWM  MTR  LED  RAIN : I2C  IRI  IRO  SW   : HA1  HA0  AD1  AD0
+         AVR  HB   ---  DMX  : PWM  MTR  LED  RAIN : I2C  IRI  IRO  SW   : HA1  HA0  AD1  AD0
          PU1  SW2I SW1I SW0I : HA1I HA0I GPI1 GPI0 : PU0  SW2O SW1O SW0O : HA1O HA0O GPO1 GPO0
       */
       return {
@@ -406,6 +448,7 @@
         ledTapeEnable: false,
         motorEnable: false,
         heartbeat: { sw: 1 },
+        i2c: { sw: 0 },
         pwm: { sw: 0 },
         dmx: { sw: 0 },
         motor: { sw: 0, optionValue: 0 },
@@ -443,6 +486,12 @@
           { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
           { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
         ],
+        value: [
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
+        ],
         adFuncTable: [
           { name: '温度センサー', type: 'temp', unit: '°C', offset: -500, gain: 0.1 },
           { name: '湿度センサー', type: 'humidity', unit: '%', offset: -500, gain: 0.045 },
@@ -456,6 +505,13 @@
           { name: '報知機センサー', type: 'alarm', valueLabel: { '0': 'off', '1': 'on' }},
           { name: 'フラップセンサー', type: 'flap', valueLabel: { '0': 'off', '1': 'on' }},
           { name: 'その他', type: 'other', valueLabel: { '0': 'off', '1': 'on' }},
+        ],
+        valueFuncTable: [
+          { name: '温度センサー', type: 'temp', unit: '°C' },
+          { name: '湿度センサー', type: 'humidity', unit: '%' },
+          { name: '降雨センサー', type: 'rain', unit: '' },
+          { name: '騒音センサー', type: 'noise', unit: '' },
+          { name: 'その他', type: 'other', unit: '' },
         ],
         gpioModeTable: [ 'off', 'out', 'in', 'pu-in' ],
         ruleForm: {
@@ -512,7 +568,7 @@
       });
       this.devices = Common.devices;
       Common.on('changeDevices', () => {
-        this.devices = Common.devices;
+        this.devices = Common.devices || [];
       });
       this.alias = Common.alias;
       Common.on('changeAlias', () => {
@@ -601,6 +657,8 @@
             this.ad[i].type = '';
           }
         }
+        // I2C
+        this.i2c.sw = (moduleOption >> 23) & 1;
         // RAIN
         this.rainSensor.sw = (moduleOption >> 24) & 1;
         // LEDTape
@@ -683,6 +741,20 @@
             this.swio[i].valueLabel = { '0': 'off', '1': 'on' };
           }
         }
+        // Value
+        for(let i = 0; i < 3; i++) {
+          if(Common.alias[device] && Common.alias[device]['value' + i]) {
+            this.value[i].name = Common.alias[device]['value' + i].name;
+            this.value[i].type = Common.alias[device]['value' + i].type;
+            this.value[i].unit = Common.alias[device]['value' + i].unit;
+            this.value[i].sw = 1;
+          } else {
+            this.value[i].name = '';
+            this.value[i].type = '';
+            this.value[i].unit = '';
+            this.value[i].sw = 0;
+          }
+        }
         this.$refs.ruleForm.validate(() => {});
       },
       ValidateModuleName(rule, value, callback) {
@@ -696,6 +768,14 @@
       },
       Validated(prop, valid) {
         this.ruleValid[prop] = valid;
+      },
+      ValueTypeSelected(num) {
+        for(const valueFunc of this.valueFuncTable) {
+          if(valueFunc.type === this.value[num].type) {
+            this.value[num].unit = valueFunc.unit;
+            break;
+          }
+        }
       },
       Submit() {
         this.$refs.ruleForm.validate((valid) => {
@@ -769,6 +849,7 @@
           newOption |= this.motor.sw << 26;
           if(this.motor.sw) {
             this.ledTape.sw = 0;
+            this.i2c.sw = 0;
             this.pwm.sw = 0;
             this.dmx.sw = 0;
             this.rainSensor.sw = 0;
@@ -787,16 +868,24 @@
           newOption |= this.dmx.sw << 28;
           if(this.dmx.sw) {
             this.rainSensor.sw = 0;
+            this.i2c.sw = 0;
             this.gpio[0].mode = 'off';
             this.gpio[1].mode = 'off';
           }
           newOption |= this.ledTape.sw << 25;
           if(this.ledTape.sw) {
             this.rainSensor.sw = 0;
+            this.i2c.sw = 0;
             this.gpio[0].mode = 'off';
           }
           newOption |= this.rainSensor.sw << 24;
           if(this.rainSensor.sw) {
+            this.i2c.sw = 0;
+            this.gpio[0].mode = 'off';
+            this.gpio[1].mode = 'off';
+          }
+          newOption |= this.i2c.sw << 23;
+          if(this.i2c.sw) {
             this.gpio[0].mode = 'off';
             this.gpio[1].mode = 'off';
           }
@@ -946,6 +1035,13 @@
               moduleAlias['hao' + i] = {
                 name: this.hao[i].name,
                 valueLabel: this.hao[i].valueLabel,
+              };
+            }
+            if(this.value[i].sw) {
+              moduleAlias['value' + i] = {
+                name: this.value[i].name,
+                type: this.value[i].type,
+                unit: this.value[i].unit,
               };
             }
           }
