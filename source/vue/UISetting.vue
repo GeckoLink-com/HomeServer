@@ -99,7 +99,7 @@
               </ElSelect>
             </ElFormItem>
           </div>
-          <div v-if="(itemType!='room')&&(itemType!='dimmerLight')&&(itemType!='ctLight')&&(itemType!='colorLight')">
+          <div v-if="(itemType!='room')&&(itemType!='dimmerLight')&&(itemType!='colorLight')">
             <div v-for="(stat, statIdx) of status" :key="'ui-status' + statIdx">
               <ElFormItem :label="'ステータス' + statIdx" :prop="'status' + statusIdx">
                 <ElSelect v-model="status[statIdx]" value-key="label">
@@ -130,7 +130,41 @@
             <br>
           </div>
 
-          <div v-if="(itemType!='room')&&(itemType!='dimmerLight')&&(itemType!='ctLight')&&(itemType!='colorLight')">
+          <div v-show="itemType=='dimmerLight'">
+            <ElFormItem label="ライト" prop="dimmerLight">
+              <ElSelect v-model="light" value-key="deviceName">
+                <ElOption v-for="dimmerLight of dimmerLights" :key="'ui-dimmerLights' + dimmerLight.deviceName" :label="dimmerLight.deviceName" :value="dimmerLight">
+                  {{ dimmerLight.deviceName }}
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
+            <ElFormItem v-if="light && (light.type==='dmx')" label="アドレス" prop="dmxAddress">
+              <ElInputNumber :min="1" :max="512" controls-position="right" size="mini" v-model="dmxAddress" />
+            </ElFormItem>
+            <ElFormItem label="調光" prop="dimmer">
+              <ElCheckbox v-model="dimmer" />
+            </ElFormItem>
+            <ElFormItem label="調色" prop="colorTemp">
+              <ElCheckbox v-model="colorTemp" />
+            </ElFormItem>
+            <br>
+          </div>
+
+          <div v-show="itemType=='colorLight'">
+            <ElFormItem label="ライト" prop="colorLight">
+              <ElSelect v-model="light" value-key="deviceName">
+                <ElOption v-for="colorLight of colorLights" :key="'ui-colorLights' + colorLight.deviceName" :label="colorLight.deviceName" :value="colorLight">
+                  {{ colorLight.deviceName }}
+                </ElOption>
+              </ElSelect>
+            </ElFormItem>
+            <ElFormItem v-if="light && (light.type==='dmx')" label="アドレス" prop="dmxAddress">
+              <ElInputNumber :min="1" :max="511" controls-position="right" size="mini" v-model="dmxAddress" />
+            </ElFormItem>
+            <br>
+          </div>
+
+          <div v-if="itemType!='room'">
             <div v-for="(btn,btnIdx) of button" :key="'ui-button' + btnIdx">
               <div class="well" v-if="btnIdx < buttonNum">
                 <ElFormItem :label="'ボタン' + btnIdx" :prop="'btn' + btnIndex + 'command'">
@@ -140,7 +174,7 @@
                     </ElOption>
                   </ElSelect>
                 </ElFormItem>
-                <div v-if="btn.command.type=='mode'">
+                <div v-if="(btn.command.type==='mode') || (btn.command.type==='light')">
                   <ElFormItem label="モード" :prop="'btn' + btnIndex + 'mode'">
                     <ElSelect v-model="btn.mode">
                       <ElOption v-for="mode of btn.command.mode" :key="'ui-commandMode' + mode" :label="mode" :value="mode">
@@ -214,40 +248,6 @@
             </div>
             <br>
           </div>
-
-          <div v-show="itemType=='dimmerLight'">
-            <ElFormItem label="ライト" prop="dimmerLight">
-              <ElSelect v-model="dimmerLight" value-key="deviceName">
-                <ElOption v-for="light of dimmerLights" :key="'ui-dimmerLights' + light.deviceName" :label="light.deviceName" :value="light">
-                  {{ light.deviceName }}
-                </ElOption>
-              </ElSelect>
-            </ElFormItem>
-            <ElFormItem v-if="dimmerLight && (dimmerLight.type==='dmx')" label="アドレス" prop="dmxAddress">
-              <ElInputNumber :min="1" :max="512" controls-position="right" size="mini" v-model="dmxAddress" />
-            </ElFormItem>
-            <ElFormItem label="調光" prop="dimmer">
-              <ElCheckbox v-model="dimmer" />
-            </ElFormItem>
-            <ElFormItem label="調色" prop="colorTemp">
-              <ElCheckbox v-model="colorTemp" />
-            </ElFormItem>
-            <br>
-          </div>
-
-          <div v-show="itemType=='colorLight'">
-            <ElFormItem label="ライト" prop="colorLight">
-              <ElSelect v-model="colorLight" value-key="deviceName">
-                <ElOption v-for="light of colorLights" :key="'ui-colorLights' + light.deviceName" :label="light.deviceName" :value="light">
-                  {{ light.deviceName }}
-                </ElOption>
-              </ElSelect>
-            </ElFormItem>
-            <ElFormItem v-if="colorLight && (colorLight.type==='dmx')" label="アドレス" prop="dmxAddress">
-              <ElInputNumber :min="1" :max="511" controls-position="right" size="mini" v-model="dmxAddress" />
-            </ElFormItem>
-            <br>
-          </div>
         </ElForm>
       </div>
       <br>
@@ -306,21 +306,22 @@
         typeTable: [
           { value: 'room', label: 'ルーム', buttons: 0 },
           { value: 'disabled', label: '-----------------------', buttons: 0 },
-          { value: 'brind', label: 'ブラインド/カーテン', buttons: 2 },
+          { value: 'blind', label: 'ブラインド/カーテン', buttons: 2 },
           { value: 'shutter', label: 'シャッター', buttons: 2 },
           { value: 'window', label: '窓', buttons: 2 },
           { value: 'lock', label: '電気錠', buttons: 2 },
           { value: 'tv', label: 'テレビ', buttons: 4 },
           { value: 'aircon', label: 'エアコン', buttons: 1 },
           { value: 'light', label: '照明(on/off)', buttons: 2 },
-          { value: 'dimmerLight', label: '照明(調光/調色)', buttons: 0 },
-          { value: 'colorLight', label: '照明(RGB)', buttons: 0 },
+          { value: 'dimmerLight', label: '照明(調光/調色)', buttons: 2 },
+          { value: 'colorLight', label: '照明(RGB)', buttons: 2 },
           { value: 'onOff', label: 'on/offスイッチ', buttons: 2 },
           { value: 'openClose', label: 'open/closeスイッチ', buttons: 2 },
           { value: 'other', label: 'その他', buttons: 4 },
         ],
-        statusFunc: ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3'],
+        statusFunc: ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3', 'value4', 'value5', 'value6', 'value7'],
         commandFunc: ['gpio0', 'gpio1', 'ha0', 'ha1', 'hao0', 'hao1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3'],
+        lightFunc: ['hue', 'pwm', 'dmx', 'led'],
         gpioinType: ['motion', 'alarm', 'flap', 'other'],
         remoconMode: ['on', 'off', 'toggle'],
         remoconLabel: { on: 'on', off: 'off', toggle: 'on/off' },
@@ -333,8 +334,7 @@
         status: [],
         airconGroup: '',
         airconModule: '',
-        dimmerLight: {},
-        colorLight: {},
+        light: {},
         button: [],
         tvGroup: '',
         tvModule: '',
@@ -397,6 +397,8 @@
       Common.on('changeHueBridges', () => {
         this.hueLights = Common.hueLights;
 
+        this.ChangeAlias();
+        /*
         const dimmerLights = [];
         for(const dev in this.hueLights) {
           dimmerLights.push({
@@ -422,6 +424,7 @@
           }
         }
         this.dimmerLights = dimmerLights;
+        */
       });
       this.uiTable = Common.uiTable;
       Common.on('changeUITable', () => {
@@ -599,7 +602,25 @@
                 label: this.alias[dev].name + ':' + (this.alias[dev][func].name || func),
               });
             }
+            if(this.lightFunc.indexOf(func) >= 0) {
+              commandList.push({
+                deviceName: this.alias[dev].name,
+                func: func,
+                type: 'light',
+                mode: [ 'on', 'off' ],
+                label: this.alias[dev].name + ':' + (this.alias[dev][func].name || func),
+              });
+            }
           }
+        }
+        for(const dev in this.hueLights) {
+          commandList.push({
+            deviceName: this.hueLights[dev].name,
+            func: 'hue',
+            type: 'light',
+            mode: [ 'on', 'off' ],
+            label: this.hueLights[dev].name,
+          });
         }
         commandList.push({
           deviceName: '',
@@ -713,8 +734,7 @@
           this.dimmer = true;
           this.colorTemp = true;
           this.dmxAddress = 1;
-          this.dimmerLight = {};
-          this.colorLight = {};
+          this.light = {};
           return;
         }
         if(this.uiTable.ItemList[idx] == null) return;
@@ -806,24 +826,17 @@
           this.tvGroup = item.table.prefix;
           this.tvModule = item.table.deviceName;
         }
-        if(item.type === 'dimmerLight') {
-          this.dimmerLight = {
+        if((item.type === 'colorLight') || (item.type === 'dimmerLight')) {
+          this.light = {
             deviceName: item.table.deviceName,
             device: item.table.device,
             type: item.table.type,
+            func: item.table.func || item.table.type,
             label: item.table.deviceName,
+            mode: item.table.mode,
           };
           this.dimmer = item.table.dimmer;
           this.colorTemp = item.table.colorTemp;
-          if(item.table.type === 'dmx') this.dmxAddress = item.table.dmxAddress;
-        }
-        if(item.type === 'colorLight') {
-          this.colorLight = {
-            deviceName: item.table.deviceName,
-            device: item.table.device,
-            type: item.table.type,
-            label: item.table.deviceName,
-          };
           if(item.table.type === 'dmx') this.dmxAddress = item.table.dmxAddress;
         }
       },
@@ -923,6 +936,7 @@
                   deviceName: btn.module,
                   command: btn.remocon,
                   label: btn.label,
+                  mode: btn.remocon.replace(/^.*_/, ''),
                 });
               }
               break;
@@ -942,6 +956,15 @@
                 });
               }
               break;
+            case 'light':
+              item.buttons.push({
+                deviceName: this.light.deviceName,
+                command: 'switch ' + btn.mode,
+                func: btn.command.func,
+                mode: btn.mode,
+                label: btn.mode,
+              });
+              break;
             default:
           }
         }
@@ -957,62 +980,24 @@
             deviceName: this.tvModule,
           };
         }
-        if(this.itemType === 'dimmerLight') {
+        if((this.itemType === 'dimmerLight') || (this.itemType === 'colorLight')) {
           item.status = [{
-            deviceName: this.dimmerLight.deviceName,
-            func: this.dimmerLight.type,
-            sensor: this.dimmerLight.deviceName,
-            type: this.dimmerLight.type,
+            deviceName: this.light.deviceName,
+            func: 'switch',
+            sensor: this.light.deviceName,
+            type: this.light.type,
           }];
-          item.buttons = [
-            {
-              command: 'switch on',
-              deviceName: this.dimmerLight.deviceName,
-              label: 'on',
-            },
-            {
-              command: 'switch off',
-              deviceName: this.dimmerLight.deviceName,
-              label: 'off',
-            },
-          ];
           item.table = {
             prefix: '',
-            deviceName: this.dimmerLight.deviceName,
-            device: this.dimmerLight.device,
-            type: this.dimmerLight.type,
+            deviceName: this.light.deviceName,
+            device: this.light.device,
+            type: this.light.type,
+            func: this.light.func || this.light.type,
             dimmer: this.dimmer,
             colorTemp: this.colorTemp,
           };
-          if(this.dimmerLight.type === 'dmx') item.table.dmxAddress = this.dmxAddress;
+          if(this.light.type === 'dmx') item.table.dmxAddress = this.dmxAddress;
         }
-        if(this.itemType === 'colorLight') {
-          item.status = [{
-            deviceName: this.colorLight.deviceName,
-            func: this.colorLight.type,
-            sensor: this.colorLight.deviceName,
-            type: this.colorLight.type,
-          }];
-          item.buttons = [
-            {
-              command: 'switch on',
-              deviceName: this.colorLight.deviceName,
-              label: 'on',
-            },
-            {
-              command: 'switch off',
-              deviceName: this.colorLight.deviceName,
-              label: 'off',
-            },
-          ];
-          item.table = {
-            prefix: '',
-            deviceName: this.colorLight.deviceName,
-            type: this.colorLight.type,
-          };
-          if(this.dimmerLight.type === 'dmx') item.table.dmxAddress = this.dmxAddress;
-       }
-
         if(this.selectedItem.type === 'new') {
           this.uiTable.ItemList.push(item);
         } else {

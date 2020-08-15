@@ -12,7 +12,9 @@ const Common = require('./Common');
 const SetupWebServer = require('./SetupWebServer');
 const ControllerConnection = require('./ControllerConnection');
 const ServerConnection = require('./ServerConnection');
-const HomeBridgePlatform = require('./HomeBridgePlatform');
+const HomeBridgePlatform = require('./HomeBridge/HomeBridgePlatform');
+const GoogleHomeService = require('./GoogleHomeService/GoogleHomeService');
+
 const SmartMeter = require('./SmartMeter');
 const LocalAddressRegister = require('./LocalAddressRegister');
 const HueAPI = require('./HueAPI.js');
@@ -70,11 +72,12 @@ if(common.config.logFile) {
   console = new console.Console({ stdout: out, stderr: out });
 }
 
-console.log('GeckoLink HomeServer');
+console.log(`GeckoLink HomeServer Ver. ${common.systemConfig.version}`);
 new LocalAddressRegister(common);
 new ControllerConnection(common);
 new ServerConnection(common);
 new HomeBridgePlatform(common);
+new GoogleHomeService(common);
 new SmartMeter(common);
 new HueAPI(common);
 new SetupWebServer(common);

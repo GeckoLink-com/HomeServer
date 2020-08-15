@@ -312,6 +312,11 @@
               </ElCol>
               <ElCol span="14">
                 <ElSwitch class="btn-inline" :disabled="(sw.sw==1)||((num != 1)&&(motor.sw==1))||((num==1)&&(pwm.sw===1))" v-model="swio[num].sw" :active-value="1" :inactive-value="0" />
+                <ElSelect v-model="swio[num].type" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))||((num==1)&&(pwm.sw===1))">
+                  <ElOption v-for="item of gpioFuncTable" :key="'as-gpioFuncTable' + item.name" :label="item.name" :value="item.type" :data-type="item.type">
+                    {{ item.name }}
+                  </ElOption>
+                </ElSelect>
                 <fieldset class="btn-inline" :disabled="(sw.sw==1)||(swio[num].sw==0)||((num != 1)&&(motor.sw==1))||((num==1)&&(pwm.sw===1))">
                   <div class="item-label">
                     ０
@@ -321,6 +326,15 @@
                     １
                   </div>
                   <ElInput class="state" type="text" v-model="swio[num].valueLabel[1]" />
+                </fieldset>
+                <fieldset class="btn-inline" v-show="swio[num].type=='motion'">
+                  <div class="item-label">
+                    遅延時間
+                  </div>
+                  <ElInput class="state" type="text" v-model="swio[num].delay" />
+                  <div class="item-label">
+                    秒
+                  </div>
                 </fieldset>
               </ElCol>
             </ElRow>
@@ -333,16 +347,16 @@
               </ElCol>
             </ElRow>
             <hr>
-            <ElRow v-for="num of [0, 1, 2, 3]" :key="'as-val' + num">
+            <ElRow v-for="(val, num) of value" :key="'as-val' + num">
               <ElCol span="4">
                 <h5>value{{ num }}</h5>
               </ElCol>
               <ElCol span="6">
-                <ElInput class="func-name" type="text" v-model="value[num].name" :disabled="value[num].sw==0" />
+                <ElInput class="func-name" type="text" v-model="val.name" :disabled="val.sw==0" />
               </ElCol>
               <ElCol span="14">
-                <ElSwitch class="btn-inline" v-model="value[num].sw" :active-value="1" :inactive-value="0" />
-                <ElSelect v-model="value[num].type" :disabled="value[num].sw==0" @input="ValueTypeSelected(num)">
+                <ElSwitch class="btn-inline" v-model="val.sw" :active-value="1" :inactive-value="0" />
+                <ElSelect v-model="val.type" :disabled="val.sw==0" @input="ValueTypeSelected(num)">
                   <ElOption v-for="item of valueFuncTable" :key="'as-valueFuncTable' + item.name" :label="item.name" :value="item.type">
                     {{ item.name }}
                   </ElOption>
@@ -351,7 +365,7 @@
                   <div class="item-label">
                     unit
                   </div>
-                  <ElInput class="state" type="text" v-model="value[num].unit" :disabled="value[num].sw==0" />
+                  <ElInput class="state" type="text" v-model="val.unit" :disabled="val.sw==0" />
                 </fieldset>
               </ElCol>
             </ElRow>
@@ -482,11 +496,15 @@
         ],
         sw: { sw: 0, name: '', optionValue: 0 },
         swio: [
-          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
-          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
-          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }},
+          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0 },
+          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0 },
+          { sw: 0, name: '', valueLabel: { '0': 'off', '1': 'on' }, type: 'other', delay: 0 },
         ],
         value: [
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
+          { sw: 0, name: '', type: 'other', unit: '' },
           { sw: 0, name: '', type: 'other', unit: '' },
           { sw: 0, name: '', type: 'other', unit: '' },
           { sw: 0, name: '', type: 'other', unit: '' },
@@ -511,6 +529,11 @@
           { name: '湿度センサー', type: 'humidity', unit: '%' },
           { name: '降雨センサー', type: 'rain', unit: '' },
           { name: '騒音センサー', type: 'noise', unit: '' },
+          { name: '人感センサー', type: 'motion', unit: '' },
+          { name: '照度センサー', type: 'illuminance', unit: 'lx' },
+          { name: '気圧センサー', type: 'pressure', unit: 'hPa' },
+          { name: 'CO2センサー', type: 'co2', unit: 'ppm' },
+          { name: 'VOCセンサー', type: 'voc', unit: 'ppb' },
           { name: 'その他', type: 'other', unit: '' },
         ],
         gpioModeTable: [ 'off', 'out', 'in', 'pu-in' ],
@@ -611,7 +634,7 @@
         this.selectedModule = device;
         this.moduleType = moduleType;
         this.ruleForm.moduleName = name;
-        const moduleParam = param ? parseInt(param) : 0;
+        const moduleParam = param ? parseInt(param, 16) : 0;
 
         if(!this.isAVR) {
           for(let i = 2; i < 4; i++) {
@@ -681,7 +704,7 @@
           if(Common.alias[device] && Common.alias[device]['gpio' + i]) {
             this.gpio[i].name = Common.alias[device]['gpio' + i].name;
             this.gpio[i].type = Common.alias[device]['gpio' + i].type;
-            this.gpio[i].delay = Common.alias[device]['gpio' + i].delay || ((this.gpio[i].type === 'motion') ? (moduleParam & ~3) : 0);
+            this.gpio[i].delay = Common.alias[device]['gpio' + i].delay || ((this.gpio[i].type === 'motion') ? (moduleParam >> 8) : 0);
             if(this.gpio[i].type === 'other') {
               this.gpio[i].valueLabel = Common.alias[device]['gpio' + i].valueLabel || { '0': 'off', '1': 'on' };
             }
@@ -735,14 +758,19 @@
           this.swio[i].sw = ((moduleOption >> (12 + i)) | (moduleOption >> (4 + i))) & 1;
           if(Common.alias[device] && Common.alias[device]['swio' + i]) {
             this.swio[i].name = Common.alias[device]['swio' + i].name;
-            this.swio[i].valueLabel = Common.alias[device]['swio' + i].valueLabel || { '0': 'off', '1': 'on' };
+            this.swio[i].type = Common.alias[device]['swio' + i].type;
+            this.swio[i].delay = Common.alias[device]['swio' + i].delay || ((this.swio[i].type === 'motion') ? (moduleParam >> 8) : 0);
+            if(this.swio[i].type === 'other') {
+              this.swio[i].valueLabel = Common.alias[device]['swio' + i].valueLabel || { '0': 'off', '1': 'on' };
+            }
           } else {
             this.swio[i].name = '';
+            this.swio[i].type = 'other';
             this.swio[i].valueLabel = { '0': 'off', '1': 'on' };
           }
         }
         // Value
-        for(let i = 0; i < 3; i++) {
+        for(let i = 0; i < 8; i++) {
           if(Common.alias[device] && Common.alias[device]['value' + i]) {
             this.value[i].name = Common.alias[device]['value' + i].name;
             this.value[i].type = Common.alias[device]['value' + i].type;
@@ -946,13 +974,19 @@
             for(let i = 0; i < 2; i++) {
               if(((this.gpio[i].mode === 'in') || (this.gpio[i].mode === 'pu-in')) && (this.gpio[i].type === 'motion')) {
                 if(this.gpio[i].delay <= 0) this.gpio[i].delay = '300';
-                delay = parseInt(this.gpio[i].delay) & ~3;
-                motionBit |= (1 << i);
+                delay = parseInt(this.gpio[i].delay);
+                motionBit |= 1 << i;
+              }
+            }
+            for(let i = 0; i < 3; i++) {
+              if(this.swio[i].sw && (this.swio[i].type === 'motion')) {
+                if(this.swio[i].delay <= 0) this.swio[i].delay = '300';
+                delay = parseInt(this.swio[i].delay);
+                motionBit |= 1 << (i + 4);
               }
             }
             if(delay > 0) {
-              delay = delay & ~3 | motionBit;
-              param = delay.toString();
+              param = ((delay << 8) | motionBit).toString();
             }
           }
 
@@ -966,11 +1000,26 @@
             if(this.swio[i].sw) {
               moduleAlias['swio' + i] = {
                 name: this.swio[i].name,
+                type: this.swio[i].type,
+                delay: (this.swio[i].type === 'motion') ? this.swio[i].delay : 0,
                 valueLabel: this.swio[i].valueLabel,
               };
+              if(this.swio[i].type === 'other') {
+                moduleAlias['swio' + i].valueLabel = this.swio[i].valueLabel;
+              } else {
+                for(const j in this.gpioFuncTable) {
+                  const item = this.gpioFuncTable[j];
+                  if((item.type === this.swio[i].type) ||
+                     (item.type === 'other')) {
+                    moduleAlias['swio' + i].valueLabel = item.valueLabel;
+                    break;
+                  }
+                }
+              }
             }
-            if(i === 2) continue;
+          }
 
+          for(let i = 0; i < 2; i++) {
             if(this.ad[i].sw) {
               moduleAlias['ad' + i] = {
                 name: this.ad[i].name,
@@ -993,6 +1042,9 @@
                 }
               }
             }
+          }
+
+          for(let i = 0; i < 2; i++) {
             if(this.gpio[i].mode !== 'off') {
               if(this.gpio[i].mode === 'out') {
                 moduleAlias['gpio' + i] = {
@@ -1019,6 +1071,9 @@
                 }
               }
             }
+          }
+
+          for(let i = 0; i < 2; i++) {
             if(this.ha[i].sw) {
               moduleAlias['ha' + i] = {
                 name: this.ha[i].name,
@@ -1037,6 +1092,9 @@
                 valueLabel: this.hao[i].valueLabel,
               };
             }
+          }
+
+          for(let i = 0; i < 8; i++) {
             if(this.value[i].sw) {
               moduleAlias['value' + i] = {
                 name: this.value[i].name,
@@ -1048,7 +1106,7 @@
 
           this.$set(this.alias, this.selectedModule, moduleAlias);
           Common.emit('changeAlias', this);
-          this.configCommand = ('config ' + newOption.toString(16) + ' F ' + param).trim();
+          this.configCommand = ('config ' + newOption.toString(16) + ' F ' + parseInt(param).toString(16)).trim();
           Socket.emit('command',
             { type: 'command', device: this.selectedModule, command: this.configCommand });
           let moduleType = null;
@@ -1058,7 +1116,7 @@
               break;
             }
           }
-          Common.emit('changeModule', this, this.selectedModule, this.ruleForm.moduleName, newOption.toString(16), param, moduleType);
+          Common.emit('changeModule', this, this.selectedModule, this.ruleForm.moduleName, newOption.toString(16), parseInt(param).toString(16), moduleType);
         });
       },
     },

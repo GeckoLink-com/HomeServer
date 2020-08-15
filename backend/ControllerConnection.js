@@ -1,7 +1,7 @@
 //
 // ControllerConnection.js
 //
-// Copyright (C) 2016-2017 Mitsuru Nakada
+// Copyright (C) 2016-2020 Mitsuru Nakada
 // This software is released under the MIT License, see license file.
 //
 
@@ -53,10 +53,7 @@ class ControllerConnection {
                   console.log(data.length);
                 }
               }
-              if(msg) {
-                this.StatusAlias(msg.data);
-                this.Receive(msg);
-              }
+              if(msg) this.Receive(msg);
             }
           }
         }
@@ -101,20 +98,25 @@ class ControllerConnection {
   }
   
   ExecCommand(caller, msg) {
-    let device = 0;
     msg.type = 'command';
     if(!Array.isArray(msg.command)) msg.command = msg.command.replace("'", '');
     this.common.ControllerLog(msg);
-    if(msg.device === 0) msg.deviceName = 'server';
-    if(msg.deviceName != 'server') {
-      if(this.common.aliasTable && msg.deviceName && (msg.deviceName in this.common.aliasTable)) {
-        device = this.common.aliasTable[msg.deviceName].device;
-      } else {
-        device = msg.device || msg.deviceName;
-      }
-      if(device.match(/^Hue_/)) return;
+    let device = msg.device;
+    let deviceName = msg.deviceName;
+    if(!deviceName && ((device === 0) || (device === '0') || (device === 'server'))) {
+      device = '0';
+      deviceName = 'server';
     }
-    let commands = msg.command;    
+    if(deviceName != 'server') {
+      if(this.common.aliasTable && this.common.aliasTable[deviceName]) {
+        device = this.common.aliasTable[deviceName].device;
+      }
+      if(!device) device = deviceName;
+      if(!deviceName && this.common.alias[device]) deviceName = this.common.alias[device].name;
+      if(!deviceName) deviceName = device;
+      if(device.match(/^Hue_/) || deviceName.match(/^Hue_/)) return;
+    }
+    let commands = msg.command;
     if(!Array.isArray(commands)) commands = [commands];
     for(const command of commands) {
       if(!command) continue;
@@ -134,22 +136,34 @@ class ControllerConnection {
           }
         }
       }
-      if(!this.common.internalStatus.lastCommand) this.common.internalStatus.lastCommand = {};
-      if(!this.common.internalStatus.lastCommand[msg.deviceName]) this.common.internalStatus.lastCommand[msg.deviceName] = {};
 
       // virtual switch
       if(func.indexOf('vsw') >= 0) {
-        if(!('virtualSW' in this.common.internalStatus)) this.common.internalStatus.virtualSW = {};
-        this.common.internalStatus.virtualSW[func] = param;
-        this.common.internalStatus.lastCommand[msg.deviceName][func] = param;
+        const status = [];
+        if(!this.common.status[`${deviceName}:${func}`]) {
+          this.common.status[`${deviceName}:${func}`] = {
+            device: deviceName,
+            deviceName: deviceName,
+            func: func,
+            funcName: this.common.alias[0][func] ? this.common.alias[0][func].name : func,
+            type: 'other',
+          };
+        }
+        this.common.status[`${deviceName}:${func}`].value = param;
+        this.common.status[`${deviceName}:${func}`].valueName = param;
+        if(!this.common.internalStatus[deviceName]) this.common.internalStatus[deviceName] = {};
+        this.common.internalStatus[deviceName][func] = Object.assign(this.common.internalStatus[deviceName][func] || {}, this.common.status[`${deviceName}:${func}`]);
         this.common.emit('changeInternalStatus', this);
+        status.push(Object.assign({}, this.common.status[`server:${func}`]));
+        this.common.emit('changeStatus', this, { type: 'change', data: status });
+
         this.common.emit('response', this, {
           type: 'response',
           data: [{
             type: 'command',
             origin: msg,
             device: device,
-            deviceName: msg.deviceName,
+            deviceName: deviceName,
             command: msg.command,
             status: 'ok',
           }],
@@ -162,34 +176,107 @@ class ControllerConnection {
       // remocon
       let f = this.SendRemoconCommand(msg, device, command);
       if(f) {
+        const status = [];
         let type = null;
         const prefix = func.replace(/_[^_]*$/, '');
         if(this.common.remocon && this.common.remocon.remoconGroup && this.common.remocon.remoconGroup[prefix]) {
           type = this.common.remocon.remoconGroup[prefix].type;
         }
-        this.common.internalStatus.lastCommand[msg.deviceName] = {
-          remocon: func,
-          type: type,
-        };
+        if(!this.common.status[`${deviceName}:remocon`]) {
+          this.common.status[`${deviceName}:remocon`] = {
+            device: device,
+            deviceName: deviceName,
+            func: 'remocon',
+            funcName: 'remocon',
+            type: type,
+            value: func,
+            valueName: func,
+          };
+        }
+        if(!this.common.internalStatus[deviceName]) this.common.internalStatus[deviceName] = {};
+        this.common.internalStatus[deviceName].remocon = Object.assign(this.common.internalStatus[deviceName].remocon || {}, this.common.status[`${deviceName}:remocon`]);
+        status.push(Object.assign({}, this.common.status[`${deviceName}:remocon`]));
+
+        const value = func.replace(`${prefix}_`, '');
+        if(type === 'aircon') {
+          const mode = value.replace(/[0-9.]*$/, '');
+          const temp = parseFloat(value.replace(/^[^0-9.]*/, ''));
+          if(!this.common.status[`${deviceName}:${prefix}`]) {
+            this.common.status[`${deviceName}:${prefix}`] = {
+              device: device,
+              deviceName: deviceName,
+              func: prefix,
+              funcName: prefix,
+              type: type,
+            };
+          }
+          this.common.status[`${deviceName}:${prefix}`].value = mode+temp;
+          this.common.status[`${deviceName}:${prefix}`].valueName = mode+temp;
+          this.common.status[`${deviceName}:${prefix}`].mode = mode;
+          if(temp > 0) this.common.status[`${deviceName}:${prefix}`][mode] = temp;
+        } else if(type === 'tv') {
+          if(!this.common.status[`${deviceName}:${prefix}`]) {
+            this.common.status[`${deviceName}:${prefix}`] = {
+              device: device,
+              deviceName: deviceName,
+              func: prefix,
+              funcName: prefix,
+              type: type,
+            };
+          }
+          this.common.status[`${deviceName}:${prefix}`].value = value;
+          this.common.status[`${deviceName}:${prefix}`].valueName = value;
+          if(['UHF', 'CS', 'BS'].indexOf(value) >= 0) {
+            this.common.status[`${deviceName}:${prefix}`].net = value;
+            this.common.status[`${deviceName}:${prefix}`].switch = 'on';
+          }
+          if(value.match(/^[0-9]*$/)) {
+            this.common.status[`${deviceName}:${prefix}`].ch = value;
+            this.common.status[`${deviceName}:${prefix}`].switch = 'on';
+          }
+          if(['on', 'off'].indexOf(value) >= 0) {
+            this.common.status[`${deviceName}:${prefix}`].switch = value;
+          }
+        } else if(type != null) {
+          if(!this.common.status[`${deviceName}:${prefix}`]) {
+            this.common.status[`${deviceName}:${prefix}`] = {
+              device: device,
+              deviceName: deviceName,
+              func: prefix,
+              funcName: prefix,
+              type: type,
+            };
+          }
+          this.common.status[`${deviceName}:${prefix}`].value = value;
+          this.common.status[`${deviceName}:${prefix}`].valueName = value;
+        }
+        if(!this.common.internalStatus[deviceName]) this.common.internalStatus[deviceName] = {};
+        this.common.internalStatus[deviceName][prefix] = Object.assign(this.common.internalStatus[deviceName][prefix] || {}, this.common.status[`${deviceName}:${prefix}`]);
+        status.push(Object.assign({}, this.common.status[`${deviceName}:${prefix}`]));
         this.common.emit('changeInternalStatus', this);
+        this.common.emit('changeStatus', this, { type: 'change', data: status });
         continue;
       }
 
       // remocon macro
       if(this.common.remocon && this.common.remocon.remoconMacro && (func in this.common.remocon.remoconMacro)) {
         this.SendRemoconMacro(msg, device, this.common.remocon.remoconMacro[func].macro, 0);
-        this.common.internalStatus.lastCommand[msg.deviceName][func.replace(/_[^_]*$/,'')] = func.replace(/^.*_/,'');
         continue;
       }
 
       // dimmerLight/colorLight command
-      if((func === 'led') || (func === 'dmx') || (func === 'pwm')) {
+      if((func === 'switch') || (func === 'led') || (func === 'dmx') || (func === 'pwm')) {
         let options = {};
         let type = '';
+        let recordFunc = func;
+        let recordParam = param;
+        const status = [];
         for(const item of this.common.uiTable.ItemList) {
-          if(item.table && (item.table.deviceName === msg.deviceName) && (item.table.type === func)) {
+          if(item.table && (item.table.deviceName === deviceName) &&
+            ((item.table.type === func) || (func === 'switch'))) {
             options = item.table;
             type = item.type;
+            func = item.table.type;
             break;
           }
         }
@@ -201,7 +288,8 @@ class ControllerConnection {
         }
 
         if(param === 'on') {
-          param = this.common.internalStatus.lastCommand[msg.deviceName][func];
+          recordFunc = 'switch';
+          param = (this.common.internalStatus[deviceName] && this.common.internalStatus[deviceName][func]) ? this.common.internalStatus[deviceName][func].value : null;
           if(!param) {
             if(func === 'led') param = '808080';
             if(func === 'dmx') {
@@ -213,6 +301,7 @@ class ControllerConnection {
             if(func === 'pwm') param = '128 128';
           }
         } else if(param === 'off') {
+          recordFunc = 'switch';
           if(func === 'led') param = '000000';
           if(func === 'dmx') {
             param = options.dmxAddress;
@@ -221,45 +310,45 @@ class ControllerConnection {
             }
           }
           if(func === 'pwm') param = '0 0';
-        } else {
-          this.common.internalStatus.lastCommand[msg.deviceName][func] = param;
-        }
-        this.SendData({type:'command', device: device, command: func + ' ' + param, origin: msg, auth: msg.auth});
-        const d = {
-          device: device,
-          deviceName: msg.deviceName,
-          func: func,
-          funcName: func,
-          type: func,
-          value: param,
-        };
-        if(type === 'dimmerLight') {
-          const params = param.split(' ');
-          if(func === 'pwm') d.valueName = parseInt(params[0]) ? 'on' : 'off';
-          if(func === 'dmx') d.valueName = parseInt(params[1]) ? 'on' : 'off';
-        }
-        if(type === 'colorLight') {
-          if(func === 'led') d.valueName = parseInt(param, 16) ? 'on' : 'off';
-          const rgb = param.split(' ');
-          if(func === 'pwm') d.valueName = (parseInt(rgb[0]) || parseInt(rgb[1]) || parseInt(rgb[2])) ? 'on' : 'off';
+          recordFunc = 'switch';
         }
 
-        let f = false;
-        for(const i in this.common.status) {
-          const st = this.common.status[i];
-          if((st.device === device) && (st.func === func)) {
-            this.common.status[i] = d;
-            f = true;
-          }
+        this.SendData({type:'command', device: device, command: func + ' ' + param, origin: msg, auth: msg.auth});
+        if(recordParam !== 'off') {
+          if(!this.common.status[`${deviceName}:${func}`]) this.common.status[`${deviceName}:${func}`] = {
+            device: device,
+            deviceName: deviceName,
+            func: func,
+            funcName: func,
+            type: func,
+          };
+          this.common.status[`${deviceName}:${func}`].value = param;
+          this.common.status[`${deviceName}:${func}`].valueName = param;
+          if(!this.common.internalStatus[deviceName]) this.common.internalStatus[deviceName] = {};
+          this.common.internalStatus[deviceName][func] = Object.assign(this.common.internalStatus[deviceName][func] || {}, this.common.status[`${deviceName}:${func}`]);
+          status.push(Object.assign({}, this.common.status[`${deviceName}:${func}`]));
         }
-        if(!f) this.common.status.push(d);
-        this.common.emit('statusNotify', this);
+        if(func !== recordFunc) {
+          if(!this.common.status[`${deviceName}:${recordFunc}`]) this.common.status[`${deviceName}:${recordFunc}`] = {
+            device: device,
+            deviceName: deviceName,
+            func: recordFunc,
+            funcName: recordFunc,
+            type: func,
+          };
+          this.common.status[`${deviceName}:${recordFunc}`].value = recordParam;
+          this.common.status[`${deviceName}:${recordFunc}`].valueName = recordParam;
+          this.common.internalStatus[deviceName][recordFunc] = Object.assign(this.common.internalStatus[deviceName][recordFunc] || {}, this.common.status[`${deviceName}:${recordFunc}`]);
+          status.push(Object.assign({}, this.common.status[`${deviceName}:${recordFunc}`]));
+        }
+        this.common.emit('changeInternalStatus', this);
+        this.common.emit('changeStatus', this, { type: 'change', data: status });
         continue;
       }
 
       // command
       this.SendData({type:'command', device: device, command: cmd, origin: msg, auth: msg.auth});
-      this.common.internalStatus.lastCommand[msg.deviceName][func] = param;
+      this.common.emit('changeInternalStatus', this);
     }
   }
 
@@ -312,46 +401,160 @@ class ControllerConnection {
   Receive(msg) {
     switch(msg.type) {
     case 'change':
+      /*
+        msg : {
+          type: 'change',
+          data: [{
+            func: <string>,
+            device: <string>,
+            value: <string>,
+          }]
+        }
+      */
+      this.DeviceAlias(msg.data);
+      this.FuncAlias(msg.data);
       this.common.ControllerLog(msg);
-      this.common.emit('changeStatus', this, msg);
       // fall through
     case 'interval':
-      for(const d of msg.data) {
-        if((d.type == 'noise') && ((d.func == 'ad0') || (d.func == 'ad1'))) continue;
-        if((d.type != 'noise') && ((d.func == 'max0') || (d.func == 'max1'))) continue;
-        d.func = d.func.replace('max', 'ad');
-        let f = false;
-        for(const i in this.common.status) {
-          const st = this.common.status[i];
-          if((st.device == d.device) && (st.func == d.func)) {
-            this.common.status[i] = d;
-            f = true;
-            break;
-          }
+      /*
+        msg : {
+          type: 'interval',
+          data: [{
+            func: <string>,
+            device: <string>,
+            value: <string>,
+          }, ....]
         }
-        if(!f) this.common.status.push(d);
+      */
+      if(msg.type === 'interval') {
+        this.DeviceAlias(msg.data);
+        this.FuncAlias(msg.data);
       }
+      for(const d of msg.data) {
+        if(d.type === 'noise') {
+          if(['ad0', 'ad1'].indexOf(d.func) >= 0) continue;
+          d.func = d.func.replace('max', 'ad');
+          this.common.status[`${d.deviceName}:${d.func}`] = d;
+        } else {
+          if(['max0', 'max1'].indexOf(d.func) >= 0) continue;
+          this.common.status[`${d.deviceName}:${d.func}`] = d;
+        }
+      }
+      if(msg.type === 'change') this.common.emit('changeStatus', this, msg);
       this.common.emit('statusNotify', this);
       break;
     case 'irreceive':
+      /*
+        msg: {
+          type:"irreceive",
+          data:[{
+            device:<string>,
+            format:<string>,
+            code:[<integer> ...]
+          }]
+        }
+      */
+      this.DeviceAlias(msg.data);
       [msg.data[0].name, msg.data[0].comment, msg.data[0].group] = this.RemoconCodeSearch(msg.data[0].code);
       this.common.ControllerLog(msg);
       this.common.emit('irReceive', this, msg);
       break;
-    case 'xbeeKeyInfo':
-      this.common.systemConfig.xbeeKey = msg.data;
+    case 'motor':
+      /*
+        msg: {
+          type:"motor",
+          data:[{
+            device:<string>,
+            status:<string>, // ok or error
+            sequence:<num>,
+            count:<num>
+          }]
+        }
+      */
+      this.DeviceAlias(msg.data);
+      this.common.emit('motor', this, msg);
+      break;
+    case 'reboot':
+      /*
+      msg: {
+        type:"reboot",
+        data:[{
+          device:<string>,
+          reason:<string>,
+          version:<string>,
+        }]
+      }
+      */
+      this.DeviceAlias(msg.data);
+      this.common.emit('reboot', this, msg);
       break;
     case 'deviceInfo':
+      /*
+        msg: {
+          type:"deviceInfo",
+          data:[{
+            device:<string>,
+            type:<string>,
+            networkAddr:<string>,
+            option:<string>,
+            param:<string>,
+            version:<string>,
+            xbeeVersion:<string>,
+            revision:<string>,
+            voltage:<string>,
+            state:<string>,
+            fwupdateNum: <num>,
+            fwupdateSeq: <num>
+          },....]
+        }
+      */
+      this.DeviceAlias(msg.data);
       this.common.deviceInfo = msg.data;
       this.common.emit('deviceInfo', this, msg);
       break;
+    case 'xbeeKeyInfo':
+      /*
+        msg: {
+          type:"xbeeKeyInfo",
+          data:[ ... ]
+        }
+      */
+      this.common.systemConfig.xbeeKey = msg.data;
+      break;
     case 'queueInfo':
+      /*
+        msg: {
+          type:"queueInfo",
+          data:{
+            writeQueue:[{
+              device: <addrL>,
+              command: <command>,
+              sendTime: <sendTime>,
+              waitMSec: <wait>,
+              nextTime: <nextTime>,
+              sequenceID: <seqID>,
+              state: <state>,
+              data: [<byte>....<byte>]
+            }, ....],
+            readQueue:[{
+              receiveTime: <receiveTime>,
+              data: [<byte>.....<byte>]
+            }, ....],
+          }
+        }
+      */
       this.common.emit('queueInfo', this, msg);
       break;
-    case 'motor':
-      this.common.emit('motor', this, msg);
-      break;
     case 'response':
+      /*
+        msg: {
+          type: "response",
+          data: [{
+            status:<string>, // ok or error
+            message:<string>,
+          }],
+        }
+      */
       if(msg.data[0].origin && msg.data[0].origin.macro) break;
       if((msg.data[0].command.indexOf('config') == 0) && msg.data[0].result) {
         this.common.emit('requestAuthkey', this, msg);
@@ -361,6 +564,14 @@ class ControllerConnection {
       this.common.emit('response', this, msg);
       break;
     case 'message':
+      /*
+        msg: {
+          type: "message",
+          data: [{
+            message:<string>,
+          }],
+        }
+      */
       this.common.emit('message', this, msg);
       break;
     default:
@@ -369,40 +580,57 @@ class ControllerConnection {
     }
   }
 
-  StatusAlias(data) {
-    if(!Array.isArray(data)) return;
-    for(const i in data) {
-      const d = data[i];
-      if((parseInt(d.device, 16) == 0) || (d.device == 'server')) {
+  DeviceAlias(data) {
+    for(const d of data) {
+      if((parseInt(d.device, 16) === 0) || (d.device === 'server')) {
         d.deviceName = 'server';
-      } else if(this.common.alias && (d.device in this.common.alias)) {
+      }
+      if(this.common.alias && this.common.alias[d.device]) {
         d.deviceName = this.common.alias[d.device].name;
-        if(!d.func) continue;
-        if(d.func.replace('max', 'ad') in this.common.alias[d.device]) {
-          const aliasf = this.common.alias[d.device][d.func.replace('max', 'ad')];
-          d.funcName = aliasf.name;
-          if('valueLabel' in aliasf) {
-            if(aliasf.valueLabel[d.value]) {
-              d.valueName = aliasf.valueLabel[d.value];
-            }
+      }
+    }
+  }
+
+  FuncAlias(data) {
+    for(const d of data) {
+      if(!d.func) continue;
+      const func = d.func.replace('max', 'ad');
+      if(this.common.alias[d.device][func]) {
+        const funcAlias = this.common.alias[d.device][func];
+        d.funcName = funcAlias.name;
+        if(funcAlias.valueLabel) {
+          if(funcAlias.valueLabel[d.value]) {
+            d.valueName = funcAlias.valueLabel[d.value];
           }
-          if((d.func == 'ad0') || (d.func == 'ad1') || (d.func == 'ad2') || (d.func == 'ad3') || (d.func == 'max0') || (d.func == 'max1')) {
-            if((aliasf.offset != null) && (aliasf.gain != null)) {
-              d.value = ((parseFloat(d.value) + parseFloat(aliasf.offset)) * parseFloat(aliasf.gain)).toFixed(1);
-              d.unit = aliasf.unit;
-              d.valueName = d.value + d.unit;
-              d.type = aliasf.type;
-            }
-          }
-          if((d.func == 'gpio0') || (d.func == 'gpio1') || (d.func == 'gpio2') || (d.func == 'gpio3')) {
-            d.type = aliasf.type;
-          }
-          if(d.func == 'sw') {
-            const swLabel = ['open', 'close', 'off', 'on', 'unknown', 'opening', 'closing', 'error'];
-            if((d.value >= 0) && (d.value < 8)) {
-              d.valueName = swLabel[d.value];
-            }
-          }
+        }
+        const swLabel = ['open', 'close', 'off', 'on', 'unknown', 'opening', 'closing', 'error'];
+        switch(func) {
+        case 'ad0':
+        case 'ad1':
+        case 'ad2':
+        case 'ad3':
+          if(funcAlias.offset == null) continue;
+          if(funcAlias.gain == null) continue;
+          d.value = ((parseFloat(d.value) + parseFloat(funcAlias.offset)) * parseFloat(funcAlias.gain)).toFixed(1);
+          d.unit = funcAlias.unit;
+          d.valueName = d.value + d.unit;
+          d.type = funcAlias.type;
+          break;
+        case 'gpio0':
+        case 'gpio1':
+        case 'gpio2':
+        case 'gpio3':
+        case 'hai0':
+        case 'hai1':
+        case 'swio0':
+        case 'swio1':
+        case 'swio2':
+          d.type = funcAlias.type;
+          break;
+        case 'sw':
+          if((d.value >= 0) && (d.value < 8)) d.valueName = swLabel[d.value];
+          break;
+        default:
         }
       }
     }

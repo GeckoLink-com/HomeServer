@@ -57,7 +57,7 @@
           </tbody>
         </table>
       </div>
-      <div v-show="status && (status.length > 0)" class="well-transparent">
+      <div v-show="status && (Object.keys(status).length > 0)" class="well-transparent">
         <h5>Sensor Status</h5>
         <table class="table">
           <thead>
@@ -85,14 +85,16 @@
             <tr>
               <th>module</th>
               <th>seqID</th>
+              <th>state</th>
               <th>command</th>
               <th>dump</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="q of queue.writeQueue" :key="'debug-writeQueue' + q.device">
+            <tr v-for="(q, i) of queue.writeQueue" :key="'debug-writeQueue' + i">
               <td>{{ q.device }}</td>
               <td>{{ q.sequenceID }}</td>
+              <td>{{ q.state }}</td>
               <td>{{ q.command }}</td>
               <td>{{ QueueDecode(q.code) }}</td>
             </tr>
@@ -109,13 +111,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="q of queue.readQueue" :key="'debug-readQueue' + q.code">
+            <tr v-for="(q, i) of queue.readQueue" :key="'debug-readQueue' + i">
               <td>{{ QueueDecode(q.code) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-
       <div v-show="controllerLog.length > 0" class="well-transparent">
         <h5>controller log</h5>
         <table class="table">
@@ -195,7 +196,7 @@
               deviceName: bridge.lights[l].name,
               type: bridge.lights[l].modelid,
               version: bridge.lights[l].swversion,
-              state: bridge.lights[l].state.on?'on':'off',
+              state: (bridge.lights[l].state.reachable && bridge.lights[l].state.on)?'on':'off',
             });
           }
         }
@@ -214,6 +215,16 @@
             label: dev.device + ((name.length > 0) ? ':' : '') + name,
             enable: dev.state === 'alive',
           });
+        }
+        for(const bridge of this.hueBridges) {
+          for(const l in bridge.lights) {
+            moduleList.push({
+              device: 'Hue_' + bridge.id + '_' + l,
+              name: bridge.lights[l].name,
+              label: 'Hue_' + bridge.id + '_' + l + ':' + bridge.lights[l].name,
+              enable: bridge.lights[l].state.reachable,
+            });
+          }
         }
         return moduleList;
       },
@@ -263,7 +274,10 @@
               }
               break;
             case 'motor':
-              events += JSON.stringify(data) + '\n';
+              events += JSON.stringify(data, null, 2) + '\n';
+              break;
+            case 'reboot':
+              events += JSON.stringify(data, null, 2) + '\n';
               break;
             default:
               break;

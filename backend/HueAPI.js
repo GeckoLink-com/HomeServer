@@ -1,7 +1,7 @@
 //
 // HueAPI.js
 //
-// Copyright (C) 2016-2017 Mitsuru Nakada
+// Copyright (C) 2016-2020 Mitsuru Nakada
 // This software is released under the MIT License, see license file.
 //
 
@@ -65,7 +65,7 @@ class HueAPI {
         break;
       case 'name':
         if(light && (light != '')) this.SetName(msg, bridgeNo, light, {name: args[1]}, () => {
-            this.GetFullState(msg, bridgeNo, this.FullState.bind(this));
+            this.GetFullState(msg, bridgeNo);
           });
         break;
       case 'ct':
@@ -99,7 +99,8 @@ class HueAPI {
           } else {
             state.hue = null;
           }
-          if(args[1] >= 0) state.ct = parseInt(1000000 / args[1]);
+          if(args[1] >= 0) state.ct = parseInt(args[1]);
+          if(args[1] >= 2000) state.ct = parseInt(1000000 / args[1]);
           if(args[2] >= 0) state.bri = parseInt(args[2]);
           this.SetLight(msg, bridgeNo, light, state);
         }
@@ -196,8 +197,9 @@ class HueAPI {
       });
       ssdp.mSearch('ssdp:root');
 
-      request.get({url:'https://www.meethue.com/api/nupnp', json:true}, (err, res, body) => {
+      request.get({url:'https://discovery.meethue.com', json:true}, (err, res, body) => {
         if(err) return;
+        if(res.statusCode != 200) return;
         for(const device of body) {
           const id = device.id.slice(-6);
           const ip = device.internalipaddress;
@@ -221,7 +223,7 @@ class HueAPI {
             this.bridges[i].message = '';
             this.bridges[i].state = 2; 
             this.common.emit('changeHueBridges', this);
-            this.GetFullState(null, i, this.FullState.bind(this));
+            this.GetFullState(null, i);
           } else {
             this.bridges[i].message = 'Hue Bridgeのリンクボタンを押してから、上のペアリングボタンを押して下さい。';
             this.bridges[i].state = 0;            
@@ -230,6 +232,14 @@ class HueAPI {
         }
       }, 5000);
     });
+
+    setInterval(() => {
+      for(const i in this.bridges) {
+        const bridge = this.bridges[i];
+        if(!bridge.ip) bridge.ip = bridge.lastIp;
+        if(bridge.user) this.GetFullState(null, i);
+      }
+    }, 30 * 1000);
   }
 
   RegistBridge(err, res, body) {
@@ -250,59 +260,7 @@ class HueAPI {
     this.bridges[bridgeNo].user = body[0].success.username;
     this.bridges[bridgeNo].state = 2;
     this.common.emit('changeHueBridges', this);
-    this.GetFullState(origin, bridgeNo, this.FullState.bind(this));
-  }
-
-  FullState(err, res, body) {
-
-    if(err || (typeof(body) != 'object')) {
-      console.log('hueAPI: FullState\n', err);
-      return;
-    }
-    const bridgeNo = res.request.bridgeNo;
-    for(const i in body.lights) {
-      if(!this.bridges[bridgeNo].lights) this.bridges[bridgeNo].lights = {};
-      if(body.lights[i] && body.lights[i].state && body.lights[i].state.on) {
-        this.bridges[bridgeNo].lights[i] = body.lights[i];
-      } else {
-        if(!this.bridges[bridgeNo].lights[i]) this.bridges[bridgeNo].lights[i] = {};
-        for(const j in body.lights[i]) {
-          if(j == 'state') {
-            if(!this.bridges[bridgeNo].lights[i][j]) this.bridges[bridgeNo].lights[i][j] = {};
-            this.bridges[bridgeNo].lights[i][j].on = false;
-            continue;
-          }
-          this.bridges[bridgeNo].lights[i][j] = body.lights[i][j];
-        }
-      }
-    }
-    this.bridges[bridgeNo].state = 1;
-    this.bridges[bridgeNo].message = '';
-    this.common.emit('changeHueBridges', this);
-    for(const l in this.bridges[bridgeNo].lights) {
-      const light = this.bridges[bridgeNo].lights[l];
-      const d = {
-        device: 'Hue_' + this.bridges[bridgeNo].id + '_' + l,
-        deviceName: light.name,
-        func: 'hue',
-        funcName: 'Hue',
-        type: 'onOff',
-        value: light.state.on,
-        valueName: light.state.on?'on':'off',
-        state: light.state,
-      }
-      let f = false;
-      for(const i in this.common.status) {
-        const st = this.common.status[i];
-        if(st.device == d.device) {
-          this.common.status[i] = d;
-          f = true;
-          break;
-        }
-      }
-      if(!f) this.common.status.push(d);
-    }
-    this.common.emit('statusNotify', this);
+    this.GetFullState(origin, bridgeNo);
   }
 
   SendResponse(origin, status) {
@@ -320,19 +278,32 @@ class HueAPI {
 
   SetLight(origin, bridgeNo, light, state) {
     state.alert = 'none';
-    for(const i in this.common.status) {
-      const st = this.common.status[i];
-      if(st.device == 'Hue_' + this.bridges[bridgeNo].id + '_' + light) {
-        this.common.status[i].state = state;
-        this.common.status[i].value = state.on;
-        this.common.status[i].valueName = state.on?'on':'off';
-        break;
-      }
-    }
-    this.common.emit('statusNotify', this);
+    const device = `Hue_${this.bridges[bridgeNo].id}_${light}`;
+    const deviceName = origin.deviceName || device;
+    const status = [];
+    this.common.status[`${deviceName}:hue`] = {
+      device: device,
+      deviceName: deviceName,
+      func: 'hue',
+      funcName: 'hue',
+      state: state,
+      value: state.on,
+      valueName: state.on ? 'on' : 'off',
+    };
+    status.push(Object.assign({}, this.common.status[`${deviceName}:hue`]));
+    this.common.status[`${deviceName}:switch`] = {
+      device: device,
+      deviceName: deviceName,
+      func: 'switch',
+      funcName: 'hue',
+      state: state,
+      value: state.on,
+      valueName: state.on ? 'on' : 'off',
+    };
+    status.push(Object.assign({}, this.common.status[`${deviceName}:switch`]));
+    this.common.emit('changeStatus', this, { type: 'change', data: status });
 
-    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this.SetLightState(origin, bridgeNo, light, state, (err, res, _body) => {
+    this.SetLightState(origin, bridgeNo, light, state, (err, res) => {
       const origin = res.request.origin;
       this.SendResponse(origin, err);
       this.common.emit('changeHueBridges', this);
@@ -394,13 +365,66 @@ class HueAPI {
       }
       
       if(!err && (typeof(body) == 'object') && ('lastscan' in body)) {
-        this.GetFullState(origin, bridgeNo, this.FullState.bind(this));
+        this.GetFullState(origin, bridgeNo);
         return;
       }
       console.log('GetNewLights Error');
       this.bridges[bridgeNo].state = 1;
       this.bridges[bridgeNo].message = '';
       this.common.emit('changeHueBridges', this);
+    });
+  }
+
+  GetFullState(origin, bridgeNo) {
+    this.Request(origin, bridgeNo, '/lights', 'get', null, (err, res, lights) => {
+      if(err || (typeof(lights) != 'object')) {
+        console.log('hueAPI: FullState\n', err);
+        return;
+      }
+      for(const i in lights) {
+        if(!this.bridges[bridgeNo].lights) this.bridges[bridgeNo].lights = {};
+        if(lights[i] && lights[i].state && lights[i].state.on) {
+          this.bridges[bridgeNo].lights[i] = lights[i];
+        } else {
+          if(!this.bridges[bridgeNo].lights[i]) this.bridges[bridgeNo].lights[i] = {};
+          for(const j in lights[i]) {
+            if(j == 'state') {
+              if(!this.bridges[bridgeNo].lights[i][j]) this.bridges[bridgeNo].lights[i][j] = {};
+              this.bridges[bridgeNo].lights[i][j].on = false;
+              continue;
+            }
+            this.bridges[bridgeNo].lights[i][j] = lights[i][j];
+          }
+        }
+      }
+      this.bridges[bridgeNo].state = 1;
+      this.bridges[bridgeNo].message = '';
+      this.common.emit('changeHueBridges', this);
+      for(const l in this.bridges[bridgeNo].lights) {
+        const light = this.bridges[bridgeNo].lights[l];
+        const device = 'Hue_' + this.bridges[bridgeNo].id + '_' + l;
+        const deviceName = light.name || device;
+        const value = light.state.reachable && light.state.on;
+        this.common.status[`${deviceName}:hue`] = {
+          device:device,
+          deviceName: deviceName,
+          func: 'hue',
+          funcName: 'hue',
+          value: value,
+          valueName: value ? 'on' : 'off',
+          state: light.state,
+        };
+        this.common.status[`${deviceName}:switch`] = {
+          device:device,
+          deviceName: deviceName,
+          func: 'switch',
+          funcName: 'hue',
+          value: value,
+          valueName: value ? 'on' : 'off',
+          state: light.state,
+        };
+      }
+      this.common.emit('statusNotify', this);
     });
   }
 
@@ -429,7 +453,7 @@ class HueAPI {
       if(err) {
         console.log('error API:setLightState',err);
       } else {
-        this.GetFullState(origin, bridgeNo, this.FullState.bind(this));
+        this.GetFullState(origin, bridgeNo);
       }
       if(callback) callback(err, res, body);
     });
@@ -437,10 +461,6 @@ class HueAPI {
 
   Pairing(origin, bridgeNo, body, callback) {
     this.Request(origin, bridgeNo, '', 'post', body, callback);
-  }
-
-  GetFullState(origin, bridgeNo, callback) {
-    this.Request(origin, bridgeNo, '', 'get', null, callback);
   }
 
   Request(origin, bridgeNo, path, method, body, callback) {

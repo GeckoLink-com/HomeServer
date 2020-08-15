@@ -9,14 +9,7 @@ module.exports = function(RED) {
 
     this.on('input', (msg) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
-      let status = homeServer.status;
-      let stat = null;
-      for(let st of status) {
-        if((st.deviceName == this.deviceName) && (st.func == this.func)) {
-          stat = st;
-          break;
-        }
-      }
+      const stat = homeServer.status[`${this.deviceName}:${this.func}`];
       if(!stat) return;
       let s = [];
       if(homeServer.IsAnalogFunc(this.deviceName, this.func)) {

@@ -35,8 +35,13 @@ class ServerConnection {
 
     this.common.on('irReceive', this.SendData.bind(this));
 
-    this.common.on('response', this.SendData.bind(this));
-    
+    this.common.on('response', (caller, msg) => {
+      const rejectCommand = [ 'i2cr', 'i2cw', 'motor', 'config', 'moduleauth', 'update', 'xbeekey', 'rmdev', 'reboot', 'shutdown', 'sysled', 'avrboot', 'avrread', 'at' ];
+      if(msg.data[0] && msg.data[0].command &&
+        rejectCommand.indexOf(msg.data[0].command.split(' ')[0]) >= 0) return;
+      this.SendData(caller, msg);
+    });
+
     this.common.on('message', this.SendData.bind(this));
     
     this.common.on('deviceInfo', this.SendData.bind(this));
@@ -44,6 +49,8 @@ class ServerConnection {
     this.common.on('sendMail', this.SendData.bind(this));
 
     this.common.on('authConfirm', this.SendData.bind(this));
+
+    this.common.on('googleSmartHomeReportState', this.SendData.bind(this));
 
     this.common.on('changeSystemConfig', (_caller) => {
       if(this.connectState > 0) this.wssClient.terminate();
@@ -235,6 +242,7 @@ class ServerConnection {
 
   SendClientUi() {
     const system = {
+      proxyId: this.common.proxyId,
       mailto: this.common.systemConfig.mailto,
     };
     if(!this.common.systemConfig.radius ||
@@ -255,27 +263,55 @@ class ServerConnection {
   }
 
   Receive(msg) {
-    if(msg.type === 'error') {
+    switch(msg.type) {
+    case 'error':
       console.log('error : ', msg.error);
       if((msg.error === 'invalid access') && this.common.systemConfig.remote) {
         this.common.systemConfig.remote = false;
         this.common.emit('changeSystemConfig', this);
       }
-    } else if(msg.type === 'command') {
+      break;
+    case 'command':
       if(!this.common.systemConfig.remote) return;
-      let cmd = msg.command;
-      if(msg.func) cmd = msg.func + ' ' + msg.mode;
-      this.common.emit('sendControllerCommand', this, {deviceName: msg.deviceName, command: cmd});
-    } else if(msg.type === 'rainInfo') {
+      this.common.emit('sendControllerCommand', this, msg);
+      break;
+    case 'googleSmarthomeSync':
       if(!this.common.systemConfig.remote) return;
-      this.common.internalStatus.rainInfo = msg.data;
-      this.common.emit('changeInternalStatus', this);
-    } else if(msg.type === 'accountValid') {
+      this.common.emit('googleSmarthomeSync', this, msg);
+      break;
+    case 'googleSmarthomeQuery':
+      if(!this.common.systemConfig.remote) return;
+      this.common.emit('googleSmarthomeQuery', this, msg);
+      break;
+    case 'googleSmarthomeExecute':
+      if(!this.common.systemConfig.remote) return;
+      this.common.emit('googleSmarthomeExecute', this, msg);
+      break;
+    case 'rainInfo':
+      if(!this.common.systemConfig.remote) return;
+      if(!this.common.status['server:rainInfo']) {
+        this.common.status['server:rainInfo'] = {
+          device: 'server',
+          deviceName: 'server',
+          func: 'rainInfo',
+          funcName: this.common.alias[0].rainInfo ? this.common.alias[0].rainInfo.name : 'rainInfo',
+          type: 'rain',
+        };
+      }
+      this.common.status['server:rainInfo'].value = msg.data;
+      this.common.status['server:rainInfo'].valueName = msg.data;
+      break;
+    case 'accountValid':
       this.common.systemConfig.remote = true;
       this.common.systemConfig.requestRemoteAccessState = 0;
       this.common.emit('changeSystemConfig', this);
-    } else if(msg.type === 'requestAuth') {
+      break;
+    case 'requestAuth':
       this.common.emit('requestAuth', this);
+      break;
+    case 'proxy':
+      console.log('proxy : ', msg);
+      break;
     }
   }
 

@@ -12,7 +12,7 @@ const express = require('express');
 const expressSession = require('express-session');
 const sharedSession = require('express-socket.io-session');
 const cookieParser = require('cookie-parser');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const nedbStore = require('connect-nedb-session')(expressSession);
 const moment = require('moment');
 const bodyParser = require('body-parser');
@@ -41,6 +41,10 @@ class SetupWebServer {
     });
 
     this.common.on('motor', (caller, msg) => {
+      this.SendMessage('events', msg);
+    });
+
+    this.common.on('reboot', (caller, msg) => {
       this.SendMessage('events', msg);
     });
 
@@ -178,11 +182,32 @@ network={
         }
 
         fs.readFile(`${__dirname}/../frontend${req.originalUrl}.gz`, (err, data) => {
-          if(err) return res.end();
+          if(err) {
+            fs.readFile(`${__dirname}/../frontend${req.originalUrl}`, (err, data) => {
+              if(err) return res.end();
+              res.set('Content-Type', 'application/javascript');
+              res.send(data);
+            });
+            return;
+          }
           res.set('Content-Type', 'application/javascript');
           res.set('Content-Encoding', 'gzip');
           res.send(data);
         });
+      });
+
+      app.use('*', (req, res, next) => {
+        const user = req.session.user || {};
+        const hash = crypto.createHash('sha256');
+        hash.update(this.common.systemConfig.password + user.nonce);
+        const digest = hash.digest('hex');
+        if(req.originalUrl === '/index.html') return next();
+        if(req.originalUrl.indexOf('/google-smarthome/') === 0) return next();
+        if((user.account !== this.common.systemConfig.account) ||
+           (user.digest !== digest)) {
+          return res.redirect('/index.html');
+        }
+        next();
       });
 
       app.use(express.static(__dirname + '/../frontend/'));
@@ -218,6 +243,14 @@ network={
         zlib.gzip(buf, (err, data) => {
           res.send(data);
         });
+      });
+
+      app.get('/google-smarthome/devices', (req, res) => {
+        this.common.emit('googleSmarthomeLocalDevices', msg => res.json(msg));
+      });
+
+      app.post('/google-smarthome/execute', (req, res) => {
+        this.common.emit('googleSmarthomeLocalExecute', req.body, msg => res.json(msg));
       });
       this.server = http.Server(app);
 
@@ -286,11 +319,15 @@ network={
       app.use(this.redSettings.httpNodeRoot, RED.httpNode);
       RED.start();
 
-      app.get('/*', function(req, res, _next) {
-
-        if(req.path.indexOf('/node/') === 0) {
-          return res.sendStatus(404);
-        }
+      app.get('/*', (req, res) => {
+        console.log('=======================================');
+        console.log('app * ', req.path);
+        console.log('method ', req.method);
+        console.log('params ', req.params);
+        console.log('body ', req.body);
+        console.log('query ', req.query);
+        console.log('=======================================');
+        if(req.path.indexOf('/node/') === 0) return res.sendStatus(404);
         res.redirect('/');
       });
 
@@ -315,6 +352,8 @@ network={
       this.socketio.use(sharedSession(session, { autoSave: true }));
       this.socketio.on('connection', this.Connection.bind(this));
     });
+
+    if(this.AttachTableID()) this.common.emit('changeUITable', this);
   }
 
   Connection(socket) {
@@ -371,6 +410,7 @@ network={
 
     socket.on('uiTable', (data) => {
       this.common.uiTable = data;
+      this.AttachTableID();
       this.common.emit('changeUITable', this);
     });
     
@@ -401,27 +441,27 @@ network={
           return;
         }
 
-        if(!('alias' in d3)) {
+        if(!d3.alias) {
           console.log('config format error (alias)');
           return;
         }
-        if(!('remocon' in d3)) {
+        if(!d3.remocon) {
           console.log('config format error (remocon)');
           return;
         }
-        if(!('uiTable' in d3)) {
+        if(!d3.uiTable) {
           console.log('config format error (uiTable)');
           return;
         }
-        if(!('status' in d3)) {
+        if(!d3.status) {
           console.log('config format error (status)');
           return;
         }
-        if(!('nodeRedConfig' in d3)) {
+        if(!d3.nodeRedConfig) {
           console.log('config format error (nodeRedConfig)');
           return;
         }
-        if(!('nodeRedFlow' in d3)) {
+        if(!d3.nodeRedFlow) {
           console.log('config format error (nodeRedFlow)');
           return;
         }
@@ -431,11 +471,26 @@ network={
 
         this.common.remocon = d3.remocon;
         this.common.uiTable = d3.uiTable;
+        this.AttachTableID();
         this.common.emit('changeRemocon', this);
         this.common.emit('changeUITable', this);
 
         this.common.internalStatus = d3.status;
+        this.common.CheckInternalStatus();
         this.common.emit('changeInternalStatus', this);
+        for(const deviceName in this.common.internalStatus) {
+          if(deviceName === 'formatVersion') continue;
+          for(const func in this.common.internalStatus[deviceName]) {
+            const device = (this.common.aliasTable[deviceName] && this.common.aliasTable[deviceName].device) ? this.common.aliasTable[deviceName].device : deviceName;
+            const funcName = (this.common.aliasTable[`${deviceName}:${func}`] && this.common.aliasTable[`${deviceName}:${func}`].property && (this.common.aliasTable[`${deviceName}:${func}`].property.name !== '')) ? this.common.aliasTable[`${deviceName}:${func}`].property.name : func;
+            this.common.status[`${deviceName}:${func}`] = Object.assign(this.common.status[`${deviceName}:${func}`] || {
+              deviceName: deviceName,
+              device: device,
+              func: func,
+              funcName: funcName,
+            }, this.common.internalStatus[deviceName][func]);
+          }
+        }
 
         for(const func of this.server.listeners('upgrade')) {
           if(func.name === 'upgrade') this.server.off('upgrade', func);
@@ -608,9 +663,16 @@ network={
   IndexResponse(req, res) {
     fs.readFile(__dirname + '/../frontend/index.html.gz', (err, data) => {
       if(err) {
-        res.writeHead(404, {'Content-Type': 'text/plain'});
-        res.write('xCannot GET /' + req.params.page);
-        return res.end();
+        fs.readFile(__dirname + '/../frontend/index.html', (err, data) => {
+          if(err) {
+            res.writeHead(404, {'Content-Type': 'text/plain'});
+            res.write('xCannot GET /' + req.params.page);
+            return res.end();
+          }
+          res.set('Content-Type', 'text/html');
+          res.send(data);
+        });
+        return;
       }
       res.set('Content-Type', 'text/html');
       res.set('Content-Encoding', 'gzip');
@@ -634,6 +696,26 @@ network={
     }
     this.common.emit('changeRemocon', this);
     this.SendMessage('remocon', this.common.remocon);
+  }
+
+  AttachTableID() {
+    if(!this.common.uiTable || !this.common.uiTable.ItemList) return false;
+
+    let f = false;
+    for(const item of this.common.uiTable.ItemList) {
+      if(!item.id) {
+        item.id = uuid();
+        f = true;
+      }
+      if(!item.status) continue;
+      for(const status of item.status) {
+        if(!status.id) {
+          status.id = uuid();
+          f = true;
+        }
+      }
+    }
+    return f;
   }
 
   SendMessage(cmd, data) {

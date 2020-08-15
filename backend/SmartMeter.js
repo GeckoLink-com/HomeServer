@@ -187,10 +187,19 @@ class SmartMeter {
           console.log('SmartMeter: GetValue 0xe8 error');
           console.log(err);
         }
-        const value = this.deviceInfo.energy < 0 ? -this.deviceInfo.energy : this.deviceInfo.energy;
-        this.common.internalStatus.smartMeter = value;
-        this.common.emit('changeInternalStatus', this);
         this.intervalDropCount = 0;
+        const value = this.deviceInfo.energy < 0 ? -this.deviceInfo.energy : this.deviceInfo.energy;
+        if(!this.common.status['server:smartMeter']) {
+          this.common.status['server:smartMeter'] = {
+            device: 'server',
+            deviceName: 'server',
+            func: 'smartMeter',
+            funcName: this.common.alias[0].smartMeter ? this.common.alias[0].smartMeter.name : 'smartMeter',
+            type: 'energy',
+          };
+        }
+        this.common.status['server:smartMeter'].value = value;
+        this.common.status['server:smartMeter'].valueName = `${value}${this.common.alias[0].smartMeter.unit ? this.common.alias[0].smartMeter.unit : 'W'}`;
       });
     });
 

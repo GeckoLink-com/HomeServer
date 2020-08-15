@@ -8,16 +8,20 @@ module.exports = function(RED) {
     this.outputs = config.outputs;
 
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
-    this.eventListener = (_caller) => {
+    this.eventListener = (_caller, inMsg) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
-      let status = homeServer.status;
-      let stat = null;
-      for(let st of status) {
-        if((st.deviceName == this.deviceName) && (st.func == this.func)) {
-          stat = st;
-          break;
+      if(inMsg && ((inMsg.type === 'motor') || (inMsg.type === 'reboot'))) {
+        if(inMsg.type === this.func) {
+          this.send([{
+            payload: {
+              type: inMsg.type,
+              ...inMsg.data[0],
+            }
+          }]);
         }
+        return;
       }
+      const stat = homeServer.status[`${this.deviceName}:${this.func}`];
       if(!stat) return;
       let s = [];
       if(homeServer.IsAnalogFunc(this.deviceName, this.func)) {
@@ -69,6 +73,9 @@ module.exports = function(RED) {
       if(out) this.send(outMsg);
     };
     RED.settings.functionGlobalContext.homeServer.on('statusNotify', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.on('changeStatus', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.on('motor', this.eventListener);
+    RED.settings.functionGlobalContext.homeServer.on('reboot', this.eventListener);
   }
   RED.nodes.registerType('gecko event',Event);
   

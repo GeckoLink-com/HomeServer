@@ -14,6 +14,7 @@ import lang from 'element-ui/lib/locale/lang/ja';
 import locale from 'element-ui/lib/locale';
 
 locale.use(lang);
+// Vue.config.devtools = true;
 Vue.prototype.$ELEMENT = { size: 'mini' };
 Vue.use(Container);
 Vue.use(Aside);

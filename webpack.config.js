@@ -1,11 +1,12 @@
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
-const VueLoadewrPlugin = require('vue-loader/lib/plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 process.noDeprecation = true;
 
 module.exports = {
+//  devtool: 'source-map',
   entry: {
     'bundle': [
       './source/js/HomeServer.js',
@@ -152,7 +153,7 @@ module.exports = {
       minRatio: 0.8,
       deleteOriginalAssets: true
     }),
-    new VueLoadewrPlugin(),
+    new VueLoaderPlugin(),
   ],
 };
 

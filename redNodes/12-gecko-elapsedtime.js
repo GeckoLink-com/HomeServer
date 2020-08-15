@@ -12,14 +12,7 @@ module.exports = function(RED) {
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     this.eventListener = (_caller) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
-      let status = homeServer.status;
-      let stat = null;
-      for(let st of status) {
-        if((st.deviceName == this.deviceName) && (st.func == this.func)) {
-          stat = st;
-          break;
-        }
-      }
+      const stat = homeServer.status[`${this.deviceName}:${this.func}`];
       if(!stat) return;
       
       let s = false;

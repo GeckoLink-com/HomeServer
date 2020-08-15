@@ -1,7 +1,7 @@
 //
 // Common.js
 //
-// Copyright (C) 2016-2017 Mitsuru Nakada
+// Copyright (C) 2016-2020 Mitsuru Nakada
 // This software is released under the MIT License, see license file.
 //
 
@@ -27,17 +27,19 @@ class Common extends eventEmitter {
     this.aliasTable = {};
     this.remocon = {};
     this.uiTable = {};
-    this.internalStatus = {virtualSW:{}};
+    this.internalStatus = {};
     this.deviceInfo = [];
-    this.status = [];
+    this.status = {};
     this.systemConfig = {};
     this.controllerLog = [];
     this.hueBridges = [];
     this.Registry = new registry(this.config.basePath);
-    this.statusFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3'];
-    this.analogFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'rainInfo', 'smartMeter'];
+    this.statusFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'gpio0', 'gpio1', 'gpio2', 'gpio3', 'ha0', 'ha1', 'hai0', 'hai1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3', 'value4', 'value5', 'value6', 'value7'];
+    this.analogFunc = ['ad0', 'ad1', 'ad2', 'ad3', 'rainInfo', 'smartMeter', 'value0', 'value1', 'value2', 'value3', 'value4', 'value5', 'value6', 'value7'];
     this.commandFunc = ['gpio0', 'gpio1', 'ha0', 'ha1', 'hao0', 'hao1', 'sw', 'swio0', 'swio1', 'swio2', 'vsw0', 'vsw1', 'vsw2', 'vsw3', 'switch'];
     this.responsiveCommandFunc = ['ha0', 'ha1', 'sw'];
+
+    this.InternalStatusFormatVersion = '1.0.0';
 
     this.version = '0.00';
     try {
@@ -45,7 +47,11 @@ class Common extends eventEmitter {
       if(data.version) this.version = data.version;
     } catch(e) {/* empty */}
     this.systemConfig.version = this.version;
-    
+
+    try {
+      this.proxyId = fs.readFileSync('/etc/avahi/services/http.service', 'utf8').match(/<txt-record>deviceId=(.+)<\/txt-record>/)[1];
+    } catch(e) {/* empty */}
+
     this.serial = '00000001';
     this.initialPassword = this.config.initialPassword || this.config.defaultPassword;
     this.defaultPassword = this.config.defaultPassword || this.config.initialPassword;
@@ -121,24 +127,18 @@ class Common extends eventEmitter {
       this.MakeAliasTable();
       if(caller != this) this.Registry.SetRegistry('alias', this.alias);
     });
-    this.Registry.GetRegistry('alias', (err, data) => {
-      this.alias = data || {};
-      this.emit('changeAlias', this);
-    });
-    
-    this.on('changeUITable', (caller) => {
-      if(caller != this) this.Registry.SetRegistry('uiTable', this.uiTable);
-    });
-    this.Registry.GetRegistry('uiTable', (err, data) => {
-      this.uiTable = data || {};
-    });
+    this.alias = this.Registry.GetRegistrySync('alias') || {};
+    this.emit('changeAlias', this);
 
     this.on('changeRemocon', (caller) => {
       if(caller != this) this.Registry.SetRegistry('remocon', this.remocon);
     });
-    this.Registry.GetRegistry('remocon', (err, data) => {
-      this.remocon = data || {};
+    this.remocon = this.Registry.GetRegistrySync('remocon') || {};
+
+    this.on('changeUITable', (caller) => {
+      if(caller != this) this.Registry.SetRegistry('uiTable', this.uiTable);
     });
+    this.uiTable = this.Registry.GetRegistrySync('uiTable') || {};
 
     this.on('changeHueBridges', (caller) => {
       if(caller != this) this.Registry.SetRegistry('hueBridges', this.hueBridges);
@@ -152,136 +152,37 @@ class Common extends eventEmitter {
     });
 
     this.on('changeValue', (caller, msg) => {
+      if(!this.aliasTable[msg.deviceName]) return;
       msg.device = this.aliasTable[msg.deviceName].device;
+      if(!this.alias[msg.device] || !this.alias[msg.device][msg.func]) return;
       msg.funcName = this.alias[msg.device][msg.func].name;
       msg.valueName = msg.value + this.alias[msg.device][msg.func].unit;
       msg.type = this.alias[msg.device][msg.func].type;
 
-      let f = false;
-      for(const i in this.status) {
-        const st = this.status[i];
-        if((st.deviceName == msg.deviceName) && (st.func == msg.func)) {
-          this.status[i] = msg;
-          f = true;
-          break;
-        }
-      }
-      if(!f) this.status.push(msg);
+      this.status[`${msg.deviceName}:${msg.func}`] = msg;
       this.emit('statusNotify', this);
     });
 
     this.on('changeInternalStatus', (caller) => {
-      for(const func in this.internalStatus.virtualSW) {
-        const val = this.internalStatus.virtualSW[func];
-        let f = -1;
-        for(const j in this.status) {
-          if((this.status[j].device === 'server') && (this.status[j].func === func)) {
-            f = j;
-            break;
-          }
-        }
-        let valueName = val;
-        if(valueName == 1) valueName = 'on';
-        if(valueName == 0) valueName = 'off';
-        const stat = {device: 'server', deviceName: 'server', func:func, value: val, valueName: valueName};
-        if(f < 0) {
-          this.status.push(stat);
-        } else {
-          this.status[f] = stat;
-        }
-      }
-      for(const deviceName in this.internalStatus.lastCommand) {
-        if((deviceName == null) || (deviceName === 'undefined')) continue;
-        if(!this.internalStatus.lastCommand[deviceName].remocon) continue;
-        const val = this.internalStatus.lastCommand[deviceName].remocon;
-        if(val === '') continue;
-        let f = -1;
-        for(const j in this.status) {
-          if((this.status[j].deviceName === deviceName) && (this.status[j].func === 'remocon')) {
-            f = j;
-            break;
-          }
-        }
-        const type = this.internalStatus.lastCommand[deviceName].type;
-        const state = {
-          lastCommand: val,
-          type: type,
-        };
-        if(type === 'aircon') {
-          const cmd = val.replace(/^.*_/, '');
-          state.mode = cmd.replace(/[0-9.]*$/, '');
-          state.temperature = cmd.replace(state.mode, '');
-          state.prefix = val.replace(/_[^_]*$/,'');
-        }
-        if(f < 0) {
-          if(this.aliasTable[deviceName]) {
-            this.status.push({
-              deviceName: deviceName,
-              device: this.aliasTable[deviceName].device,
-              func: 'remocon',
-              valueName: val,
-              state: state,
-            });
-          }
-        } else {
-          this.status[f].valueName = val;
-          this.status[f].state = state;
-        }
-      }
-      if(this.internalStatus.rainInfo != null) {
-        let f = -1;
-        for(const j in this.status) {
-          if((this.status[j].device == 'server') && (this.status[j].func == 'rainInfo')) {
-            f = j;
-            break;
-          }
-        }
-        if(this.alias[0] != null) {
-          const stat = {
-            device: 'server',
-            deviceName: 'server',
-            func:'rainInfo',
-            funcName: this.alias[0].rainInfo?this.alias[0].rainInfo.name:'rainInfo',
-            type: this.alias[0].rainInfo?this.alias[0].rainInfo.type:'rain',
-            value: this.internalStatus.rainInfo,
-            valueName: this.internalStatus.rainInfo,
-          };
-          if(f < 0) {
-            this.status.push(stat);
-          } else {
-            this.status[f] = stat;
-          }
-        }
-      }
-      if((this.internalStatus.smartMeter != null) && this.alias[0]) {
-        let f = -1;
-        for(const j in this.status) {
-          if((this.status[j].device == 'server') && (this.status[j].func == 'smartMeter')) {
-            f = j;
-            break;
-          }
-        }
-        const stat = {
-          device: 'server',
-          deviceName: 'server',
-          func: 'smartMeter',
-          funcName: this.alias[0].smartMeter.name,
-          type: this.alias[0].smartMeter.type,
-          value: this.internalStatus.smartMeter,
-          valueName: this.internalStatus.smartMeter + this.alias[0].smartMeter.unit,
-        };
-        if(f < 0) {
-          this.status.push(stat);
-        } else {
-          this.status[f] = stat;
-        }
-      }
-      this.emit('statusNotify', this);
       if(caller != this) this.Registry.SetRegistry('internalStatus', this.internalStatus);
     });
     this.Registry.GetRegistry('internalStatus', (err, data) => {
-      this.internalStatus = data || {virtualSW:{}};
+      this.internalStatus = data || {};
+      this.CheckInternalStatus();
       this.emit('changeInternalStatus', this);
+      for(const deviceName in this.internalStatus) {
+        if(deviceName === 'formatVersion') continue;
+        for(const func in this.internalStatus[deviceName]) {
+          const device = (this.aliasTable[deviceName] && this.aliasTable[deviceName].device) ? this.aliasTable[deviceName].device : deviceName;
+          const funcName = (this.aliasTable[`${deviceName}:${func}`] && this.aliasTable[`${deviceName}:${func}`].property && (this.aliasTable[`${deviceName}:${func}`].property.name !== '')) ? this.aliasTable[`${deviceName}:${func}`].property.name : func;
+          this.status[`${deviceName}:${func}`] = Object.assign(this.status[`${deviceName}:${func}`] || {
+            deviceName: deviceName,
+            device: device,
+            func: func,
+            funcName: funcName,
+          }, this.internalStatus[deviceName][func]);
+        }
+      }
     });
 
     this.on('changeSystemConfig', (caller) => {
@@ -450,7 +351,7 @@ class Common extends eventEmitter {
     }
 
     this.controllerLog.push(log);
-    if(this.controllerLog.length > 100) this.controllerLog.splice(0, this.controllerLog.length - 100);
+    if(this.controllerLog.length > 300) this.controllerLog.splice(0, this.controllerLog.length - 300);
     this.emit('changeControllerLog', this, this.controllerLog);
     this.Registry.SetRegistry('controllerLog', this.controllerLog);
   }
@@ -474,7 +375,90 @@ class Common extends eventEmitter {
   IsResponsiveCommandFunc(deviceName, func) {
     return this.responsiveCommandFunc.indexOf(func) >= 0;
   }
-  
+
+  CheckInternalStatus() {
+    if(!this.internalStatus.formatVersion || (this.internalStatus.formatVersion < this.InternalStatusFormatVersion)) {
+      this.internalStatus = { formatVersion: this.InternalStatusFormatVersion }; // remove old version data
+    }
+  }
+
+  RGBtoHSV(red, green, blue) {
+    let r = red / 255;
+    let g = green / 255;
+    let b = blue / 255;
+    if(green == null) {
+      const rgb = `000000${red}`;
+      r = parseInt(rgb.slice(-6, -4), 16) / 255;
+      g = parseInt(rgb.slice(-4, -2), 16) / 255;
+      b = parseInt(rgb.slice(-2), 16) / 255;
+    }
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = max - min;
+    if(h > 0.0) {
+      if(max === r) {
+        h = (g - b) / h;
+        if(h < 0.0) {
+          h += 6.0;
+        }
+      } else if(max === g) {
+        h = 2.0 + (b - r) / h;
+      } else {
+        h = 4.0 + (r - g) / h;
+      }
+    }
+    h /= 6.0;
+    let s = max - min;
+    if(max !== 0.0) s /= max;
+    let v = max;
+    return [h * 360, s * 100, v * 100];
+  }
+
+  HSVtoRGB(sh, ss, sv) {
+    const h = sh / 360;
+    const s = ss / 100;
+    const v = sv / 100;
+    let r = v;
+    let g = v;
+    let b = v;
+    if(s > 0.0) {
+      const i = Math.floor(h * 6);
+      const f = h * 6 - i;
+      switch(i) {
+        default:
+        case 0:
+            g *= 1 - s * (1 - f);
+            b *= 1 - s;
+            break;
+        case 1:
+            r *= 1 - s * f;
+            b *= 1 - s;
+            break;
+        case 2:
+            r *= 1 - s;
+            b *= 1 - s * (1 - f);
+            break;
+        case 3:
+            r *= 1 - s;
+            g *= 1 - s * f;
+            break;
+        case 4:
+            r *= 1 - s * (1 - f);
+            g *= 1 - s;
+            break;
+        case 5:
+            g *= 1 - s;
+            b *= 1 - s * f;
+            break;
+      }
+    }
+    return [('0' + Math.round(r * 255).toString(16)).slice(-2) +
+            ('0' + Math.round(g * 255).toString(16)).slice(-2) +
+            ('0' + Math.round(b * 255).toString(16)).slice(-2),
+            Math.round(r * 255),
+            Math.round(g * 255),
+            Math.round(b * 255)];
+  }
 }
 
 module.exports = Common;

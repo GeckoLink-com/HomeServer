@@ -41,21 +41,26 @@
           $.getJSON('gecko/' + this.id, (homeServer) => {
             this.homeServer = homeServer;
             for(const i in this.homeServer.alias) {
-              $('#node-input-deviceName').append($('<option></option>').val(this.homeServer.alias[i].name).text(this.homeServer.alias[i].name));
+              $('#node-input-deviceName')
+              .append($('<option></option>')
+              .val(this.homeServer.alias[i].name)
+              .text(this.homeServer.alias[i].name));
               if(this.editValue.deviceName == null) this.editValue.deviceName = this.homeServer.alias[i].name;
             }
             $('#node-input-deviceName').val(this.editValue.deviceName);
             
             const RedrawFunc = () => {
               $('#node-input-func option').remove();
+              let motorFlag = false;
               for(const i in this.homeServer.aliasTable[this.editValue.deviceName].property) {
-                if(this.homeServer.statusFunc.indexOf(i) < 0) continue;
+                if((this.homeServer.statusFunc.indexOf(i) < 0) && (i !== 'motor')) continue;
                 if((i.indexOf('gpio') == 0) && (this.homeServer.aliasTable[this.editValue.deviceName].property[i].type == 'out')) continue;
                 let name = this.homeServer.aliasTable[this.editValue.deviceName].property[i].name;
                 if(!name || (name == '')) name = i;
                 if(this.editValue.func == null) this.editValue.func = i;
                 $('#node-input-func').append($('<option></option>').val(i).text(name));
               }
+              $('#node-input-func').append($('<option></option>').val('reboot').text('reboot'));
               $('#node-input-func').val(this.editValue.func);
               RedrawMode();
             }
@@ -79,6 +84,7 @@
             const RedrawMode = () => {
               $('#node-input-container').css('min-height','250px').css('min-width','450px').empty();
               if(!(this.editValue.deviceName in this.homeServer.aliasTable)) return;
+              if((this.editValue.func === 'motor') || (this.editValue.func === 'reboot')) return;
               if(!(this.editValue.func in this.homeServer.aliasTable[this.editValue.deviceName].property)) return;
               const funcObj = this.homeServer.aliasTable[this.editValue.deviceName].property[this.editValue.func];
               if(this.homeServer.analogFunc.indexOf(this.editValue.func) >= 0) {
@@ -173,7 +179,9 @@
         oneditsave: function() {
           this.deviceName = $('#node-input-deviceName').val();
           this.func = $('#node-input-func').val();
-          if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
+          if((this.func === 'motor') || (this.func === 'reboot')) {
+            this.output = 1;
+          } else if(this.homeServer.analogFunc.indexOf(this.func) >= 0) {
             this.outputs = 0;
             for(let i = 0; i < 3; i++) {
               this.rules[i].sel = $('#node-input-adsel' + i).val();

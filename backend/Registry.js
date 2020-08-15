@@ -1,7 +1,7 @@
 //
 // Registry.js
 //
-// Copyright (C) 2016-2017 Mitsuru Nakada
+// Copyright (C) 2016-2020 Mitsuru Nakada
 // This software is released under the MIT License, see license file.
 //
 
@@ -40,6 +40,16 @@ class Registry {
       }
       callback(err, obj);
     });
+  }
+
+  GetRegistrySync(name) {
+    let obj = null;
+    try {
+      obj = JSON.parse(fs.readFileSync(this.path + '/' + name+ '.json', 'utf8'));
+    } catch(e) {
+      // error data
+    }
+    return obj;
   }
 
   GetText(name, callback) {

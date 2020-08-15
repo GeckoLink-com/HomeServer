@@ -6,24 +6,26 @@ module.exports = function(RED) {
     this.func = config.func;
     this.mode = config.mode;
     this.script = config.script;
+    this.msg = null;
 
-    this.on("input", () => {
+    this.on("input", (msg) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       if(this.func == 'script') {
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.script, id:this.id, func:this.script.replace(/[ \t].*$/,''), mode:this.script.replace(/^[^ \t]*/, '').trim()});
       } else {
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.func + ' ' + this.mode, id:this.id, func:this.func, mode:this.mode});
       }
+      this.msg = msg;
     });
 
     this.eventListener = (caller, msg) => {
       if(msg.data[0].origin.id == this.id) {
-        this.send({'payload': {
+        this.send(Object.assign({}, this.msg, {'payload': {
           device: this.deviceName,
           command: msg.data[0].origin.command,
           status: msg.data[0].status,
           result: msg.data[0].result,
-        }});
+        }}));
       }
     };
     RED.settings.functionGlobalContext.homeServer.on('response', this.eventListener);
