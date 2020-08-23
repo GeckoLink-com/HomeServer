@@ -114,7 +114,7 @@ class HomeBridgePlatform {
 
   UITableNotify(_caller) {
     if(!this.Bridge) return;
-    if(!this.common.uiTable || (Object.keys(this.common.uiTable) === 0)) return;
+    if(!this.common.uiTable || !this.common.uiTable.itemList || (Object.keys(this.common.uiTable) === 0)) return;
     if(!this.common.remocon) return;
     this.Bridge.removeBridgedAccessories(this.Bridge.bridgedAccessories);
     this.Bridge.bridgedAccessories = [];

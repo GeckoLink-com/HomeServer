@@ -5,7 +5,8 @@ module.exports = function(RED) {
 
     this.on("input", (msg) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
-      homeServer.emit('sendControllerCommand', this, {deviceName: msg.payload.deviceName, command: msg.payload.func + (msg.payload.mode?(' ' + msg.payload.mode):''), id:this.id, func:msg.payload.func, mode:msg.payload.mode});
+      const command = msg.payload.command || (msg.payload.func + (msg.payload.mode ? (' ' + msg.payload.mode) : ''));
+      homeServer.emit('sendControllerCommand', this, {deviceName: msg.payload.deviceName, command: command, id:this.id, func:msg.payload.func, mode:msg.payload.mode});
     });
 
     this.eventListener = (caller, msg) => {

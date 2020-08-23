@@ -11,7 +11,8 @@ module.exports = function(RED) {
     this.on("input", (msg) => {
       const homeServer = RED.settings.functionGlobalContext.homeServer;
       if(this.func == 'script') {
-        homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.script, id:this.id, func:this.script.replace(/[ \t].*$/,''), mode:this.script.replace(/^[^ \t]*/, '').trim()});
+        const command = (this.script !== '') ? this.script : msg.payload.command;
+        homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: command, id:this.id, func:this.script.replace(/[ \t].*$/,''), mode:this.script.replace(/^[^ \t]*/, '').trim()});
       } else {
         homeServer.emit('sendControllerCommand', this, {deviceName: this.deviceName, command: this.func + ' ' + this.mode, id:this.id, func:this.func, mode:this.mode});
       }
